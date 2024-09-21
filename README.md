@@ -11,3 +11,22 @@
 5. 브라우저에 livereload 확장 프로그램 설치
 
 </details>
+
+<details>
+  <summary>webflux 간단 소개</summary>
+
+- 적은 수의 스레드로 동시성을 처리 (비동기 지원)
+- Mono(0 ~ 1개의 값 반환) 타입 + Flux(1개 이상의 값 반환) 타입
+- Netty, Undertow, Tomcat 등의 비동기 웹 서버와 통합
+- WebClient를 통해 비동기 HTTP 요청
+
+</details>
+
+<details>
+  <summary>spring-data-mongodb-reactive</summary>
+
+- MongoDB는 BSON(Binary JSON)을 사용해 데이터를 저장하는 NoSQL 데이터베이스
+- JPA 스프링에서 db를 다루면서 NoSQL 특성을 이용한 비동기적 상호작용을 지원
+- @CreatedDate와 같은 자동 추가 기능을 사용하려면 @EnableMongoAuditing를 설정
+
+</details>

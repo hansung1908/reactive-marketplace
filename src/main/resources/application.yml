@@ -18,3 +18,9 @@ spring:
   thymeleaf:
     cache: false
     prefix: file:src/main/resources/templates/
+
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: marketplace_db
