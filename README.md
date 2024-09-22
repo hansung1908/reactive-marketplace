@@ -30,3 +30,13 @@
 - @CreatedDate와 같은 자동 추가 기능을 사용하려면 @EnableMongoAuditing를 설정
 
 </details>
+
+<details>
+  <summary>json 직렬화 + 역직렬화</summary>
+
+- 객체를 JSON 문자열로 변환하는 과정
+- 일반적으로 Jackson이나 Gson과 같은 라이브러리를 사용
+- Java 클래스의 필드가 JSON으로 변환되려면, 해당 필드에 대한 getter가 필요
+- 반대로, 역직렬화 시에는 setter가 필요
+
+</details>
