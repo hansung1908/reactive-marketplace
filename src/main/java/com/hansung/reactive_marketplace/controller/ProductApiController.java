@@ -15,7 +15,7 @@ public class ProductApiController {
         this.productService = productService;
     }
 
-    @GetMapping("/")
+    @GetMapping("/products")
     public Flux<Product> index() {
         return productService.findAll();
     }

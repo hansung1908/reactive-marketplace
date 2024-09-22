@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 public class Product {
 
     @Id
-    private int id;
+    private String id;
     private String title;
     private String description;
     private int price;
-    private ProductStatus status; // 초깃값은 on_sale로 자동 설정
+    private ProductStatus status; // 초깃값은 ON_SALE로 자동 설정
     @CreatedDate
     private LocalDateTime created_at;
 }
