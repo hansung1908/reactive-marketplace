@@ -2,6 +2,7 @@ async function findAllProduct() {
     try {
         const response = await fetch('/products'); // 서버에서 제품 데이터 요청
         const products = await response.json(); // JSON 형태로 응답 받기
+        console.log(products); // 데이터 구조를 확인
         const productList = document.getElementById('product-list'); // 제품 목록을 담을 요소 선택
 
         // 제품 데이터를 HTML로 추가
@@ -24,7 +25,7 @@ async function findAllProduct() {
                     </div>
                 </div>
             `;
-            productList.insertAdjacentHTML('beforeend', productCard); // 제품 카드를 HTML에 추가
+            productList.insertAdjacentHTML('afterbegin', productCard); // 제품 카드를 HTML에 추가
         });
     } catch (error) {
         console.error('Error fetching products:', error); // 오류 처리
