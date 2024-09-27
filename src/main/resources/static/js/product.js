@@ -14,7 +14,7 @@ async function findAllProduct() {
                         <div class="card-body p-4">
                             <div class="text-center">
                                 <h5 class="fw-bolder">${product.title}</h5>
-                                <span>${product.price}</span>
+                                <span>${product.price} 원</span>
                             </div>
                         </div>
                         <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
