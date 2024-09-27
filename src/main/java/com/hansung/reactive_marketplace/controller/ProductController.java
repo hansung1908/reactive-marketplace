@@ -10,4 +10,9 @@ public class ProductController {
     public String index() {
         return "index";
     }
+
+    @GetMapping("/product/saveForm")
+    public String saveForm() {
+        return "product/saveForm";
+    }
 }

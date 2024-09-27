@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:insert="~{layout/header}"></div>
+</head>
+<body>
+<div th:insert="~{layout/navbar}"></div>
+
+<div class="container mt-5">
+    <form id="productForm">
+        <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+            <div class="col p-4 d-flex flex-column position-static">
+                <strong class="d-inline-block mb-2 text-primary-emphasis">상품 등록</strong>
+                <div class="form-group mb-1">
+                    <label for="title">상품명</label>
+                    <input type="text" class="form-control" id="title" placeholder="상품명을 입력하세요" required>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="price">가격</label>
+                    <input type="number" class="form-control" id="price" placeholder="가격을 입력하세요" required>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="description">상품 설명</label>
+                    <textarea class="form-control" id="description" rows="4" placeholder="상품 설명을 입력하세요" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-secondary mb-1">등록하기</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div th:insert="~{layout/footer}"></div>
+<script src="js/product.js"></script>
+</body>
+</html>
