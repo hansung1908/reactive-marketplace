@@ -13,18 +13,59 @@ public class Product {
 
     @Id
     private String id;
+
     private String title;
+
     private String description;
+
     private int price;
-    private ProductStatus status; // 초깃값은 ON_SALE로 자동 설정
+
+    private ProductStatus status;
+
     @CreatedDate
     private LocalDateTime created_at;
+
+    protected Product() {
+    }
+
+    private Product(Builder builder) {
+        this.title = builder.title;
+        this.description = builder.description;
+        this.price = builder.price;
+        this.status = ProductStatus.ON_SALE; // 초깃값은 ON_SALE로 자동 설정
+    }
+
+    // 빌더 클래스
+    public static class Builder {
+
+        private String title;
+        private String description;
+        private int price;
+
+        public Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder price(int price) {
+            this.price = price;
+            return this;
+        }
+
+        public Product build() {
+            return new Product(this); // Product 객체 생성
+        }
+    }
 
     @Override
     public String toString() {
         return "Product{" +
-                "id='" + id + '\'' +
-                ", title='" + title + '\'' +
+                "title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", price=" + price +
                 ", status=" + status +
