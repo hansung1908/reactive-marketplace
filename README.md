@@ -28,6 +28,8 @@
 - MongoDB는 BSON(Binary JSON)을 사용해 데이터를 저장하는 NoSQL 데이터베이스
 - JPA 스프링에서 db를 다루면서 NoSQL 특성을 이용한 비동기적 상호작용을 지원
 - @CreatedDate와 같은 자동 추가 기능을 사용하려면 @EnableMongoAuditing를 설정
+- reactive-mongodb 환경이라면 @EnableReactiveMongoAuditing를 설정
+- @Id는 선언없이도 자동 생성되지만 커스텀 가능성과 명시화의 이유로 설정하는 것이 좋음
 
 </details>
 

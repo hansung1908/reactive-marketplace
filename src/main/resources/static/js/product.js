@@ -2,7 +2,6 @@ async function findAllProduct() {
     try {
         const response = await fetch('/products'); // 서버에서 제품 데이터 요청
         const products = await response.json(); // JSON 형태로 응답 받기
-        console.log(products); // 데이터 구조를 확인
         const productList = document.getElementById('product-list'); // 제품 목록을 담을 요소 선택
 
         // 제품 데이터를 HTML로 추가
@@ -28,9 +27,46 @@ async function findAllProduct() {
             productList.insertAdjacentHTML('afterbegin', productCard); // 제품 카드를 HTML에 추가
         });
     } catch (error) {
-        console.error('Error fetching products:', error); // 오류 처리
+        console.error('Error:', error);
     }
 }
 
-// 페이지가 로드될 때 제품 목록을 가져오는 이벤트 리스너
-document.addEventListener('DOMContentLoaded', findAllProduct);
+async function saveProduct(event) {
+    event.preventDefault(); // 폼 제출 기본 동작 방지
+
+    try {
+        const data = {
+            title: document.querySelector('#title').value,
+            description: document.querySelector('#description').value,
+            price: document.querySelector('#price').value
+        }
+
+        const response = await fetch("/product/save", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if(response.ok) {
+            window.location.href = '/';
+        }
+    } catch (error) {
+        console.error('Error:', error); // 오류 처리
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 현재 페이지 URL 경로 가져오기
+    const currentPath = window.location.pathname;
+    console.log(currentPath)
+
+    if (currentPath === '/') {
+        findAllProduct(); // 제품 목록을 초기 로드
+    }
+
+    else if (currentPath === '/product/saveForm') {
+        document.getElementById('product-save').addEventListener('submit', saveProduct); // 폼 제출 이벤트 리스너 등록
+    }
+});
