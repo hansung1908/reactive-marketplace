@@ -1,3 +1,5 @@
+<html xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Eighth navbar example">
   <div class="container">
     <a class="navbar-brand" href="/">Marketplace</a>
@@ -8,12 +10,22 @@
     <div class="collapse navbar-collapse" id="collapsibleNavbar">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link"href="/product/saveForm">write</a>
+          <a class="nav-link"href="#">로그인</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">profile</a>
+          <a class="nav-link" href="/user/saveForm">회원가입</a>
         </li>
       </ul>
+
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link"href="/product/saveForm">상품 등록</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">프로필</a>
+        </li>
+      </ul>
+
       <form role="search">
         <input class="form-control" type="search" placeholder="Search" aria-label="Search">
       </form>
