@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:insert="~{layout/header}"></div>
+</head>
+<body>
+<div th:insert="~{layout/navbar}"></div>
+
+<div class="container mt-5">
+    <form id="user-save">
+        <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+            <div class="col p-4 d-flex flex-column position-static">
+                <strong class="d-inline-block mb-2 text-primary-emphasis">회원가입</strong>
+                <div class="form-group mb-1">
+                    <label for="userId">userId</label>
+                    <input type="text" class="form-control" id="userId" placeholder="userId" required>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="nickname">nickname</label>
+                    <input type="text" class="form-control" id="nickname" placeholder="Nickname" required>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="password">password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Password" required>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="email">email</label>
+                    <input type="email" class="form-control" id="email" placeholder="you@example.com" required>
+                </div>
+                <button type="submit" class="btn btn-secondary mb-1">회원가입</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div th:insert="~{layout/footer}"></div>
+<script src="/js/user.js"></script>
+</body>
+</html>
