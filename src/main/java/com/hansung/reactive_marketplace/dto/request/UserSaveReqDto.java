@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public class UserSaveReqDto {
 
-    private String userId;
+    private String username;
 
     private String nickname;
 
@@ -16,8 +16,8 @@ public class UserSaveReqDto {
     protected UserSaveReqDto() {
     }
 
-    public UserSaveReqDto(String userId, String nickname, String password, String email) {
-        this.userId = userId;
+    public UserSaveReqDto(String username, String nickname, String password, String email) {
+        this.username = username;
         this.nickname = nickname;
         this.password = password;
         this.email = email;
@@ -26,7 +26,7 @@ public class UserSaveReqDto {
     @Override
     public String toString() {
         return "UserSaveReqDto{" +
-                "userId='" + userId + '\'' +
+                "username='" + username + '\'' +
                 ", nickname='" + nickname + '\'' +
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +

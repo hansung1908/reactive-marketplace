@@ -14,13 +14,15 @@ public class User {
     @Id
     private String id;
 
-    private String userId;
+    private String username;
 
     private String nickname;
 
     private String password;
 
     private String email;
+
+    private Authority authority;
 
     @CreatedDate
     private LocalDateTime created_at;
@@ -29,20 +31,21 @@ public class User {
     }
 
     private User(Builder builder) {
-        this.userId = builder.userId;
+        this.username = builder.username;
         this.nickname = builder.nickname;
         this.password = builder.password;
         this.email = builder.email;
+        this.authority = Authority.USER; // 기본값으로 USER 권한 부여
     }
 
     public static class Builder {
-        private String userId;
+        private String username;
         private String nickname;
         private String password;
         private String email;
 
-        public Builder userId(String userId) {
-            this.userId = userId;
+        public Builder username(String username) {
+            this.username = username;
             return this;
         }
 
@@ -70,7 +73,7 @@ public class User {
     public String toString() {
         return "User{" +
                 "id='" + id + '\'' +
-                ", userId='" + userId + '\'' +
+                ", username='" + username + '\'' +
                 ", nickname='" + nickname + '\'' +
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
