@@ -6,6 +6,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -19,8 +20,12 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http.csrf(csrfSpec -> csrfSpec.disable())
-                .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.anyExchange()
-                        .permitAll());
+                .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
+                        .anyExchange().permitAll());
+
+//                .formLogin(formLoginSpec -> formLoginSpec
+//                        .loginPage("/user/loginForm")
+//                        .authenticationSuccessHandler(new RedirectServerAuthenticationSuccessHandler("/")));
 
         return http.build();
     }

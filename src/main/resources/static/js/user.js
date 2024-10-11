@@ -3,7 +3,7 @@ async function saveUser(event) {
 
     try {
         const data = {
-            userId: document.querySelector('#userId').value,
+            username: document.querySelector('#username').value,
             nickname: document.querySelector('#nickname').value,
             password: document.querySelector('#password').value,
             email: document.querySelector('#email').value
