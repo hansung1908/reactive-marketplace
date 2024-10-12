@@ -24,12 +24,12 @@ public class SecurityConfig {
                 .anonymous(Customizer.withDefaults()) // thymeleaf spring security에서 anonymous 사용을 위한 활성화
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
                         .pathMatchers("/", "/js/**", "/user/**").permitAll()
-                        .pathMatchers("/products").permitAll()
-                        .anyExchange().authenticated());
+                        .pathMatchers("/products", "/login").permitAll()
+                        .anyExchange().authenticated())
 
-//                .formLogin(formLoginSpec -> formLoginSpec
-//                        .loginPage("/user/loginForm")
-//                        .authenticationSuccessHandler(new RedirectServerAuthenticationSuccessHandler("/")));
+                .formLogin(formLoginSpec -> formLoginSpec
+                        .loginPage("/user/loginForm")
+                        .authenticationSuccessHandler(new RedirectServerAuthenticationSuccessHandler("/")));
 
         return http.build();
     }

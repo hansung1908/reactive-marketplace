@@ -10,4 +10,9 @@ public class UserController {
     public String saveForm() {
         return "user/saveForm";
     }
+
+    @GetMapping("/user/loginForm")
+    public String loginForm() {
+        return "user/loginForm";
+    }
 }
