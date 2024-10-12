@@ -48,10 +48,6 @@ async function saveProduct(event) {
             },
             body: JSON.stringify(data)
         });
-
-        if(response.ok) {
-            window.location.href = '/';
-        }
     } catch (error) {
         console.error('Error:', error); // 오류 처리
     }
@@ -60,7 +56,6 @@ async function saveProduct(event) {
 document.addEventListener('DOMContentLoaded', () => {
     // 현재 페이지 URL 경로 가져오기
     const currentPath = window.location.pathname;
-    console.log(currentPath)
 
     if (currentPath === '/') {
         findAllProduct(); // 제품 목록을 초기 로드
