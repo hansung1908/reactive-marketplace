@@ -33,4 +33,8 @@ public class ProductService {
 
         return productRepository.save(product);
     }
+
+    public Mono<Product> findById(String productId) {
+        return productRepository.findById(productId).subscribeOn(Schedulers.boundedElastic());
+    }
 }
