@@ -28,9 +28,4 @@ public class ProductApiController {
                               @AuthenticationPrincipal CustomUserDetail userDetail) {
         return productService.save(productSaveReqDto, userDetail.getUser());
     }
-
-    @GetMapping("/product/{id}")
-    public Mono<Product> getProductDetails(@PathVariable String id) {
-        return productService.findById(id);
-    }
 }
