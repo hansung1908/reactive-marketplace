@@ -1,8 +1,10 @@
 package com.hansung.reactive_marketplace.service;
 
 import com.hansung.reactive_marketplace.domain.Product;
+import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
+import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -21,11 +23,12 @@ public class ProductService {
         return productRepository.findAll().subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Mono<Product> save(ProductSaveReqDto productSaveReqDto) {
+    public Mono<Product> save(ProductSaveReqDto productSaveReqDto, User user) {
         Product product = new Product.Builder()
                 .title(productSaveReqDto.getTitle())
                 .description(productSaveReqDto.getDescription())
                 .price(productSaveReqDto.getPrice())
+                .userId(user.getId())
                 .build();
 
         return productRepository.save(product);
