@@ -2,7 +2,9 @@ package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
+import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import com.hansung.reactive_marketplace.service.ProductService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +27,8 @@ public class ProductApiController {
     }
 
     @PostMapping("/product/save")
-    public Mono<Product> save(@RequestBody ProductSaveReqDto productSaveReqDto) {
-        return productService.save(productSaveReqDto);
+    public Mono<Product> save(@RequestBody ProductSaveReqDto productSaveReqDto,
+                              @AuthenticationPrincipal CustomUserDetail userDetail) {
+        return productService.save(productSaveReqDto, userDetail.getUser());
     }
 }

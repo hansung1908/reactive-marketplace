@@ -48,6 +48,10 @@ async function saveProduct(event) {
             },
             body: JSON.stringify(data)
         });
+
+        if(response.ok) {
+            window.location.href = '/';
+        }
     } catch (error) {
         console.error('Error:', error); // 오류 처리
     }

@@ -1,12 +1,14 @@
 package com.hansung.reactive_marketplace.security;
 
 import com.hansung.reactive_marketplace.domain.User;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+@Getter
 public class CustomUserDetail implements UserDetails {
 
     private User user;

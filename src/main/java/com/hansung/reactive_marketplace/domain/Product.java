@@ -25,6 +25,8 @@ public class Product {
     @CreatedDate
     private LocalDateTime created_at;
 
+    private String userId;
+
     protected Product() {
     }
 
@@ -33,6 +35,7 @@ public class Product {
         this.description = builder.description;
         this.price = builder.price;
         this.status = ProductStatus.ON_SALE; // 초깃값은 ON_SALE로 자동 설정
+        this.userId = builder.userId;
     }
 
     // 빌더 클래스
@@ -41,6 +44,7 @@ public class Product {
         private String title;
         private String description;
         private int price;
+        private String userId;
 
         public Builder title(String title) {
             this.title = title;
@@ -57,6 +61,11 @@ public class Product {
             return this;
         }
 
+        public Builder userId(String userId) {
+            this.userId = userId;
+            return this;
+        }
+
         public Product build() {
             return new Product(this); // Product 객체 생성
         }
@@ -65,11 +74,13 @@ public class Product {
     @Override
     public String toString() {
         return "Product{" +
-                "title='" + title + '\'' +
+                "id='" + id + '\'' +
+                ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", price=" + price +
                 ", status=" + status +
                 ", created_at=" + created_at +
+                ", userId='" + userId + '\'' +
                 '}';
     }
 }
