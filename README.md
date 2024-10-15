@@ -42,3 +42,13 @@
 - 반대로, 역직렬화 시에는 setter가 필요
 
 </details>
+
+<details>
+  <summary>Rendering</summary>
+
+- 리액티브 환경에서 뷰를 렌더링하는 방식
+- 기존 mvc방식으로 처리하면 동기적으로 값을 처리하여 리액티브의 장점을 잃음
+- Rendering 객체는 비동기적으로 데이터 처리를 관리 가능
+- 또한 리액티브 프로그래밍 패턴을 따르므로, webflux의 이점을 최대한 활용 가능
+
+</details>
