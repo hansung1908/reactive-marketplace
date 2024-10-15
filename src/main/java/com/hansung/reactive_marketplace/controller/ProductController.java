@@ -6,6 +6,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.reactive.result.view.Rendering;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Controller
@@ -18,8 +20,12 @@ public class ProductController {
     }
 
     @GetMapping("/")
-    public String index() {
-        return "index";
+    public Mono<Rendering> index() {
+        return productService.findAll()
+                .collectList()
+                .map(products -> Rendering.view("index")
+                        .modelAttribute("products", products)
+                        .build());
     }
 
     @GetMapping("/product/saveForm")
@@ -28,9 +34,10 @@ public class ProductController {
     }
 
     @GetMapping("/product/{id}")
-    public Mono<String> getProductDetails(@PathVariable String id, Model model) {
+    public Mono<Rendering> ProductDetails(@PathVariable String id) {
         return productService.findById(id)
-                .doOnNext(product -> model.addAttribute(product))
-                .then(Mono.just("product/detailForm"));
+                .map(product -> Rendering.view("product/detailForm")
+                        .modelAttribute("product", product)
+                        .build());
     }
 }

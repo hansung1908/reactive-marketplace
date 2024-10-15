@@ -18,11 +18,6 @@ public class ProductApiController {
         this.productService = productService;
     }
 
-    @GetMapping("/products")
-    public Flux<Product> index() {
-        return productService.findAll();
-    }
-
     @PostMapping("/product/save")
     public Mono<Product> save(@RequestBody ProductSaveReqDto productSaveReqDto,
                               @AuthenticationPrincipal CustomUserDetail userDetail) {
