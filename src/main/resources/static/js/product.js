@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 현재 페이지 URL 경로 가져오기
     const currentPath = window.location.pathname;
 
-    else if (currentPath === '/product/saveForm') {
+    if (currentPath === '/product/saveForm') {
         document.getElementById('product-save').addEventListener('submit', saveProduct); // 폼 제출 이벤트 리스너 등록
     }
 });
