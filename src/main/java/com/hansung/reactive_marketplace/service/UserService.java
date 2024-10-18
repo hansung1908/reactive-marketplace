@@ -6,7 +6,6 @@ import com.hansung.reactive_marketplace.repository.UserRepository;
 import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

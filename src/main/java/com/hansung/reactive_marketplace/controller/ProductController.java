@@ -1,13 +1,10 @@
 package com.hansung.reactive_marketplace.controller;
 
-import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.service.ProductService;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.reactive.result.view.Rendering;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Controller
