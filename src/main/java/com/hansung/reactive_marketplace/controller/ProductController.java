@@ -18,7 +18,7 @@ public class ProductController {
 
     @GetMapping("/")
     public Mono<Rendering> index() {
-        return productService.findAll()
+        return productService.findProductList()
                 .collectList()
                 .map(products -> Rendering.view("index")
                         .modelAttribute("products", products)

@@ -4,6 +4,7 @@ import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
+import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.repository.UserRepository;
 import org.springframework.data.domain.Sort;
@@ -24,8 +25,8 @@ public class ProductService {
         this.userRepository = userRepository;
     }
 
-    public Flux<Product> findAll() {
-        return productRepository.findAll(Sort.by(Sort.Direction.DESC, "created_at"))
+    public Flux<ProductListResDto> findProductList() {
+        return productRepository.findProductList(Sort.by(Sort.Direction.DESC, "created_at"))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
