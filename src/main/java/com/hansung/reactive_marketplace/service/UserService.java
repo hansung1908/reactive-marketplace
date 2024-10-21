@@ -22,6 +22,12 @@ public class UserService implements ReactiveUserDetailsService {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
+    @Override
+    public Mono<UserDetails> findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> new CustomUserDetail(user));
+    }
+
     public Mono<User> saveUser(UserSaveReqDto userSaveReqDto) {
         User user = new User.Builder()
                 .username(userSaveReqDto.getUsername())
@@ -31,11 +37,5 @@ public class UserService implements ReactiveUserDetailsService {
                 .build();
 
         return userRepository.save(user);
-    }
-
-    @Override
-    public Mono<UserDetails> findByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .map(user -> new CustomUserDetail(user));
     }
 }
