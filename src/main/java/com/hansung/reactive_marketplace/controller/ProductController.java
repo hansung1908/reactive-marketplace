@@ -31,10 +31,19 @@ public class ProductController {
     }
 
     @GetMapping("/product/{id}")
-    public Mono<Rendering> ProductDetails(@PathVariable String id) {
+    public Mono<Rendering> ProductDetails(@PathVariable("id") String id) {
         return productService.findById(id)
                 .map(product -> Rendering.view("product/detailForm")
                         .modelAttribute("product", product)
+                        .build());
+    }
+
+    @GetMapping("/product/my/{userId}")
+    public Mono<Rendering> MyProductList(@PathVariable("userId") String userId) {
+        return productService.findMyProductList(userId)
+                .collectList()
+                .map(products -> Rendering.view("product/my/productListForm")
+                        .modelAttribute("products", products)
                         .build());
     }
 }
