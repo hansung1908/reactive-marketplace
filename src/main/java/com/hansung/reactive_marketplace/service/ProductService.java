@@ -3,6 +3,7 @@ package com.hansung.reactive_marketplace.service;
 import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
+import com.hansung.reactive_marketplace.dto.response.MyProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
@@ -26,7 +27,7 @@ public class ProductService {
     }
 
     public Flux<ProductListResDto> findProductList() {
-        return productRepository.findProductList(Sort.by(Sort.Direction.DESC, "created_at"))
+        return productRepository.findProductList(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -50,5 +51,10 @@ public class ProductService {
                                 product.getDescription(),
                                 user.getNickname()
                         )));
+    }
+
+    public Flux<MyProductListResDto> findMyProductList(String userId) {
+        return productRepository.findMyProductList(userId, Sort.by(Sort.Direction.DESC, "createdAt"))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }

@@ -23,7 +23,7 @@ public class Product {
     private ProductStatus status;
 
     @CreatedDate
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     private String userId;
 
@@ -79,7 +79,7 @@ public class Product {
                 ", description='" + description + '\'' +
                 ", price=" + price +
                 ", status=" + status +
-                ", created_at=" + created_at +
+                ", createdAt=" + createdAt +
                 ", userId='" + userId + '\'' +
                 '}';
     }
