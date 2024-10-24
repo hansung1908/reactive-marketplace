@@ -1,6 +1,4 @@
-async function saveUser(event) {
-    event.preventDefault(); // 폼 제출 기본 동작 방지
-
+async function saveUser() {
     try {
         const data = {
             username: document.querySelector('#username').value,
@@ -25,9 +23,7 @@ async function saveUser(event) {
     }
 }
 
-async function updateUser(event) {
-    event.preventDefault(); // 폼 제출 기본 동작 방지
-
+async function updateUser() {
     try {
         const data = {
             id : document.querySelector('#id').value,
@@ -48,7 +44,29 @@ async function updateUser(event) {
             window.location.href = '/user/profileForm';
         }
     } catch (error) {
-        console.error('Error:', error); // 오류 처리
+        console.error('Error:', error);
+    }
+}
+
+async function deleteUser() {
+    try {
+        const data = {
+            id : document.querySelector('#id').value
+        }
+
+        const response = await fetch("/user/delete", {
+            method: "DELETE",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if(response.ok) {
+            window.location.href = '/';
+        }
+    } catch (error) {
+        console.error('Error:', error);
     }
 }
 
@@ -57,10 +75,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPath = window.location.pathname;
 
     if (currentPath === '/user/saveForm') {
-        document.getElementById('user-save').addEventListener('submit', saveUser); // 폼 제출 이벤트 리스너 등록
+        document.getElementById('user-save').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작을 방지
+
+            const confirmed = confirm("해당 정보로 회원가입 하시겠습니까?");
+            if (confirmed) {
+                saveUser();
+            }
+        });
     }
 
     else if (currentPath === '/user/profileForm') {
-        document.getElementById('user-update').addEventListener('submit', updateUser);
+        document.getElementById('user-update').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작을 방지
+
+            const confirmed = confirm("해당 정보로 회원수정 하시겠습니까?");
+            if (confirmed) {
+                updateUser();
+            }
+        });
+
+        document.getElementById('user-delete').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작을 방지
+
+            const confirmed = confirm("정말로 회원탈퇴 하시겠습니까?");
+            if (confirmed) {
+                deleteUser();
+            }
+        });
     }
 });

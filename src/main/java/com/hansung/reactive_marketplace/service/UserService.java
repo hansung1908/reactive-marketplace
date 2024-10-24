@@ -1,6 +1,7 @@
 package com.hansung.reactive_marketplace.service;
 
 import com.hansung.reactive_marketplace.domain.User;
+import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.repository.UserRepository;
@@ -9,6 +10,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -61,5 +63,9 @@ public class UserService implements ReactiveUserDetailsService {
                     return reactiveMongoTemplate.updateFirst(query, update, User.class) // 업데이트 실행
                             .flatMap(result -> Mono.just(user)); // 업데이트 후 유저 정보 반환
                 });
+    }
+
+    public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
+        return userRepository.deleteById(userDeleteReqDto.getId());
     }
 }
