@@ -1,37 +1,43 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <div th:insert="~{layout/header}"></div>
+    <div th:insert="~{layout/header}"></div>
 </head>
 <body>
 <div th:insert="~{layout/navbar}"></div>
 
 <div class="container mt-5 pt-4">
-  <form id="user-update">
     <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-      <div class="col p-4 d-flex flex-column position-static">
-        <strong class="d-inline-block mb-2 text-primary-emphasis">프로필</strong>
-        <input type="hidden" id="id" th:value="${#authentication.principal.user.id}"/>
-        <div class="form-group mb-1">
-          <label for="username">username</label>
-          <input type="text" class="form-control" id="username" placeholder="username" th:value="${#authentication.principal.user.username}" readonly>
+        <div class="col p-4 d-flex flex-column position-static">
+            <form id="user-update">
+                <strong class="d-inline-block mb-2 text-primary-emphasis">프로필</strong>
+                <input type="hidden" id="id" th:value="${#authentication.principal.user.id}"/>
+                <div class="form-group mb-1">
+                    <label for="username">username</label>
+                    <input type="text" class="form-control" id="username" placeholder="username"
+                           th:value="${#authentication.principal.user.username}" readonly>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="nickname">nickname</label>
+                    <input type="text" class="form-control" id="nickname" placeholder="Nickname"
+                           th:value="${#authentication.principal.user.nickname}" required>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="password">password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Password">
+                </div>
+                <div class="form-group mb-1">
+                    <label for="email">email</label>
+                    <input type="email" class="form-control" id="email" placeholder="you@example.com"
+                           th:value="${#authentication.principal.user.email}" required>
+                </div>
+                <button type="submit" class="btn btn-secondary mb-1">회원수정</button>
+            </form>
+            <form id="user-delete">
+                <button type="submit" class="btn btn-danger mb-1">회원탈퇴</button>
+            </form>
         </div>
-        <div class="form-group mb-1">
-          <label for="nickname">nickname</label>
-          <input type="text" class="form-control" id="nickname" placeholder="Nickname" th:value="${#authentication.principal.user.nickname}" required>
-        </div>
-        <div class="form-group mb-1">
-          <label for="password">password</label>
-          <input type="password" class="form-control" id="password" placeholder="Password">
-        </div>
-        <div class="form-group mb-1">
-          <label for="email">email</label>
-          <input type="email" class="form-control" id="email" placeholder="you@example.com" th:value="${#authentication.principal.user.email}" required>
-        </div>
-        <button type="submit" class="btn btn-secondary mb-1">회원수정</button>
-      </div>
     </div>
-  </form>
 </div>
 
 <div th:insert="~{layout/footer}"></div>

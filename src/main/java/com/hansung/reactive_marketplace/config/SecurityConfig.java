@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.logout.SecurityContextServerLogoutHandler;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -30,7 +31,7 @@ public class SecurityConfig {
                 .anonymous(Customizer.withDefaults()) // thymeleaf spring security에서 anonymous 사용을 위한 활성화
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
                         .pathMatchers("/", "/js/**", "/user/saveForm").permitAll()
-                        .pathMatchers("/products", "/login").permitAll()
+                        .pathMatchers("/products", "/login", "/user/save").permitAll()
                         .anyExchange().authenticated())
 
                 .formLogin(Customizer.withDefaults())
