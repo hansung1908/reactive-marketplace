@@ -5,6 +5,8 @@ import lombok.Getter;
 @Getter
 public class ProductDetailResDto {
 
+    private String id;
+
     private String title;
 
     private int price;
@@ -16,7 +18,8 @@ public class ProductDetailResDto {
     protected ProductDetailResDto() {
     }
 
-    public ProductDetailResDto(String title, int price, String description, String nickname) {
+    public ProductDetailResDto(String id, String title, int price, String description, String nickname) {
+        this.id = id;
         this.title = title;
         this.price = price;
         this.description = description;

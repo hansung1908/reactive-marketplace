@@ -1,6 +1,4 @@
-async function saveProduct(event) {
-    event.preventDefault(); // 폼 제출 기본 동작 방지
-
+async function saveProduct() {
     try {
         const data = {
             title: document.querySelector('#title').value,
@@ -24,11 +22,44 @@ async function saveProduct(event) {
     }
 }
 
+async function saveProduct() {
+    try {
+        const response = await fetch("/product/save", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if(response.ok) {
+            const productId = document.querySelector('#productId').value;
+            const username = document.querySelector('#username').value;
+            export { productId, username }; // 값 보내기
+    } catch (error) {
+        console.error('Error:', error); // 오류 처리
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 현재 페이지 URL 경로 가져오기
     const currentPath = window.location.pathname;
 
     if (currentPath === '/product/saveForm') {
-        document.getElementById('product-save').addEventListener('submit', saveProduct); // 폼 제출 이벤트 리스너 등록
+        document.getElementById('product-save').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작을 방지
+
+            const confirmed = confirm("해당 정보로 상품등록 하시겠습니까?");
+            if (confirmed) {
+            saveProduct();
+            }
+        });
+    }
+
+    else if (currentPath === '/product/detailForm') {
+        document.getElementById('chat-open').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작을 방지
+
+        });
     }
 });
