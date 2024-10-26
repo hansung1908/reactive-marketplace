@@ -46,6 +46,7 @@ public class ProductService {
         return productRepository.findById(productId)
                 .flatMap(product -> userRepository.findById(product.getUserId())
                         .map(user -> new ProductDetailResDto(
+                                product.getId(),
                                 product.getTitle(),
                                 product.getPrice(),
                                 product.getDescription(),

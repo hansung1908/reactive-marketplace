@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:insert="~{layout/header}"></div>
+</head>
+<body>
+<div th:insert="~{layout/navbar}"></div>
+
+<div class="py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="row gx-4 gx-lg-5 align-items-center">
+            <div id="user_chat_data" class="user_chat_data">
+                <div class="profile_name">
+                    &nbsp;&nbsp;&nbsp;&nbsp;<img src="./img/profile.png" class="mr-3 rounded-circle"> &nbsp;&nbsp;
+                    <span id="username"></span>
+                </div>
+
+                <div class="container-fluid chat_section" id="chat-box">
+
+                </div>
+
+                <div class="type_msg">
+                    <div class="input_msg_write">
+                        <input id="chat-outgoing-msg" type="text" class="write_msg" placeholder="Type a message" />
+                        <button id="chat-send" class="msg_send_btn" type="button"><i class="fa fa-paper-plane"
+                                                                                     aria-hidden="true"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:insert="~{layout/footer}"></div>
+<script src="/js/chat.js"></script>
+</body>
+</html>

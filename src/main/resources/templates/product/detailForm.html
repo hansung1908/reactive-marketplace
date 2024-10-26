@@ -18,10 +18,10 @@
                 </div>
                 <p class="lead" th:text="${product.description}">설명</p>
                 <div class="d-flex">
-                    <button class="btn btn-outline-dark flex-shrink-0" type="button">
-                        <i class="bi-cart-fill me-1"></i>
-                        Add to cart
-                    </button>
+                    <form id="chat-open">
+                        <input type="hidden" id="productId" th:value="${product.id}"/>
+                        <button type="submit" class="btn btn-outline-dark flex-shrink-0">1:1 대화</button>
+                    </form>
                 </div>
             </div>
         </div>
