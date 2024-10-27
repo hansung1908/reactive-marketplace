@@ -30,6 +30,10 @@
 - @CreatedDate와 같은 자동 추가 기능을 사용하려면 @EnableMongoAuditing를 설정
 - reactive-mongodb 환경이라면 @EnableReactiveMongoAuditing를 설정
 - @Id는 선언없이도 자동 생성되지만 커스텀 가능성과 명시화의 이유로 설정하는 것이 좋음
+- collection 생성시 tailable cursor를 사용하려면 capped 설정을 true하고, size를 지정해야함
+```shell
+db.createCollection("chat", { capped: true, size: 1048576 });
+```
 
 </details>
 

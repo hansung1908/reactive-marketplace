@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <div th:insert="~{layout/header}"></div>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 <div th:insert="~{layout/navbar}"></div>
@@ -10,14 +12,15 @@
     <div class="container px-4 px-lg-5 my-5">
         <div class="row gx-4 gx-lg-5 align-items-center">
             <div id="user_chat_data" class="user_chat_data">
+                <input type="hidden" id="roomId" th:value="${chatRoom.id}"/>
+                <input type="hidden" id="sender" th:value="${#authentication.principal.user.nickname}"/>
+                <input type="hidden" id="receiver" th:value="${#authentication.principal.user.nickname == chatRoom.buyer ? chatRoom.seller : chatRoom.buyer}"/>
                 <div class="profile_name">
-                    &nbsp;&nbsp;&nbsp;&nbsp;<img src="./img/profile.png" class="mr-3 rounded-circle"> &nbsp;&nbsp;
-                    <span id="username"></span>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<img src="/img/profile.png" class="mr-3 rounded-circle"> &nbsp;&nbsp;
+                    <span th:text="${#authentication.principal.user.nickname}"></span>
                 </div>
 
-                <div class="container-fluid chat_section" id="chat-box">
-
-                </div>
+                <div class="container-fluid chat_section" id="chat-box"></div>
 
                 <div class="type_msg">
                     <div class="input_msg_write">
