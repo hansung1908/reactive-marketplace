@@ -5,19 +5,19 @@ import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.repository.UserRepository;
-import com.hansung.reactive_marketplace.security.CustomUserDetail;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
-public class UserService implements ReactiveUserDetailsService {
+public class UserService {
 
     private final UserRepository userRepository;
 
@@ -25,16 +25,12 @@ public class UserService implements ReactiveUserDetailsService {
 
     private final ReactiveMongoTemplate reactiveMongoTemplate;
 
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, ReactiveMongoTemplate reactiveMongoTemplate) {
+    public UserService(UserRepository userRepository,
+                       BCryptPasswordEncoder bCryptPasswordEncoder,
+                       ReactiveMongoTemplate reactiveMongoTemplate) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.reactiveMongoTemplate = reactiveMongoTemplate;
-    }
-
-    @Override
-    public Mono<UserDetails> findByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .map(user -> new CustomUserDetail(user));
     }
 
     public Mono<User> saveUser(UserSaveReqDto userSaveReqDto) {
@@ -49,19 +45,22 @@ public class UserService implements ReactiveUserDetailsService {
     }
 
     public Mono<User> updateUser(UserUpdateReqDto userUpdateReqDto) {
-        Query query = new Query(Criteria.where("id").is(userUpdateReqDto.getId())); // 유저 정보 찾기
-        return reactiveMongoTemplate.findOne(query, User.class)
-                .flatMap(user -> {
-                    Update update = new Update()
-                            .set("nickname", userUpdateReqDto.getNickname())
-                            .set("email", userUpdateReqDto.getEmail())
-                            .set("password", userUpdateReqDto.getPassword() == null || userUpdateReqDto.getPassword().equals("")
-                                    ? user.getPassword() // null이면 기존 비밀번호
-                                    : bCryptPasswordEncoder.encode(userUpdateReqDto.getPassword())); // 새로운 값이 있으면 인코딩 후 저장
+        Query query = new Query(Criteria.where("id").is(userUpdateReqDto.getId()));
 
-                    return reactiveMongoTemplate.updateFirst(query, update, User.class) // 업데이트 실행
-                            .flatMap(result -> Mono.just(user)); // 업데이트 후 유저 정보 반환
-                });
+        Update update = new Update()
+                .set("nickname", userUpdateReqDto.getNickname())
+                .set("email", userUpdateReqDto.getEmail());
+
+        if (userUpdateReqDto.getPassword() != null && !userUpdateReqDto.getPassword().isEmpty()) {
+            update.set("password", bCryptPasswordEncoder.encode(userUpdateReqDto.getPassword()));
+        }
+
+        return reactiveMongoTemplate.findAndModify(
+                query,
+                update,
+                FindAndModifyOptions.options().returnNew(true),
+                User.class
+        );
     }
 
     public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
