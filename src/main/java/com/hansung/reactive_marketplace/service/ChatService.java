@@ -61,4 +61,9 @@ public class ChatService {
 
         return chatRepository.save(chat);
     }
+
+    public Flux<ChatRoom> findChatRoomList(String nickname) {
+        return chatRoomRepository.findChatRoomListBySellerOrBuyer(nickname)
+                .subscribeOn(Schedulers.boundedElastic());
+    }
 }
