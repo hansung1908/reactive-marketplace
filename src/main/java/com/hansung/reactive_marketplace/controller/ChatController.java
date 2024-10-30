@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.reactive.result.view.Rendering;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Controller
@@ -23,6 +24,15 @@ public class ChatController {
         return chatService.openChat(productId, seller, buyer)
                 .map(chatRoom -> Rendering.view("chat/chatForm")
                         .modelAttribute("chatRoom", chatRoom)
+                        .build());
+    }
+
+    @GetMapping("/chat/chatRoom/{nickname}")
+    public Mono<Rendering> findChatRoomList(@PathVariable("nickname") String nickname) {
+        return chatService.findChatRoomList(nickname)
+                .collectList()
+                .map(chatRooms -> Rendering.view("chat/chatRoomForm")
+                        .modelAttribute("chatRooms", chatRooms)
                         .build());
     }
 }
