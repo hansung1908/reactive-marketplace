@@ -2,9 +2,12 @@ package com.hansung.reactive_marketplace.service;
 
 import com.hansung.reactive_marketplace.domain.Chat;
 import com.hansung.reactive_marketplace.domain.ChatRoom;
+import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.dto.request.ChatSaveReqDto;
+import com.hansung.reactive_marketplace.dto.response.ChatRoomListResDto;
 import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
+import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.util.ChatUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -18,11 +21,14 @@ public class ChatService {
 
     private final ChatRoomRepository chatRoomRepository;
 
+    private final ProductRepository productRepository;
+
     private final ChatUtils chatUtils;
 
-    public ChatService(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ChatUtils chatUtils) {
+    public ChatService(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ProductRepository productRepository, ChatUtils chatUtils) {
         this.chatRepository = chatRepository;
         this.chatRoomRepository = chatRoomRepository;
+        this.productRepository = productRepository;
         this.chatUtils = chatUtils;
     }
 
@@ -62,8 +68,24 @@ public class ChatService {
         return chatRepository.save(chat);
     }
 
-    public Flux<ChatRoom> findChatRoomList(String nickname) {
+    public Flux<ChatRoomListResDto> findChatRoomList(String nickname) {
         return chatRoomRepository.findChatRoomListBySellerOrBuyer(nickname)
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(chatRoom -> Mono.zip(
+                        productRepository.findById(chatRoom.getProductId()),
+                        chatRepository.findRecentChat(chatRoom.getId())
+                ).map(tuple -> {
+                    Product product = tuple.getT1();
+                    Chat chat = tuple.getT2();
+
+                    return new ChatRoomListResDto(
+                            chatRoom.getProductId(),
+                            product.getTitle(),
+                            chatRoom.getSeller(),
+                            chatRoom.getBuyer(),
+                            chat.getMsg(),
+                            chat.getCreatedAt()
+                    );
+                }));
     }
 }
