@@ -23,7 +23,7 @@ public class UserApiController {
     }
 
     @PutMapping("/user/update")
-    public Mono<User> update(@RequestBody UserUpdateReqDto userUpdateReqDto) {
+    public Mono<Void> update(@RequestBody UserUpdateReqDto userUpdateReqDto) {
         return userService.updateUser(userUpdateReqDto);
     }
 

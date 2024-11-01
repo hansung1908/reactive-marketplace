@@ -5,14 +5,8 @@ import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.repository.UserRepository;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -44,23 +38,17 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Mono<User> updateUser(UserUpdateReqDto userUpdateReqDto) {
-        Query query = new Query(Criteria.where("id").is(userUpdateReqDto.getId()));
+    public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto) {
+        return userRepository.findById(userUpdateReqDto.getId())
+                .flatMap(user -> {
+                    String password = user.getPassword();
 
-        Update update = new Update()
-                .set("nickname", userUpdateReqDto.getNickname())
-                .set("email", userUpdateReqDto.getEmail());
+                    if (userUpdateReqDto.getPassword() != null && !userUpdateReqDto.getPassword().isEmpty()) {
+                        password = bCryptPasswordEncoder.encode(userUpdateReqDto.getPassword());
+                    }
 
-        if (userUpdateReqDto.getPassword() != null && !userUpdateReqDto.getPassword().isEmpty()) {
-            update.set("password", bCryptPasswordEncoder.encode(userUpdateReqDto.getPassword()));
-        }
-
-        return reactiveMongoTemplate.findAndModify(
-                query,
-                update,
-                FindAndModifyOptions.options().returnNew(true),
-                User.class
-        );
+                    return userRepository.updateUser(userUpdateReqDto.getId(), userUpdateReqDto.getNickname(), password, userUpdateReqDto.getEmail());
+                });
     }
 
     public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
