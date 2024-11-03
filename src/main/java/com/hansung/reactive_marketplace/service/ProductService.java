@@ -2,7 +2,9 @@ package com.hansung.reactive_marketplace.service;
 
 import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.domain.User;
+import com.hansung.reactive_marketplace.dto.request.ProductDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
+import com.hansung.reactive_marketplace.dto.request.ProductUpdateReqDto;
 import com.hansung.reactive_marketplace.dto.response.MyProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
@@ -26,12 +28,7 @@ public class ProductService {
         this.userRepository = userRepository;
     }
 
-    public Flux<ProductListResDto> findProductList() {
-        return productRepository.findProductList(Sort.by(Sort.Direction.DESC, "createdAt"))
-                .subscribeOn(Schedulers.boundedElastic());
-    }
-
-    public Mono<Product> save(ProductSaveReqDto productSaveReqDto, User user) {
+    public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, User user) {
         Product product = new Product.Builder()
                 .title(productSaveReqDto.getTitle())
                 .description(productSaveReqDto.getDescription())
@@ -42,7 +39,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    public Mono<ProductDetailResDto> findById(String productId) {
+    public Mono<ProductDetailResDto> findProductDetail(String productId) {
         return productRepository.findById(productId)
                 .flatMap(product -> userRepository.findById(product.getUserId())
                         .map(user -> new ProductDetailResDto(
@@ -54,8 +51,21 @@ public class ProductService {
                         )));
     }
 
+    public Flux<ProductListResDto> findProductList() {
+        return productRepository.findProductList(Sort.by(Sort.Direction.DESC, "createdAt"))
+                .subscribeOn(Schedulers.boundedElastic());
+    }
+
     public Flux<MyProductListResDto> findMyProductList(String userId) {
         return productRepository.findMyProductList(userId, Sort.by(Sort.Direction.DESC, "createdAt"))
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    public Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto) {
+        return productRepository.updateProduct(productUpdateReqDto.getId(), productUpdateReqDto.getDescription(), productUpdateReqDto.getPrice(), productUpdateReqDto.getStatus());
+    }
+
+    public Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto) {
+        return productRepository.deleteById(productDeleteReqDto.getId());
     }
 }

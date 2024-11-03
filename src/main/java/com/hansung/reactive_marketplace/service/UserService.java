@@ -5,7 +5,6 @@ import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.repository.UserRepository;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -17,14 +16,10 @@ public class UserService {
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    private final ReactiveMongoTemplate reactiveMongoTemplate;
-
     public UserService(UserRepository userRepository,
-                       BCryptPasswordEncoder bCryptPasswordEncoder,
-                       ReactiveMongoTemplate reactiveMongoTemplate) {
+                       BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
     public Mono<User> saveUser(UserSaveReqDto userSaveReqDto) {
