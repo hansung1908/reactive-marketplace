@@ -16,8 +16,21 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @GetMapping("/product/saveForm")
+    public String saveForm() {
+        return "product/saveForm";
+    }
+
+    @GetMapping("/product/detail/{id}")
+    public Mono<Rendering> ProductDetail(@PathVariable("id") String id) {
+        return productService.findProductDetail(id)
+                .map(product -> Rendering.view("product/detailForm")
+                        .modelAttribute("product", product)
+                        .build());
+    }
+
     @GetMapping("/")
-    public Mono<Rendering> index() {
+    public Mono<Rendering> ProductList() {
         return productService.findProductList()
                 .collectList()
                 .map(products -> Rendering.view("index")
@@ -25,25 +38,20 @@ public class ProductController {
                         .build());
     }
 
-    @GetMapping("/product/saveForm")
-    public String saveForm() {
-        return "product/saveForm";
-    }
-
-    @GetMapping("/product/{id}")
-    public Mono<Rendering> ProductDetails(@PathVariable("id") String id) {
-        return productService.findById(id)
-                .map(product -> Rendering.view("product/detailForm")
-                        .modelAttribute("product", product)
-                        .build());
-    }
-
     @GetMapping("/product/my/{userId}")
     public Mono<Rendering> MyProductList(@PathVariable("userId") String userId) {
         return productService.findMyProductList(userId)
                 .collectList()
-                .map(products -> Rendering.view("product/my/productListForm")
+                .map(products -> Rendering.view("product/myProductListForm")
                         .modelAttribute("products", products)
+                        .build());
+    }
+
+    @GetMapping("/product/updateForm/{id}")
+    public Mono<Rendering> updateForm(@PathVariable("id") String id) {
+        return productService.findProductDetail(id)
+                .map(product -> Rendering.view("product/updateForm")
+                        .modelAttribute("product", product)
                         .build());
     }
 }
