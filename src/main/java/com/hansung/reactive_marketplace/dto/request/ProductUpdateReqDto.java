@@ -23,4 +23,14 @@ public class ProductUpdateReqDto {
         this.price = price;
         this.status = status;
     }
+
+    @Override
+    public String toString() {
+        return "ProductUpdateReqDto{" +
+                "id='" + id + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                ", status=" + status +
+                '}';
+    }
 }

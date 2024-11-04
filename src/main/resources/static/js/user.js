@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('user-save').addEventListener('submit', function(event) {
             event.preventDefault(); // 기본 폼 제출 동작을 방지
 
-            const confirmed = confirm("해당 정보로 회원가입 하시겠습니까?");
+            const confirmed = confirm("해당 정보로 회원가입을 하시겠습니까?");
             if (confirmed) {
                 saveUser();
             }
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('user-update').addEventListener('submit', function(event) {
             event.preventDefault(); // 기본 폼 제출 동작을 방지
 
-            const confirmed = confirm("해당 정보로 회원수정 하시겠습니까?");
+            const confirmed = confirm("해당 정보로 회원수정을 하시겠습니까?");
             if (confirmed) {
                 updateUser();
             }
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('user-delete').addEventListener('submit', function(event) {
             event.preventDefault(); // 기본 폼 제출 동작을 방지
 
-            const confirmed = confirm("정말로 회원탈퇴 하시겠습니까?");
+            const confirmed = confirm("정말로 회원탈퇴를 하시겠습니까?");
             if (confirmed) {
                 deleteUser();
             }

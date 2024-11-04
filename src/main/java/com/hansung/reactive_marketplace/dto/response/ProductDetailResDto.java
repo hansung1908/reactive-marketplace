@@ -13,16 +13,19 @@ public class ProductDetailResDto {
 
     private String description;
 
+    private String userId;
+
     private String nickname;
 
     protected ProductDetailResDto() {
     }
 
-    public ProductDetailResDto(String id, String title, int price, String description, String nickname) {
+    public ProductDetailResDto(String id, String title, int price, String description, String userId, String nickname) {
         this.id = id;
         this.title = title;
         this.price = price;
         this.description = description;
+        this.userId = userId;
         this.nickname = nickname;
     }
 }

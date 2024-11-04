@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:insert="~{layout/header}"></div>
+</head>
+<body>
+<div th:insert="~{layout/navbar}"></div>
+
+<div class="container mt-5 pt-4">
+    <form id="product-update">
+        <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+            <div class="col p-4 d-flex flex-column position-static">
+                <strong class="d-inline-block mb-2 text-primary-emphasis">상품 수정</strong>
+                <input type="hidden" id="id" th:value="${product.id}"/>
+                <div class="form-group col-md-1">
+                    <label for="productStatus" class="form-label">상태</label>
+                    <select id="productStatus" name="productStatus" class="btn btn-outline-secondary dropdown-toggle" required>
+                        <option value="ON_SALE">판매중</option>
+                        <option value="SOLD_OUT">판매완료</option>
+                    </select>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="title">상품명</label>
+                    <input type="text" class="form-control" id="title" placeholder="상품명을 입력하세요" th:value="${product.title}" readonly>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="price">가격</label>
+                    <input type="number" class="form-control" id="price" placeholder="가격을 입력하세요" th:value="${product.price}" required>
+                </div>
+                <div class="form-group mb-1">
+                    <label for="description">상품 설명</label>
+                    <textarea class="form-control" id="description" rows="4" placeholder="상품 설명을 입력하세요" th:text="${product.description}" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-secondary mb-1">수정</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div th:insert="~{layout/footer}"></div>
+<script src="/js/product.js"></script>
+</body>
+</html>

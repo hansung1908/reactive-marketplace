@@ -47,6 +47,7 @@ public class ProductService {
                                 product.getTitle(),
                                 product.getPrice(),
                                 product.getDescription(),
+                                product.getUserId(),
                                 user.getNickname()
                         )));
     }
