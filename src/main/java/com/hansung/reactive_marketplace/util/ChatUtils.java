@@ -5,6 +5,7 @@ import com.hansung.reactive_marketplace.repository.ChatRepository;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+// 채팅방 설정과 관련된 메소드를 모아놓은 유틸리티 클래스
 @Component
 public class ChatUtils {
 
@@ -14,6 +15,7 @@ public class ChatUtils {
         this.chatRepository = chatRepository;
     }
 
+    // 채팅방 생성과 함께 연결 유지를 위한 더미 데이터
     public Mono<Chat> saveDummyChat(String roomId) {
         Chat chat = new Chat.Builder()
                 .roomId(roomId)
