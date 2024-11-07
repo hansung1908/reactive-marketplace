@@ -7,7 +7,10 @@ import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
 
 @Service
 public class UserService {
@@ -16,13 +19,16 @@ public class UserService {
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    private final ImageService imageService;
+
     public UserService(UserRepository userRepository,
-                       BCryptPasswordEncoder bCryptPasswordEncoder) {
+                       BCryptPasswordEncoder bCryptPasswordEncoder, ImageService imageService) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.imageService = imageService;
     }
 
-    public Mono<User> saveUser(UserSaveReqDto userSaveReqDto) {
+    public Mono<User> saveUser(UserSaveReqDto userSaveReqDto, MultipartFile image) {
         User user = new User.Builder()
                 .username(userSaveReqDto.getUsername())
                 .nickname(userSaveReqDto.getNickname())
@@ -30,7 +36,12 @@ public class UserService {
                 .email(userSaveReqDto.getEmail())
                 .build();
 
-        return userRepository.save(user);
+        return userRepository.save(user)
+                .doOnNext(savedUser -> {
+                    if (image != null) {
+                        imageService.uploadImage(image, savedUser.getId(), userSaveReqDto.getImageSource());
+                    }
+                });
     }
 
     public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto) {
