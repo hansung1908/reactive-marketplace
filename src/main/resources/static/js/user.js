@@ -2,6 +2,11 @@ async function saveUser() {
     try {
         const formData = new FormData();
 
+        const image = document.querySelector('input[type="file"]').files[0];
+            if (image) {
+                formData.append("image", image);
+            }
+
         formData.append('user', JSON.stringify({
             username: document.querySelector('#username').value,
             nickname: document.querySelector('#nickname').value,
@@ -10,17 +15,9 @@ async function saveUser() {
             imageSource: document.querySelector('#imageSource').value
         }));
 
-        const image = document.querySelector('input[type="file"]').files[0];
-        if (image) {
-            formData.append("image", image);
-        }
-
         const response = await fetch("/user/save", {
             method: "POST",
-            body: formData,
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
+            body: formData
         });
 
         if(response.ok) {

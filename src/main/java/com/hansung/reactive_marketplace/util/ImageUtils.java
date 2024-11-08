@@ -1,12 +1,8 @@
 package com.hansung.reactive_marketplace.util;
 
-import com.hansung.reactive_marketplace.domain.ImageSource;
-import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.stereotype.Component;
-import org.springframework.util.FileCopyUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
