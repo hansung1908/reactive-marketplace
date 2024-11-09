@@ -5,8 +5,8 @@ import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.service.UserService;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -20,7 +20,7 @@ public class UserApiController {
 
     @PostMapping("/user/save")
     public Mono<User> save(@RequestPart("user") UserSaveReqDto userSaveReqDto,
-                           @RequestPart(value = "image", required = false) MultipartFile image) {
+                           @RequestPart(value = "image", required = false) FilePart image) {
         return userService.saveUser(userSaveReqDto, image);
     }
 
