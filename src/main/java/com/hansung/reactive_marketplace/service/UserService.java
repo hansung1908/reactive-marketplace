@@ -5,9 +5,9 @@ import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.repository.UserRepository;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -26,7 +26,7 @@ public class UserService {
         this.imageService = imageService;
     }
 
-    public Mono<User> saveUser(UserSaveReqDto userSaveReqDto, MultipartFile image) {
+    public Mono<User> saveUser(UserSaveReqDto userSaveReqDto, FilePart image) {
         User user = new User.Builder()
                 .username(userSaveReqDto.getUsername())
                 .nickname(userSaveReqDto.getNickname())

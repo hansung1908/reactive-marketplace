@@ -111,4 +111,20 @@ public class Image {
             return new Image(this);
         }
     }
+
+    @Override
+    public String toString() {
+        return "Image{" +
+                "id='" + id + '\'' +
+                ", imageSource=" + imageSource +
+                ", userId='" + userId + '\'' +
+                ", productId='" + productId + '\'' +
+                ", imageName='" + imageName + '\'' +
+                ", imageType='" + imageType + '\'' +
+                ", imageSize=" + imageSize +
+                ", imagePath='" + imagePath + '\'' +
+                ", createdDate=" + createdDate +
+                ", thumbnailPath='" + thumbnailPath + '\'' +
+                '}';
+    }
 }
