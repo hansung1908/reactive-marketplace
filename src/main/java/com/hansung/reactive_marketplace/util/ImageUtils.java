@@ -2,7 +2,6 @@ package com.hansung.reactive_marketplace.util;
 
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -19,7 +18,7 @@ public class ImageUtils {
 
     // 이미지 업로드 경로를 생성
     public String generateImagePath(String uploadPath, String fileName) {
-        return uploadPath + File.separator + fileName;
+        return uploadPath + "/" + fileName;
     }
 
     // 이미지 구별을 위해 붙혀둔 uuid를 제거한 원래 이름 추출
