@@ -93,8 +93,6 @@ public class ImageService {
             }
         }
 
-        System.out.println(imageData.toString());
-
         return imageRepository.save(imageData);
     }
 }

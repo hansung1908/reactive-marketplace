@@ -23,6 +23,45 @@
 </details>
 
 <details>
+    <summary>리액티브 오퍼레이션</summary>
+
+- flux와 mono로 파이프라인을 만들기 위한 메소드
+---
+- just() : 리액티브 타입 생성, static 메소드
+- range(n, m) : n부터 m까지 숫자의 리액티브 타입 생성 (카운터), static 메소드
+- subscribe() : 리액티브 타입 호출
+---
+- interval(), delayElements() : Duration.ofSeconds()를 통해 초 단위로 값 방출
+- delaySubscription() : Duration.ofSeconds()를 통해 구독 지연 설정
+---
+- A.mergeWith(B) : 두 flux A와 B를 결합, 별도에 설정이 없으면 순서 보장 x
+- A.zip(B) : 두 flux A와 B를 결합, 각 소스로부터 한 항목씩 묶어서 새로운 flux 생성
+- first() : 두 flux중 느린 flux는 제외하고 빠른 flux만 발행
+---
+- from~() : 각 컬렉션을 리액티브 타입으로 변환 (fromArray(), fromStream() ..)
+- skip() : 주어진 숫자에 맞게 처음 항목을 건너뛰고 발행
+- take() : 주어진 숫자에 맞게 처음 항목부터 발행
+- filter() : 조건식을 통해 원하는 값만 발행
+- distinct() : 중복 제거하여 발행
+---
+- map() : 지정된 함수를 통해 매핑, 동기적 실행
+- flatmap() : 지정된 함수를 통해 매핑, subscribeOn()을 통해 비동기적 실행 가능
+- buffer() : 주어진 숫자에 맞게 소스를 List 컬렉션으로 묶은 flux 발행, flatMap()을 통해 병행 처리 가능
+- collectList() : flux를 list로 묶어 mono<list> 발행
+- collectMap() : flux를 매핑하여 mono<map> 발행
+---
+- all() : 조건식을 통해 모든 값이 만족하는지 체크, expectNext(true)로 검증
+- any() : 조건식을 통해 하나의 값이라도 만족하는지 체크, expectNext(true)로 검증
+- stepVerifier : assertion을 적용하는 리액티브 타입 테스트 도구
+  - create() : 테스트 데이터 등록
+  - expectNext() : 각 항목과 데이터 비교
+  - verifyComplete() : 데이터가 완전한지 검사, 마무리 메소드
+---
+doOn~() : 로깅, api 콜과 같은 부수적인 작업에 사용, 스트림을 전달받으나 반환 x, 각 트리거에 맞게 발동 (doOnNext() : 발행, doOnSuccess() : 완료, doOnError() : 에러 ..)
+then() : doOnSuccess()와 발동 조건이 같음, 이전 스트림 전달 x, 기존 스트림만 변경 가능
+</details>
+
+<details>
   <summary>spring-data-mongodb-reactive</summary>
 
 - MongoDB는 BSON(Binary JSON)을 사용해 데이터를 저장하는 NoSQL 데이터베이스
@@ -57,3 +96,27 @@ db.createCollection("chat", { capped: true, size: 1048576 });
 - flux<..>같이 여러개의 데이터를 렌더링하려면 collectList()를 사용하여 Mono<List<..>>로 변환
 
 </details>
+
+<details>
+    <summary>리액티브 환경에서 파일 처리</summary>
+
+- MultipartFile 대신 비동기를 지원하는 FilePart 사용
+- content-type은 multipart/form-data로 mvc 방식과 똑같이 받음
+---
+- 파일과 json 데이터를 같이 보낼때 생기는 octet stream 타입 문제
+- WebMvcConfigurer 대신 WebFluxConfigurer을 사용하여 설정
+- mvc 방식에선 octet stream을 jackson 라이브러리를 통해 json 형태로 바꿔주는 converter를 등록
+- flux에선 decoder를 통해 json 변환을 구현하고 codec 설정을 통해 등록
+</details>
+
+<details>
+    <summary>이미지 리사이징</summary>
+
+- 이미지의 크기나 화질을 조정하여 용량을 낮추는 방식
+- thumbnailator 라이브러리를 이용하면 리사이징부터 저장까지 간단하게 구현 가능
+- size()로 크기 조정 (사진 비율에 따라 비율이 달라질 수 있음), outputQuality()로 화질 조정
+- java.io,File로 이미지 데이터를 불러오거나 저장
+</details>
+
+doonnext 비동기 진행 보장 x, db 다루는거도 안됨
+thumnailtor, 비동기 메소드, 설정 정리 필요

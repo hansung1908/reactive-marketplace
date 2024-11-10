@@ -35,10 +35,12 @@ public class UserService {
                 .build();
 
         return userRepository.save(user)
-                .doOnNext(savedUser -> {
+                .flatMap(savedUser -> {
                     if (image != null) {
-                        imageService.uploadImage(image, savedUser.getId(), userSaveReqDto.getImageSource());
+                        return imageService.uploadImage(image, savedUser.getId(), userSaveReqDto.getImageSource())
+                                .thenReturn(savedUser);
                     }
+                    return Mono.just(savedUser);
                 });
     }
 
