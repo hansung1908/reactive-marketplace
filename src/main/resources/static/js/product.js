@@ -1,17 +1,22 @@
 async function saveProduct() {
     try {
-        const data = {
+        const formData = new FormData();
+
+        const image = document.querySelector('input[type="file"]').files[0];
+            if (image) {
+                formData.append("image", image);
+            }
+
+        formData.append('product', JSON.stringify({
             title: document.querySelector('#title').value,
             description: document.querySelector('#description').value,
-            price: document.querySelector('#price').value
-        }
+            price: document.querySelector('#price').value,
+            imageSource: document.querySelector('#imageSource').value
+        }));
 
         const response = await fetch("/product/save", {
             method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            body: formData
         });
 
         if(response.ok) {

@@ -57,8 +57,10 @@
   - expectNext() : 각 항목과 데이터 비교
   - verifyComplete() : 데이터가 완전한지 검사, 마무리 메소드
 ---
-doOn~() : 로깅, api 콜과 같은 부수적인 작업에 사용, 스트림을 전달받으나 반환 x, 각 트리거에 맞게 발동 (doOnNext() : 발행, doOnSuccess() : 완료, doOnError() : 에러 ..)
-then() : doOnSuccess()와 발동 조건이 같음, 이전 스트림 전달 x, 기존 스트림만 변경 가능
+- doOn~() : 로깅 + api 콜과 같은 부수적인 작업에 사용
+  - 스트림을 전달받으나 반환 x (비동기적 처리까지 겹쳐 db작업 x)
+  - 각 트리거에 맞게 발동 (doOnNext() : 발행, doOnSuccess() : 완료, doOnError() : 에러 ..)
+- then() : doOnSuccess()와 발동 조건이 같음, 이전 스트림 전달 x, 기존 스트림만 변경 가능
 </details>
 
 <details>
@@ -117,6 +119,3 @@ db.createCollection("chat", { capped: true, size: 1048576 });
 - size()로 크기 조정 (사진 비율에 따라 비율이 달라질 수 있음), outputQuality()로 화질 조정
 - java.io,File로 이미지 데이터를 불러오거나 저장
 </details>
-
-doonnext 비동기 진행 보장 x, db 다루는거도 안됨
-thumnailtor, 비동기 메소드, 설정 정리 필요

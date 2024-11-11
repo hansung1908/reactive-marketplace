@@ -6,6 +6,7 @@ import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductUpdateReqDto;
 import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import com.hansung.reactive_marketplace.service.ProductService;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -20,9 +21,10 @@ public class ProductApiController {
     }
 
     @PostMapping("/product/save")
-    public Mono<Product> save(@RequestBody ProductSaveReqDto productSaveReqDto,
+    public Mono<Product> save(@RequestPart("product") ProductSaveReqDto productSaveReqDto,
+                              @RequestPart(value = "image", required = false) FilePart image,
                               @AuthenticationPrincipal CustomUserDetail userDetail) {
-        return productService.saveProduct(productSaveReqDto, userDetail.getUser());
+        return productService.saveProduct(productSaveReqDto, image, userDetail.getUser());
     }
 
     @PutMapping("/product/update")
