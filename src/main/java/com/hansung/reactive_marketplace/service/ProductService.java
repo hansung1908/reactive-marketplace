@@ -11,6 +11,7 @@ import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.repository.UserRepository;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -23,12 +24,15 @@ public class ProductService {
 
     private final UserRepository userRepository;
 
-    public ProductService(ProductRepository productRepository, UserRepository userRepository) {
+    private final ImageService imageService;
+
+    public ProductService(ProductRepository productRepository, UserRepository userRepository, ImageService imageService) {
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.imageService = imageService;
     }
 
-    public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, User user) {
+    public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, User user) {
         Product product = new Product.Builder()
                 .title(productSaveReqDto.getTitle())
                 .description(productSaveReqDto.getDescription())
@@ -36,7 +40,14 @@ public class ProductService {
                 .userId(user.getId())
                 .build();
 
-        return productRepository.save(product);
+        return productRepository.save(product)
+                .flatMap(savedProduct -> {
+                    if (image != null) {
+                        return imageService.uploadImage(image, user.getId(), productSaveReqDto.getImageSource())
+                                .thenReturn(savedProduct);
+                    }
+                    return Mono.just(savedProduct);
+                });
     }
 
     public Mono<ProductDetailResDto> findProductDetail(String productId) {
