@@ -95,4 +95,8 @@ public class ImageService {
 
         return imageRepository.save(imageData);
     }
+
+    public Mono<Image> findProductImageById(String productId) {
+        return imageRepository.findByProductId(productId);
+    }
 }

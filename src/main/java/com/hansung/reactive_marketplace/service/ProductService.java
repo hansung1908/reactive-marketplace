@@ -43,7 +43,7 @@ public class ProductService {
         return productRepository.save(product)
                 .flatMap(savedProduct -> {
                     if (image != null) {
-                        return imageService.uploadImage(image, user.getId(), productSaveReqDto.getImageSource())
+                        return imageService.uploadImage(image, savedProduct.getId(), productSaveReqDto.getImageSource())
                                 .thenReturn(savedProduct);
                     }
                     return Mono.just(savedProduct);
