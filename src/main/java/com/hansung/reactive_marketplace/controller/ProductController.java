@@ -1,8 +1,8 @@
 package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.domain.Image;
-import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
+import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
 import com.hansung.reactive_marketplace.service.ImageService;
 import com.hansung.reactive_marketplace.service.ProductService;
 import org.springframework.stereotype.Controller;
@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.reactive.result.view.Rendering;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Controller
 public class ProductController {
@@ -49,8 +51,8 @@ public class ProductController {
     public Mono<Rendering> ProductList() {
         return productService.findProductList()
                 .collectList()
-                .map(products -> Rendering.view("index")
-                        .modelAttribute("products", products)
+                .map(productList -> Rendering.view("index")
+                        .modelAttribute("productList", productList)
                         .build());
     }
 
@@ -58,8 +60,8 @@ public class ProductController {
     public Mono<Rendering> MyProductList(@PathVariable("userId") String userId) {
         return productService.findMyProductList(userId)
                 .collectList()
-                .map(products -> Rendering.view("product/myProductListForm")
-                        .modelAttribute("products", products)
+                .map(myProductList -> Rendering.view("product/myProductListForm")
+                        .modelAttribute("myProductList", myProductList)
                         .build());
     }
 

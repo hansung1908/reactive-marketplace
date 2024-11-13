@@ -20,15 +20,18 @@ public class MyProductListResDto {
 
     private LocalDateTime createdAt;
 
+    private String thumbnailPath;
+
     protected MyProductListResDto() {
     }
 
-    public MyProductListResDto(String id, String title, String description, int price, ProductStatus status, LocalDateTime createdAt) {
+    public MyProductListResDto(String id, String title, String description, int price, ProductStatus status, LocalDateTime createdAt, String thumbnailPath) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.price = price;
         this.status = status;
         this.createdAt = createdAt;
+        this.thumbnailPath = thumbnailPath;
     }
 }

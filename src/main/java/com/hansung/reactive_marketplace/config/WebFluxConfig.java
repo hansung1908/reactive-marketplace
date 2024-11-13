@@ -16,8 +16,8 @@ public class WebFluxConfig implements WebFluxConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/image/**")
-                .addResourceLocations("file:///C:/image/");
+        registry.addResourceHandler("/image/**") // 해당 요청에 대해서
+                .addResourceLocations("file:///C:/image/"); // 해당 외부 경로로 지정
 
     }
 }
