@@ -119,3 +119,11 @@ db.createCollection("chat", { capped: true, size: 1048576 });
 - size()로 크기 조정 (사진 비율에 따라 비율이 달라질 수 있음), outputQuality()로 화질 조정
 - java.io,File로 이미지 데이터를 불러오거나 저장
 </details>
+
+<details>
+  <summary>외부 경로 정적 리소스 허용</summary>
+
+- 기본적으로 외부 경로를 통해 정적 리소스를 불러오는 것은 보안적으로 막혀있음
+- 이를 허용하기 위해서는 해당 경로를 어떤 요청을 보냈을때 허용할지 설정이 필요
+- WebFluxConfigurer에서 addResourceHandlers에서 설정 가능
+</details>

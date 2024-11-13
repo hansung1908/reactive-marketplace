@@ -65,12 +65,27 @@ public class ProductService {
 
     public Flux<ProductListResDto> findProductList() {
         return productRepository.findProductList(Sort.by(Sort.Direction.DESC, "createdAt"))
-                .subscribeOn(Schedulers.boundedElastic());
+                .flatMap(product -> imageService.findProductImageById(product.getId())
+                        .map(image -> new ProductListResDto(
+                                product.getId(),
+                                product.getTitle(),
+                                product.getPrice(),
+                                image.getThumbnailPath()
+                        )));
     }
 
     public Flux<MyProductListResDto> findMyProductList(String userId) {
         return productRepository.findMyProductList(userId, Sort.by(Sort.Direction.DESC, "createdAt"))
-                .subscribeOn(Schedulers.boundedElastic());
+                .flatMap(product -> imageService.findProductImageById(product.getId())
+                        .map(image -> new MyProductListResDto(
+                                product.getId(),
+                                product.getTitle(),
+                                product.getDescription(),
+                                product.getPrice(),
+                                product.getStatus(),
+                                product.getCreatedAt(),
+                                image.getThumbnailPath()
+                        )));
     }
 
     public Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto) {

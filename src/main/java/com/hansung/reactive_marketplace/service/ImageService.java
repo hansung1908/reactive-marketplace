@@ -8,6 +8,7 @@ import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
@@ -62,7 +63,7 @@ public class ImageService {
                     image.transferTo(originalProfileImage).subscribe(); // 원본 이미지 업로드
 
                     Thumbnails.of(originalProfileImage) // 해당 경로로부터 이미지 가져옴
-                            .size(45, 45) // 이미지 크기를 리사이즈
+                            .forceSize(45, 45) // 이미지 크기를 리사이즈
                             .outputQuality(0.8) // 품질을 80%로 설정 (0.0 ~ 1.0 범위)
                             .toFile(resizedProfileImage); // 리사이즈된 이미지 업로드
                 } catch (IOException e) {
@@ -84,7 +85,7 @@ public class ImageService {
                     image.transferTo(originalProductImage).subscribe();
 
                     Thumbnails.of(originalProductImage)
-                            .size(450, 300)
+                            .forceSize(300, 350)
                             .outputQuality(0.8)
                             .toFile(resizedProductImage);
                 } catch (IOException e) {

@@ -11,12 +11,15 @@ public class ProductListResDto {
 
     private int price;
 
+    private String thumbnailPath;
+
     protected ProductListResDto() {
     }
 
-    public ProductListResDto(String id, String title, int price) {
+    public ProductListResDto(String id, String title, int price, String thumbnailPath) {
         this.id = id;
         this.title = title;
         this.price = price;
+        this.thumbnailPath = thumbnailPath;
     }
 }
