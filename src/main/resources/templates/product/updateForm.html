@@ -12,6 +12,11 @@
             <div class="col p-4 d-flex flex-column position-static">
                 <strong class="d-inline-block mb-2 text-primary-emphasis">상품 수정</strong>
                 <input type="hidden" id="id" th:value="${product.id}"/>
+                <div class="form-group mb-1">
+                    <img id="preview" alt="이미지 미리보기" th:src="${product.imagePath}"
+                         style="max-width: 300px; max-height: 300px; margin-bottom: 10px;">
+                    <input type="file" id="image" th:value="${product.imagePath}" onchange="previewImage()" style="display: block;">
+                </div>
                 <div class="form-group col-md-1">
                     <label for="productStatus" class="form-label">상태</label>
                     <select id="productStatus" name="productStatus" class="btn btn-outline-secondary dropdown-toggle" required>
@@ -39,5 +44,6 @@
 
 <div th:insert="~{layout/footer}"></div>
 <script src="/js/product.js"></script>
+<script src="/js/image.js"></script>
 </body>
 </html>

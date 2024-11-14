@@ -17,15 +17,18 @@ public class ProductDetailResDto {
 
     private String nickname;
 
+    private String imagePath;
+
     protected ProductDetailResDto() {
     }
 
-    public ProductDetailResDto(String id, String title, int price, String description, String userId, String nickname) {
+    public ProductDetailResDto(String id, String title, int price, String description, String userId, String nickname, String imagePath) {
         this.id = id;
         this.title = title;
         this.price = price;
         this.description = description;
         this.userId = userId;
         this.nickname = nickname;
+        this.imagePath = imagePath;
     }
 }

@@ -10,9 +10,12 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 @Service
 public class ImageService {
@@ -99,5 +102,20 @@ public class ImageService {
 
     public Mono<Image> findProductImageById(String productId) {
         return imageRepository.findByProductId(productId);
+    }
+
+    public Mono<Void> deleteProductImageById(String productId) {
+        System.out.println("-----------작동 확인------------");
+        return imageRepository.findByProductId(productId)
+                .flatMap(image -> {
+                    try {
+                        Files.deleteIfExists(Paths.get(image.getImagePath()));
+                        Files.deleteIfExists(Paths.get(image.getThumbnailPath()));
+                        return Mono.just(image);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .then(imageRepository.deleteByProductId(productId));
     }
 }
