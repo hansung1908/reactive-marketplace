@@ -14,14 +14,17 @@ public class ProductUpdateReqDto {
 
     private ProductStatus status;
 
+    private String imagePath;
+
     protected ProductUpdateReqDto() {
     }
 
-    public ProductUpdateReqDto(String id, String description, int price, ProductStatus status) {
+    public ProductUpdateReqDto(String id, String description, int price, ProductStatus status, String imagePath) {
         this.id = id;
         this.description = description;
         this.price = price;
         this.status = status;
+        this.imagePath = imagePath;
     }
 
     @Override
@@ -31,6 +34,7 @@ public class ProductUpdateReqDto {
                 ", description='" + description + '\'' +
                 ", price=" + price +
                 ", status=" + status +
+                ", imagePath='" + imagePath + '\'' +
                 '}';
     }
 }

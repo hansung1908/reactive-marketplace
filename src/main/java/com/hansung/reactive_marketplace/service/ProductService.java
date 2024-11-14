@@ -1,5 +1,6 @@
 package com.hansung.reactive_marketplace.service;
 
+import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.ProductDeleteReqDto;
@@ -15,7 +16,6 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 @Service
 public class ProductService {
@@ -51,16 +51,24 @@ public class ProductService {
     }
 
     public Mono<ProductDetailResDto> findProductDetail(String productId) {
-        return productRepository.findById(productId)
-                .flatMap(product -> userRepository.findById(product.getUserId())
-                        .map(user -> new ProductDetailResDto(
-                                product.getId(),
-                                product.getTitle(),
-                                product.getPrice(),
-                                product.getDescription(),
-                                product.getUserId(),
-                                user.getNickname()
-                        )));
+        Mono<Product> productMono = productRepository.findById(productId);
+        Mono<Image> imageMono = imageService.findProductImageById(productId);
+
+        return Mono.zip(productMono, imageMono)
+                .flatMap(tuple -> {
+                    Product product = tuple.getT1();
+                    Image image = tuple.getT2();
+
+                    return userRepository.findById(product.getUserId())
+                            .map(user -> new ProductDetailResDto(
+                                    product.getId(),
+                                    product.getTitle(),
+                                    product.getPrice(),
+                                    product.getDescription(),
+                                    product.getUserId(),
+                                    user.getNickname(),
+                                    image.getImagePath()));
+                });
     }
 
     public Flux<ProductListResDto> findProductList() {
@@ -93,6 +101,7 @@ public class ProductService {
     }
 
     public Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto) {
-        return productRepository.deleteById(productDeleteReqDto.getId());
+        return productRepository.deleteById(productDeleteReqDto.getId())
+                .then(imageService.deleteProductImageById(productDeleteReqDto.getId()));
     }
 }

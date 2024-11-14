@@ -32,19 +32,10 @@ public class ProductController {
 
     @GetMapping("/product/detail/{id}")
     public Mono<Rendering> ProductDetail(@PathVariable("id") String id) {
-        Mono<Image> image = imageService.findProductImageById(id);
-        Mono<ProductDetailResDto> product = productService.findProductDetail(id);
-
-        return Mono.zip(image, product)
-                .map(tuple -> {
-                    Image productImage = tuple.getT1();
-                    ProductDetailResDto productDetail = tuple.getT2();
-
-                    return Rendering.view("product/detailForm")
-                            .modelAttribute("productImage", productImage)
-                            .modelAttribute("productDetail", productDetail)
-                            .build();
-                });
+        return productService.findProductDetail(id)
+                .map(product -> Rendering.view("product/detailForm")
+                        .modelAttribute("product", product)
+                        .build());
     }
 
     @GetMapping("/")

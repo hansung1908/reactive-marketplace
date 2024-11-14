@@ -7,4 +7,6 @@ import reactor.core.publisher.Mono;
 public interface ImageRepository extends ReactiveMongoRepository<Image, String> {
 
     Mono<Image> findByProductId(String productId);
+
+    Mono<Void> deleteByProductId(String productId);
 }

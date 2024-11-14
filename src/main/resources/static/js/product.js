@@ -33,7 +33,8 @@ async function updateProduct() {
             id : document.querySelector('#id').value,
             description: document.querySelector('#description').value,
             price: document.querySelector('#price').value,
-            status: document.querySelector('#productStatus').value
+            status: document.querySelector('#productStatus').value,
+            image : document.querySelector('#image').value
         }
 
         const response = await fetch("/product/update", {
