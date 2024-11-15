@@ -70,7 +70,6 @@ public class ChatService {
 
     public Flux<ChatRoomListResDto> findChatRoomList(String nickname) {
         return chatRoomRepository.findChatRoomListBySellerOrBuyer(nickname)
-                .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(chatRoom -> Mono.zip(
                         productRepository.findById(chatRoom.getProductId()),
                         chatRepository.findRecentChat(chatRoom.getId())

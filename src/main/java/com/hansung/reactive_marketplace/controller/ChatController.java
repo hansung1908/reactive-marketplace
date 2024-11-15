@@ -29,7 +29,7 @@ public class ChatController {
     @GetMapping("/chat/chatRoom/{nickname}")
     public Mono<Rendering> findChatRoomList(@PathVariable("nickname") String nickname) {
         return chatService.findChatRoomList(nickname)
-                .collectList()
+                .collectList()// model 추가를 위한 flux -> mono<list> 변환
                 .map(chatRooms -> Rendering.view("chat/chatRoomForm")
                         .modelAttribute("chatRooms", chatRooms)
                         .build());

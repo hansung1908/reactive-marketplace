@@ -44,8 +44,9 @@
 - filter() : 조건식을 통해 원하는 값만 발행
 - distinct() : 중복 제거하여 발행
 ---
-- map() : 지정된 함수를 통해 매핑, 동기적 실행
-- flatmap() : 지정된 함수를 통해 매핑, subscribeOn()을 통해 비동기적 실행 가능
+- map() : 지정된 함수를 통해 매핑, 동기적 실행,  
+- flatmap() : 지정된 함수를 통해 매핑, 비동기적 실행, 병렬 처리
+- concatmap() : 지정된 함수를 통해 매핑, 비동기적 실행, 순차적 처리
 - buffer() : 주어진 숫자에 맞게 소스를 List 컬렉션으로 묶은 flux 발행, flatMap()을 통해 병행 처리 가능
 - collectList() : flux를 list로 묶어 mono<list> 발행
 - collectMap() : flux를 매핑하여 mono<map> 발행

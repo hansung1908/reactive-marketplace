@@ -11,7 +11,7 @@ public class WebFluxConfig implements WebFluxConfigurer {
 
     @Override
     public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
-        configurer.customCodecs().register(new OctetStreamDecoder(new ObjectMapper()));
+        configurer.customCodecs().register(new OctetStreamDecoder(new ObjectMapper())); // 디코더 추가
     }
 
     @Override
