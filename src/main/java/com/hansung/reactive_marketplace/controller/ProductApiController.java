@@ -28,8 +28,9 @@ public class ProductApiController {
     }
 
     @PutMapping("/product/update")
-    public Mono<Void> update(@RequestBody ProductUpdateReqDto productUpdateReqDto) {
-        return productService.updateProduct(productUpdateReqDto);
+    public Mono<Void> update(@RequestPart("product") ProductUpdateReqDto productUpdateReqDto,
+                             @RequestPart(value = "image", required = false) FilePart image) {
+        return productService.updateProduct(productUpdateReqDto, image);
     }
 
     @DeleteMapping("/product/delete")

@@ -15,7 +15,7 @@ public class ChatUtils {
         this.chatRepository = chatRepository;
     }
 
-    // 채팅방 생성과 함께 연결 유지를 위한 더미 데이터
+    // 채팅방 생성을 알려주는 더미 채팅 데이터
     public Mono<Chat> saveDummyChat(String roomId) {
         Chat chat = new Chat.Builder()
                 .roomId(roomId)
