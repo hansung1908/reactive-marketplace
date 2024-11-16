@@ -76,7 +76,98 @@
 ```shell
 db.createCollection("chat", { capped: true, size: 1048576 });
 ```
+</details>
 
+<details>
+  <summary>mongodb-aggregation</summary>
+
+### 기본 명령어
+
+- $match 
+  - 도큐먼트 필터링 (SQL의 WHERE절과 유사)
+  - 특정 조건에 맞는 도큐먼트 선택
+```shell
+{ $match: { status: "active" } }
+{ $match: { age: { $gt: 25 } } }
+```
+
+- $group
+  - 데이터 그룹화 및 집계
+  - _id 필드로 그룹화 기준 지정
+```shell
+{
+  $group: {
+    _id: "$department",
+    totalSalary: { $sum: "$salary" },
+    avgAge: { $avg: "$age" },
+    count: { $sum: 1 }
+  }
+}
+```
+
+- $sort
+  - 결과 정렬
+  - 1: 오름차순, -1: 내림차순
+```shell
+{ $sort: { age: -1, name: 1 } }
+```
+
+- $project
+  - 출력할 필드 선택 (SQL의 SELECT와 유사)
+  - 1: 포함, 0: 제외
+```shell
+{
+  $project: {
+    name: 1,
+    age: 1,
+    _id: 0,
+    fullName: { $concat: ["$firstName", " ", "$lastName"] }
+  }
+}
+```
+
+- $limit / $skip
+  - 결과 수 제한 및 건너뛰기
+```shell
+{ $limit: 5 }  # 상위 5개 결과만
+{ $skip: 10 }  # 처음 10개 건너뛰기
+```
+
+### 집계 연산자
+
+- 수학 연산자
+```shell
+$sum: # 합계 계산
+$avg: # 평균값 계산
+$min: # 최솟값 찾기
+$max: # 최댓값 찾기
+$count: # 개수 세기
+```
+
+- 배열 연산자
+  - $unwind: 배열을 개별 도큐먼트로 분리
+```shell
+{ $unwind: "$tags" }
+```
+
+- 조인 연산자
+  - $lookup: 다른 컬렉션과 조인
+```shell
+{
+  $lookup: {
+    from: "orders",          // 조인할 컬렉션
+    localField: "user_id",   // 현재 컬렉션의 필드
+    foreignField: "user_id", // 대상 컬렉션의 필드
+    as: "user_orders"        // 결과를 저장할 필드명
+  }
+}
+```
+
+### 사용 시 주의사항
+- $match는 가능한 파이프라인 초기에 사용하여 처리할 데이터 양을 줄이기
+- 인덱스는 파이프라인의 첫 번째 $match 단계에서만 사용 가능
+- 메모리 사용량 제한 (기본 100MB)을 고려하여 설계
+- 복잡한 집계는 성능에 영향을 줄 수 있으므로 최적화 필요
 </details>
 
 <details>
