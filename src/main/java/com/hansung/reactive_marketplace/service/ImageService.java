@@ -102,6 +102,10 @@ public class ImageService {
         return imageRepository.findByProductId(productId);
     }
 
+    public Mono<Image> findProfileImageById(String userId) {
+        return imageRepository.findByUserId(userId);
+    }
+
     public Mono<Void> deleteProductImageById(String productId) {
         return imageRepository.findByProductId(productId)
                 .flatMap(image -> {
