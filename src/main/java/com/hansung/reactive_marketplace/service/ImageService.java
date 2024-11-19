@@ -119,4 +119,18 @@ public class ImageService {
                 })
                 .then(imageRepository.deleteByProductId(productId));
     }
+
+    public Mono<Void> deleteProfileImageById(String userId) {
+        return imageRepository.findByUserId(userId)
+                .flatMap(image -> {
+                    try {
+                        Files.deleteIfExists(Paths.get(image.getImagePath()));
+                        Files.deleteIfExists(Paths.get(image.getThumbnailPath()));
+                        return Mono.just(image);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .then(imageRepository.deleteByUserId(userId));
+    }
 }

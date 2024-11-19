@@ -11,4 +11,6 @@ public interface ImageRepository extends ReactiveMongoRepository<Image, String> 
     Mono<Image> findByUserId(String userId);
 
     Mono<Void> deleteByProductId(String productId);
+
+    Mono<Void> deleteByUserId(String userId);
 }

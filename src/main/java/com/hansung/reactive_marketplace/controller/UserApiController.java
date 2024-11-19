@@ -20,13 +20,16 @@ public class UserApiController {
 
     @PostMapping("/user/save")
     public Mono<User> save(@RequestPart("user") UserSaveReqDto userSaveReqDto,
-                           @RequestPart(value = "image", required = false) FilePart image) {
+                           @RequestPart(value = "image") FilePart image) {
         return userService.saveUser(userSaveReqDto, image);
     }
 
     @PutMapping("/user/update")
-    public Mono<Void> update(@RequestBody UserUpdateReqDto userUpdateReqDto) {
-        return userService.updateUser(userUpdateReqDto);
+    public Mono<Void> update(@RequestPart("user") UserUpdateReqDto userUpdateReqDto,
+                             @RequestPart(value = "image", required = false) FilePart image) {
+        System.out.println(userUpdateReqDto);
+        System.out.println(image);
+        return userService.updateUser(userUpdateReqDto, image);
     }
 
     @DeleteMapping("/user/delete")
