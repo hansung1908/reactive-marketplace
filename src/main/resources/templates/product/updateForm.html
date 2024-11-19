@@ -12,9 +12,8 @@
             <div class="col p-4 d-flex flex-column position-static">
                 <strong class="d-inline-block mb-2 text-primary-emphasis">상품 수정</strong>
                 <input type="hidden" id="id" th:value="${product.id}"/>
+                <input type="hidden" id="imageSource" th:value="PRODUCT"/>
                 <div class="form-group mb-1">
-                    <input type="hidden" id="imageSource" th:value="PRODUCT"/>
-
                     <img id="preview" alt="이미지 미리보기" th:src="${product.imagePath}"
                          style="max-width: 300px; max-height: 300px; margin-bottom: 10px;">
                     <input type="file" id="image" onchange="previewImage()" style="display: block;">

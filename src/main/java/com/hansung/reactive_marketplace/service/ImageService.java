@@ -48,7 +48,7 @@ public class ImageService {
                 .imageSize(image.headers().getContentLength())
                 .build();
 
-        switch (imageSource) {
+        switch (imageSource) { // 이미지 타입에 따라 분류
             case PROFILE -> {
                 imageData = imageData.toBuilder()
                         .imageSource(ImageSource.PROFILE)
@@ -57,8 +57,8 @@ public class ImageService {
                         .thumbnailPath(imageUtils.generateImagePath(profileThumbnailPath, "resized_" + imageName))
                         .build();
 
-                File originalProfileImage = new File(profileOriginalPath, imageName);
-                File resizedProfileImage = new File(profileThumbnailPath, "resized_" + imageName);
+                File originalProfileImage = new File(profileOriginalPath, imageName); // 원본 이미지 파일 경로
+                File resizedProfileImage = new File(profileThumbnailPath, "resized_" + imageName); // 리사이즈된 이미지 파일 경로
 
                 try {
                     image.transferTo(originalProfileImage).subscribe(); // 원본 이미지 업로드
@@ -103,7 +103,12 @@ public class ImageService {
     }
 
     public Mono<Image> findProfileImageById(String userId) {
-        return imageRepository.findByUserId(userId);
+        return imageRepository.findByUserId(userId)
+                .switchIfEmpty(Mono.defer(() ->
+                            Mono.just(new Image.Builder() // 이미지가 없으면 기본 이미지로 대체
+                                        .imagePath("/img/profile.png")
+                                        .build())
+                            ));
     }
 
     public Mono<Void> deleteProductImageById(String productId) {

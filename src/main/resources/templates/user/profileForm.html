@@ -12,9 +12,8 @@
             <form id="user-update">
                 <strong class="d-inline-block mb-2 text-primary-emphasis">프로필</strong>
                 <input type="hidden" id="id" th:value="${#authentication.principal.user.id}"/>
+                <input type="hidden" id="imageSource" th:value="PROFILE"/>
                 <div class="form-group mb-1">
-                    <input type="hidden" id="imageSource" th:value="PROFILE"/>
-
                     <img id="preview" alt="이미지 미리보기" th:src="${profile.imagePath}"
                          style="max-width: 300px; max-height: 300px; margin-bottom: 10px;">
                     <input type="file" id="image" onchange="previewImage()" style="display: block;">

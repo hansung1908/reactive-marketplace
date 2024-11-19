@@ -22,7 +22,7 @@ public class ProductApiController {
 
     @PostMapping("/product/save")
     public Mono<Product> save(@RequestPart("product") ProductSaveReqDto productSaveReqDto,
-                              @RequestPart(value = "image") FilePart image,
+                              @RequestPart(value = "image") FilePart image, // 상품 이미지는 반드시 필요 (required = true (기본값))
                               @AuthenticationPrincipal CustomUserDetail userDetail) {
         return productService.saveProduct(productSaveReqDto, image, userDetail.getUser());
     }
