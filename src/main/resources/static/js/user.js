@@ -3,9 +3,9 @@ async function saveUser() {
         const formData = new FormData();
 
         const image = document.querySelector('input[type="file"]').files[0];
-            if (image) {
-                formData.append("image", image);
-            }
+        if (image) {
+            formData.append("image", image);
+        }
 
         formData.append('user', JSON.stringify({
             username: document.querySelector('#username').value,
@@ -30,23 +30,28 @@ async function saveUser() {
 
 async function updateUser() {
     try {
-        const data = {
+        const formData = new FormData();
+
+        const image = document.querySelector('input[type="file"]').files[0];
+        if (image) {
+            formData.append("image", image);
+        }
+
+        formData.append('user', JSON.stringify({
             id : document.querySelector('#id').value,
             nickname: document.querySelector('#nickname').value,
             password: document.querySelector('#password').value,
-            email: document.querySelector('#email').value
-        }
+            email: document.querySelector('#email').value,
+            imageSource: document.querySelector('#imageSource').value
+        }));
 
         const response = await fetch("/user/update", {
             method: "PUT",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            body: formData
         });
 
         if(response.ok) {
-            window.location.href = '/user/profileForm';
+            window.location.href = '/';
         }
     } catch (error) {
         console.error('Error:', error);
@@ -90,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    else if (currentPath === '/user/profileForm') {
+    else if (currentPath.startsWith('/user/profileForm')) {
         document.getElementById('user-update').addEventListener('submit', function(event) {
             event.preventDefault(); // 기본 폼 제출 동작을 방지
 

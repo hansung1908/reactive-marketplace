@@ -44,7 +44,7 @@ public class UserService {
                 });
     }
 
-    public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto) {
+    public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto, FilePart image) {
         return userRepository.findById(userUpdateReqDto.getId())
                 .flatMap(user -> {
                     String password = user.getPassword();
@@ -53,7 +53,22 @@ public class UserService {
                         password = bCryptPasswordEncoder.encode(userUpdateReqDto.getPassword());
                     }
 
-                    return userRepository.updateUser(userUpdateReqDto.getId(), userUpdateReqDto.getNickname(), password, userUpdateReqDto.getEmail());
+                    Mono<Void> updateUserMono = userRepository.updateUser(
+                            userUpdateReqDto.getId(),
+                            userUpdateReqDto.getNickname(),
+                            password,
+                            userUpdateReqDto.getEmail()
+                    );
+
+                    if (image != null) {
+                        return updateUserMono.then(
+                                imageService.deleteProfileImageById(userUpdateReqDto.getId())
+                                        .then(imageService.uploadImage(image, userUpdateReqDto.getId(), userUpdateReqDto.getImageSource()))
+                                        .then() // Mono<Void> 반환을 위한 then
+                        );
+                    } else {
+                        return updateUserMono;
+                    }
                 });
     }
 
