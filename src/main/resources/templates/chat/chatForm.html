@@ -16,7 +16,7 @@
                 <input type="hidden" id="sender" th:value="${#authentication.principal.user.nickname}"/>
                 <input type="hidden" id="receiver" th:value="${#authentication.principal.user.nickname == chatRoom.buyer ? chatRoom.seller : chatRoom.buyer}"/>
                 <div class="profile_name">
-                    &nbsp;&nbsp;&nbsp;&nbsp;<img src="/img/profile.png" class="mr-3 rounded-circle">&nbsp;&nbsp;
+                    &nbsp;&nbsp;&nbsp;&nbsp;<img class="mr-3 rounded-circle" th:src="${chatRoom.thumbnailPath}">&nbsp;&nbsp;
                     <span th:text="${#authentication.principal.user.nickname}"></span>
                 </div>
 
