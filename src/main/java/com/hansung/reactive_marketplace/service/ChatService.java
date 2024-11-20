@@ -2,11 +2,13 @@ package com.hansung.reactive_marketplace.service;
 
 import com.hansung.reactive_marketplace.domain.Chat;
 import com.hansung.reactive_marketplace.domain.ChatRoom;
+import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.dto.request.ChatSaveReqDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomListResDto;
 import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
+import com.hansung.reactive_marketplace.repository.ImageRepository;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.util.ChatUtils;
 import org.springframework.stereotype.Service;
@@ -23,12 +25,15 @@ public class ChatService {
 
     private final ProductRepository productRepository;
 
+    private final ImageService imageService;
+
     private final ChatUtils chatUtils;
 
-    public ChatService(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ProductRepository productRepository, ChatUtils chatUtils) {
+    public ChatService(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ProductRepository productRepository, ImageService imageService, ChatUtils chatUtils) {
         this.chatRepository = chatRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.productRepository = productRepository;
+        this.imageService = imageService;
         this.chatUtils = chatUtils;
     }
 
@@ -72,10 +77,12 @@ public class ChatService {
         return chatRoomRepository.findChatRoomListBySellerOrBuyer(nickname)
                 .flatMap(chatRoom -> Mono.zip(
                         productRepository.findById(chatRoom.getProductId()),
-                        chatRepository.findRecentChat(chatRoom.getId())
+                        chatRepository.findRecentChat(chatRoom.getId()),
+                        imageService.findProductImageById(chatRoom.getProductId())
                 ).map(tuple -> {
                     Product product = tuple.getT1();
                     Chat chat = tuple.getT2();
+                    Image image = tuple.getT3();
 
                     return new ChatRoomListResDto(
                             chatRoom.getProductId(),
@@ -83,8 +90,8 @@ public class ChatService {
                             chatRoom.getSeller(),
                             chatRoom.getBuyer(),
                             chat.getMsg(),
-                            chat.getCreatedAt()
-                    );
+                            chat.getCreatedAt(),
+                            image.getThumbnailPath());
                 }));
     }
 }
