@@ -19,15 +19,18 @@ public class ChatRoomListResDto {
 
     private LocalDateTime recentCreatedAt;
 
+    private String thumbnailPath;
+
     protected ChatRoomListResDto() {
     }
 
-    public ChatRoomListResDto(String productId, String productTitle, String seller, String buyer, String recentMsg, LocalDateTime recentCreatedAt) {
+    public ChatRoomListResDto(String productId, String productTitle, String seller, String buyer, String recentMsg, LocalDateTime recentCreatedAt, String thumbnailPath) {
         this.productId = productId;
         this.productTitle = productTitle;
         this.seller = seller;
         this.buyer = buyer;
         this.recentMsg = recentMsg;
         this.recentCreatedAt = recentCreatedAt;
+        this.thumbnailPath = thumbnailPath;
     }
 }
