@@ -106,8 +106,9 @@ public class ImageService {
         return imageRepository.findByUserId(userId)
                 .switchIfEmpty(Mono.defer(() ->
                             Mono.just(new Image.Builder() // 이미지가 없으면 기본 이미지로 대체
-                                        .imagePath("/img/profile.png")
-                                        .build())
+                                    .imagePath("/img/profile.png")
+                                    .thumbnailPath("/img/profile.png")
+                                    .build())
                             ));
     }
 

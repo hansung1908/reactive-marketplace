@@ -6,10 +6,11 @@ import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.dto.request.ChatSaveReqDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomListResDto;
+import com.hansung.reactive_marketplace.dto.response.ChatRoomResDto;
 import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
-import com.hansung.reactive_marketplace.repository.ImageRepository;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
+import com.hansung.reactive_marketplace.repository.UserRepository;
 import com.hansung.reactive_marketplace.util.ChatUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -25,14 +26,17 @@ public class ChatService {
 
     private final ProductRepository productRepository;
 
+    private final UserRepository userRepository;
+
     private final ImageService imageService;
 
     private final ChatUtils chatUtils;
 
-    public ChatService(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ProductRepository productRepository, ImageService imageService, ChatUtils chatUtils) {
+    public ChatService(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ProductRepository productRepository, UserRepository userRepository, ImageService imageService, ChatUtils chatUtils) {
         this.chatRepository = chatRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.productRepository = productRepository;
+        this.userRepository = userRepository;
         this.imageService = imageService;
         this.chatUtils = chatUtils;
     }
@@ -42,11 +46,18 @@ public class ChatService {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Mono<ChatRoom> openChat(String productId, String seller, String buyer) {
+    public Mono<ChatRoomResDto> openChat(String productId, String seller, String buyer) {
         return chatRoomRepository.findChatRoom(productId, seller)
-                .flatMap(chatRoom -> { // 기존 채팅방이 있을 경우
-                    return Mono.just(chatRoom);
-                })
+                .flatMap(chatRoom -> userRepository.findByNickname(buyer)
+                        .flatMap(user -> imageService.findProfileImageById(user.getId()) // 기존 채팅방이 있을 경우
+                                .map(image -> new ChatRoomResDto(
+                                        chatRoom.getId(),
+                                        chatRoom.getSeller(),
+                                        chatRoom.getBuyer(),
+                                        image.getThumbnailPath()
+                                ))
+                        )
+                )
                 .switchIfEmpty(Mono.defer(() -> { // 새로운 채팅방 생성 로직
                     ChatRoom chatRoom = new ChatRoom.Builder()
                             .productId(productId)
@@ -55,10 +66,16 @@ public class ChatService {
                             .build();
 
                     return chatRoomRepository.save(chatRoom)
-                            .flatMap(savedChatRoom -> {
-                                return chatUtils.saveDummyChat(savedChatRoom.getId()) // 더미 채팅 메시지 저장
-                                        .then(Mono.just(savedChatRoom)); // 저장된 채팅방 반환
-                            });
+                            .flatMap(savedChatRoom -> userRepository.findByNickname(buyer)
+                                .flatMap(user -> imageService.findProfileImageById(user.getId())
+                                        .map(image -> new ChatRoomResDto(
+                                                savedChatRoom.getId(),
+                                                savedChatRoom.getSeller(),
+                                                savedChatRoom.getBuyer(),
+                                                image.getThumbnailPath()
+                                        ))
+                                )
+                            );
                 }));
     }
 
