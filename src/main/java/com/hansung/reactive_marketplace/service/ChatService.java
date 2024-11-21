@@ -11,7 +11,6 @@ import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.repository.UserRepository;
-import com.hansung.reactive_marketplace.util.ChatUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,15 +29,12 @@ public class ChatService {
 
     private final ImageService imageService;
 
-    private final ChatUtils chatUtils;
-
-    public ChatService(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ProductRepository productRepository, UserRepository userRepository, ImageService imageService, ChatUtils chatUtils) {
+    public ChatService(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ProductRepository productRepository, UserRepository userRepository, ImageService imageService) {
         this.chatRepository = chatRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.imageService = imageService;
-        this.chatUtils = chatUtils;
     }
 
     public Flux<Chat> findMsgByRoomId(String roomId) {
