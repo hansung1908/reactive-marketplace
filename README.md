@@ -219,3 +219,13 @@ $count: # 개수 세기
 - 이를 허용하기 위해서는 해당 경로를 어떤 요청을 보냈을때 허용할지 설정이 필요
 - WebFluxConfigurer에서 addResourceHandlers에서 설정 가능
 </details>
+
+<details>
+  <summary>유틸리티 클래스</summary>
+
+- 코드 재사용성을 높이기 위해 특정 기능을 제공하는 도구들을 모은 클래스
+- stateless 상태(객체 상태 변경 x)를 유지하며 thread-safe(다중 스레드에서 작업 보장)하게 설계
+- Math 클래스 처럼 모든 메소드를 static으로 제공
+- immutable(불변성) 유지를 위해 list나 map을 불변 객체로 처리 + 생성자는 private로 처리 혹은 설정 x
+- service나 component와 분리하여 독립적인 역할을 하므로 어노테이션 설정 x
+</details>
