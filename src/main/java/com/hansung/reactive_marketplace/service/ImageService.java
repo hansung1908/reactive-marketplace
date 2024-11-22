@@ -20,8 +20,6 @@ public class ImageService {
 
     private final ImageRepository imageRepository;
 
-    private final ImageUtils imageUtils;
-
     @Value("${image.profile.originalPath}")
     private String profileOriginalPath;
 
@@ -34,13 +32,12 @@ public class ImageService {
     @Value("${image.product.thumbnailPath}")
     private String productThumbnailPath;
 
-    public ImageService(ImageRepository imageRepository, ImageUtils imageUtils) {
+    public ImageService(ImageRepository imageRepository) {
         this.imageRepository = imageRepository;
-        this.imageUtils = imageUtils;
     }
 
     public Mono<Image> uploadImage(FilePart image, String id, ImageSource imageSource) {
-        String imageName = imageUtils.generateUniqueImageName(image.filename());
+        String imageName = ImageUtils.generateUniqueImageName(image.filename());
 
         Image imageData = new Image.Builder()
                 .imageName(image.filename())
@@ -53,8 +50,8 @@ public class ImageService {
                 imageData = imageData.toBuilder()
                         .imageSource(ImageSource.PROFILE)
                         .userId(id)
-                        .imagePath(imageUtils.generateImagePath(profileOriginalPath, imageName))
-                        .thumbnailPath(imageUtils.generateImagePath(profileThumbnailPath, "resized_" + imageName))
+                        .imagePath(ImageUtils.generateImagePath(profileOriginalPath, imageName))
+                        .thumbnailPath(ImageUtils.generateImagePath(profileThumbnailPath, "resized_" + imageName))
                         .build();
 
                 File originalProfileImage = new File(profileOriginalPath, imageName); // 원본 이미지 파일 경로
@@ -75,8 +72,8 @@ public class ImageService {
                 imageData = imageData.toBuilder()
                         .imageSource(ImageSource.PRODUCT)
                         .productId(id)
-                        .imagePath(imageUtils.generateImagePath(productOriginalPath, imageName))
-                        .thumbnailPath(imageUtils.generateImagePath(productThumbnailPath, "resized_" + imageName))
+                        .imagePath(ImageUtils.generateImagePath(productOriginalPath, imageName))
+                        .thumbnailPath(ImageUtils.generateImagePath(productThumbnailPath, "resized_" + imageName))
                         .build();
 
                 File originalProductImage = new File(productOriginalPath, imageName);

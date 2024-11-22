@@ -28,16 +28,16 @@ public class UserService {
 
     public Mono<User> saveUser(UserSaveReqDto userSaveReqDto, FilePart image) {
         User user = new User.Builder()
-                .username(userSaveReqDto.getUsername())
-                .nickname(userSaveReqDto.getNickname())
-                .password(bCryptPasswordEncoder.encode(userSaveReqDto.getPassword()))
-                .email(userSaveReqDto.getEmail())
+                .username(userSaveReqDto.username())
+                .nickname(userSaveReqDto.nickname())
+                .password(bCryptPasswordEncoder.encode(userSaveReqDto.password()))
+                .email(userSaveReqDto.email())
                 .build();
 
         return userRepository.save(user)
                 .flatMap(savedUser -> {
                     if (image != null) {
-                        return imageService.uploadImage(image, savedUser.getId(), userSaveReqDto.getImageSource())
+                        return imageService.uploadImage(image, savedUser.getId(), userSaveReqDto.imageSource())
                                 .thenReturn(savedUser);
                     }
                     return Mono.just(savedUser);
@@ -45,25 +45,25 @@ public class UserService {
     }
 
     public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto, FilePart image) {
-        return userRepository.findById(userUpdateReqDto.getId())
+        return userRepository.findById(userUpdateReqDto.id())
                 .flatMap(user -> {
                     String password = user.getPassword();
 
-                    if (userUpdateReqDto.getPassword() != null && !userUpdateReqDto.getPassword().isEmpty()) {
-                        password = bCryptPasswordEncoder.encode(userUpdateReqDto.getPassword());
+                    if (userUpdateReqDto.password() != null && !userUpdateReqDto.password().isEmpty()) {
+                        password = bCryptPasswordEncoder.encode(userUpdateReqDto.password());
                     }
 
                     Mono<Void> updateUserMono = userRepository.updateUser(
-                            userUpdateReqDto.getId(),
-                            userUpdateReqDto.getNickname(),
+                            userUpdateReqDto.id(),
+                            userUpdateReqDto.nickname(),
                             password,
-                            userUpdateReqDto.getEmail()
+                            userUpdateReqDto.email()
                     );
 
                     if (image != null) {
                         return updateUserMono.then(
-                                imageService.deleteProfileImageById(userUpdateReqDto.getId())
-                                        .then(imageService.uploadImage(image, userUpdateReqDto.getId(), userUpdateReqDto.getImageSource()))
+                                imageService.deleteProfileImageById(userUpdateReqDto.id())
+                                        .then(imageService.uploadImage(image, userUpdateReqDto.id(), userUpdateReqDto.imageSource()))
                                         .then() // Mono<Void> 반환을 위한 then
                         );
                     } else {
@@ -73,6 +73,6 @@ public class UserService {
     }
 
     public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
-        return userRepository.deleteById(userDeleteReqDto.getId());
+        return userRepository.deleteById(userDeleteReqDto.id());
     }
 }

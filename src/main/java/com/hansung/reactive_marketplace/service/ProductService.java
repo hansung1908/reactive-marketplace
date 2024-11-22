@@ -34,16 +34,16 @@ public class ProductService {
 
     public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, User user) {
         Product product = new Product.Builder()
-                .title(productSaveReqDto.getTitle())
-                .description(productSaveReqDto.getDescription())
-                .price(productSaveReqDto.getPrice())
+                .title(productSaveReqDto.title())
+                .description(productSaveReqDto.description())
+                .price(productSaveReqDto.price())
                 .userId(user.getId())
                 .build();
 
         return productRepository.save(product)
                 .flatMap(savedProduct -> {
                     if (image != null) {
-                        return imageService.uploadImage(image, savedProduct.getId(), productSaveReqDto.getImageSource())
+                        return imageService.uploadImage(image, savedProduct.getId(), productSaveReqDto.imageSource())
                                 .thenReturn(savedProduct);
                     }
                     return Mono.just(savedProduct);
@@ -98,17 +98,17 @@ public class ProductService {
 
     public Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto, FilePart image) {
         Mono<Void> updateProductMono = productRepository.updateProduct(
-                productUpdateReqDto.getId(),
-                productUpdateReqDto.getDescription(),
-                productUpdateReqDto.getPrice(),
-                productUpdateReqDto.getStatus()
+                productUpdateReqDto.id(),
+                productUpdateReqDto.description(),
+                productUpdateReqDto.price(),
+                productUpdateReqDto.status()
         );
 
         // 반환값이 없는 상태에서 조건문을 사용하기 위해 분리
         if (image != null) {
             return updateProductMono.then(
-                    imageService.deleteProductImageById(productUpdateReqDto.getId())
-                            .then(imageService.uploadImage(image, productUpdateReqDto.getId(), productUpdateReqDto.getImageSource()))
+                    imageService.deleteProductImageById(productUpdateReqDto.id())
+                            .then(imageService.uploadImage(image, productUpdateReqDto.id(), productUpdateReqDto.imageSource()))
                             .then() // Mono<Void> 반환을 위한 then
             );
         } else {
@@ -117,7 +117,7 @@ public class ProductService {
     }
 
     public Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto) {
-        return productRepository.deleteById(productDeleteReqDto.getId())
-                .then(imageService.deleteProductImageById(productDeleteReqDto.getId()));
+        return productRepository.deleteById(productDeleteReqDto.id())
+                .then(imageService.deleteProductImageById(productDeleteReqDto.id()));
     }
 }
