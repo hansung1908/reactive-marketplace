@@ -77,10 +77,10 @@ public class ChatService {
 
     public Mono<Chat> saveMsg(ChatSaveReqDto chatSaveReqDto) {
         Chat chat = new Chat.Builder()
-                .msg(chatSaveReqDto.getMsg())
-                .sender(chatSaveReqDto.getSender())
-                .receiver(chatSaveReqDto.getReceiver())
-                .roomId(chatSaveReqDto.getRoomId())
+                .msg(chatSaveReqDto.msg())
+                .sender(chatSaveReqDto.sender())
+                .receiver(chatSaveReqDto.receiver())
+                .roomId(chatSaveReqDto.roomId())
                 .build();
 
         return chatRepository.save(chat);
