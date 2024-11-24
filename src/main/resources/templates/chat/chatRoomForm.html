@@ -13,14 +13,15 @@
                 <div class="col p-4 d-flex flex-column position-static">
                     <strong class="d-inline-block mb-2 text-primary-emphasis" th:text="${chatRoom.recentCreatedAt}">최근 채팅 일자</strong>
                     <h3 class="mb-2" th:text="${chatRoom.productTitle}">상품 제목</h3>
-                    <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'seller : ' + ${chatRoom.seller}">판매자</h5>
-                    <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'buyer : ' + ${chatRoom.buyer}">구매자</h5>
+                    <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'seller : ' + ${chatRoom.sellerNickname}">판매자</h5>
+                    <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'buyer : ' + ${chatRoom.buyerNickname}">구매자</h5>
                     <p class="card-text mb-auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;" th:text="${chatRoom.recentMsg}">최근 채팅 내용</p>
-                    <a th:href="@{/chat/productId/{productId}/seller/{seller}/buyer/{buyer}(productId=${chatRoom.productId}, seller=${chatRoom.seller}, buyer=${chatRoom.buyer})}"
-                       class="icon-link gap-1 icon-link-hover stretched-link">
-                        채팅방 입장
-                        <svg class="bi"><use xlink:href="#chevron-right"/></svg>
-                    </a>
+                    <form id="chat-open">
+                        <input type="hidden" id="productId" th:value="${chatRoom.productId}">
+                        <input type="hidden" id="sellerId" th:value="${chatRoom.sellerId}">
+                        <input type="hidden" id="buyerId" th:value="${chatRoom.buyerId}">
+                        <button type="submit" class="btn btn-outline-dark flex-shrink-0">채팅방 입장</button>
+                    </form>
                 </div>
                 <div class="col-auto d-none d-lg-block">
                     <img class="card-img-top mb-5 mb-md-0" th:src="${chatRoom.thumbnailPath}" style="max-width: 300px; max-height: 4000px;"/>
@@ -32,5 +33,6 @@
 
 <div th:insert="~{layout/footer}"></div>
 <script src="/js/user.js"></script>
+<script src="/js/chatRoom.js"></script>
 </body>
 </html>

@@ -16,9 +16,9 @@ public class Chat {
 
     private String msg;
 
-    private String sender;
+    private String senderId;
 
-    private String receiver;
+    private String receiverId;
 
     private String roomId;
 
@@ -30,15 +30,15 @@ public class Chat {
 
     public Chat(Builder builder) {
         this.msg = builder.msg;
-        this.sender = builder.sender;
-        this.receiver = builder.receiver;
+        this.senderId = builder.senderId;
+        this.receiverId = builder.receiverId;
         this.roomId = builder.roomId;
     }
 
     public static class Builder {
         private String msg;
-        private String sender;
-        private String receiver;
+        private String senderId;
+        private String receiverId;
         private String roomId;
 
         public Builder msg(String msg) {
@@ -46,13 +46,13 @@ public class Chat {
             return this;
         }
 
-        public Builder sender(String sender) {
-            this.sender = sender;
+        public Builder senderId(String senderId) {
+            this.senderId = senderId;
             return this;
         }
 
-        public Builder receiver(String receiver) {
-            this.receiver = receiver;
+        public Builder receiverId(String receiverId) {
+            this.receiverId = receiverId;
             return this;
         }
 
@@ -71,8 +71,8 @@ public class Chat {
         return "Chat{" +
                 "id='" + id + '\'' +
                 ", msg='" + msg + '\'' +
-                ", sender='" + sender + '\'' +
-                ", receiver='" + receiver + '\'' +
+                ", senderId='" + senderId + '\'' +
+                ", receiverId='" + receiverId + '\'' +
                 ", roomId='" + roomId + '\'' +
                 ", createdAt=" + createdAt +
                 '}';

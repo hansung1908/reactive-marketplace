@@ -13,36 +13,36 @@ public class ChatRoom {
 
     private String productId;
 
-    private String seller;
+    private String sellerId;
 
-    private String buyer;
+    private String buyerId;
 
     protected ChatRoom() {
     }
 
     public ChatRoom(Builder builder) {
         this.productId = builder.productId;
-        this.seller = builder.seller;
-        this.buyer = builder.buyer;
+        this.sellerId = builder.sellerId;
+        this.buyerId = builder.buyerId;
     }
 
     public static class Builder {
         private String productId;
-        private String seller;
-        private String buyer;
+        private String sellerId;
+        private String buyerId;
 
         public Builder productId(String productId) {
             this.productId = productId;
             return this;
         }
 
-        public Builder seller(String seller) {
-            this.seller = seller;
+        public Builder sellerId(String sellerId) {
+            this.sellerId = sellerId;
             return this;
         }
 
-        public Builder buyer(String buyer) {
-            this.buyer = buyer;
+        public Builder buyerId(String buyerId) {
+            this.buyerId = buyerId;
             return this;
         }
 
@@ -56,8 +56,8 @@ public class ChatRoom {
         return "ChatRoom{" +
                 "id='" + id + '\'' +
                 ", productId='" + productId + '\'' +
-                ", seller='" + seller + '\'' +
-                ", buyer='" + buyer + '\'' +
+                ", sellerId='" + sellerId + '\'' +
+                ", buyerId='" + buyerId + '\'' +
                 '}';
     }
 }

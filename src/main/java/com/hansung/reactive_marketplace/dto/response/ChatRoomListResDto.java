@@ -5,8 +5,10 @@ import java.time.LocalDateTime;
 public record ChatRoomListResDto(
         String productId,
         String productTitle,
-        String seller,
-        String buyer,
+        String sellerId,
+        String sellerNickname,
+        String buyerId,
+        String buyerNickname,
         String recentMsg,
         LocalDateTime recentCreatedAt,
         String thumbnailPath) {}

@@ -2,6 +2,6 @@ package com.hansung.reactive_marketplace.dto.response;
 
 public record ChatRoomResDto(
         String id,
-        String seller,
-        String buyer,
+        String sellerId,
+        String buyerId,
         String thumbnailPath) {}

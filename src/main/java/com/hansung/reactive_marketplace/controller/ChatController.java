@@ -4,6 +4,7 @@ import com.hansung.reactive_marketplace.service.ChatService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.result.view.Rendering;
 import reactor.core.publisher.Mono;
 
@@ -16,19 +17,19 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @GetMapping("/chat/productId/{productId}/seller/{seller}/buyer/{buyer}")
-    public Mono<Rendering> openChat(@PathVariable("productId") String productId,
-                                    @PathVariable("seller") String seller,
-                                    @PathVariable("buyer") String buyer) {
-        return chatService.openChat(productId, seller, buyer)
+    @GetMapping("/chat/open")
+    public Mono<Rendering> openChat(@RequestParam("productId") String productId,
+                                    @RequestParam("sellerId") String sellerId,
+                                    @RequestParam("buyerId") String buyerId) {
+        return chatService.openChat(productId, sellerId, buyerId)
                 .map(chatRoom -> Rendering.view("chat/chatForm")
                         .modelAttribute("chatRoom", chatRoom)
                         .build());
     }
 
-    @GetMapping("/chat/chatRoom/{nickname}")
-    public Mono<Rendering> findChatRoomList(@PathVariable("nickname") String nickname) {
-        return chatService.findChatRoomList(nickname)
+    @GetMapping("/chat/chatRoom/{userId}")
+    public Mono<Rendering> findChatRoomList(@PathVariable("userId") String userId) {
+        return chatService.findChatRoomList(userId)
                 .collectList()// model 추가를 위한 flux -> mono<list> 변환
                 .map(chatRooms -> Rendering.view("chat/chatRoomForm")
                         .modelAttribute("chatRooms", chatRooms)
