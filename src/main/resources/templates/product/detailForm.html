@@ -14,21 +14,28 @@
             </div>
 
             <div class="col-md-6">
-                <input type="hidden" id="id" th:value="${product.id}"/>
+                <input type="hidden" id="productId" th:value="${product.id}"/>
                 <div class="small mb-1" th:text="${product.nickname}">업로더 이름</div>
                 <h1 class="display-5 fw-bolder" th:text="${product.title}">제목</h1>
                 <div class="fs-5 mb-5">
                     <span th:text="${product.price}">가격</span>
                 </div>
                 <p class="lead" th:text="${product.description}">설명</p>
-                <a th:href="@{/chat/productId/{productId}/seller/{seller}/buyer/{buyer}(productId=${product.id}, seller=${product.nickname}, buyer=${#authentication.principal.user.nickname})}"
-                   class="btn btn-outline-dark flex-shrink-0" th:if="${product.userId} != ${#authentication.principal.user.id}">1:1 대화</a>
-                <a th:href="@{/product/updateForm/{id}(id=${product.id})}" class="btn btn-outline-dark flex-shrink-0"
-                   th:if="${product.userId} == ${#authentication.principal.user.id}">수정</a>
-                <form id="product-delete">
-                    <button type="submit" class="btn btn-danger mb-1"
-                            th:if="${product.userId} == ${#authentication.principal.user.id}">삭제</button>
-                </form>
+                <div>
+                    <form id="chat-open" th:if="${product.userId} != ${#authentication.principal.user.id}">
+                        <input type="hidden" id="sellerId" th:value="${product.userId}">
+                        <input type="hidden" id="buyerId" th:value="${#authentication.principal.user.id}">
+                        <button type="submit" class="btn btn-outline-dark flex-shrink-0">1:1 대화</button>
+                    </form>
+
+                    <a th:href="@{/product/updateForm/{id}(id=${product.id})}" class="btn btn-outline-dark flex-shrink-0"
+                       th:if="${product.userId} == ${#authentication.principal.user.id}">수정</a>
+
+                    <form id="product-delete">
+                        <button type="submit" class="btn btn-danger mb-1"
+                                th:if="${product.userId} == ${#authentication.principal.user.id}">삭제</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -36,5 +43,6 @@
 
 <div th:insert="~{layout/footer}"></div>
 <script src="/js/product.js"></script>
+<script src="/js/chatRoom.js"></script>
 </body>
 </html>

@@ -13,8 +13,8 @@
         <div class="row gx-4 gx-lg-5 align-items-center">
             <div id="user_chat_data" class="user_chat_data">
                 <input type="hidden" id="roomId" th:value="${chatRoom.id}"/>
-                <input type="hidden" id="sender" th:value="${#authentication.principal.user.nickname}"/>
-                <input type="hidden" id="receiver" th:value="${#authentication.principal.user.nickname == chatRoom.buyer ? chatRoom.seller : chatRoom.buyer}"/>
+                <input type="hidden" id="sender" th:value="${#authentication.principal.user.id}"/>
+                <input type="hidden" id="receiver" th:value="${#authentication.principal.user.id == chatRoom.buyerId ? chatRoom.sellerId : chatRoom.buyerId}"/>
                 <div class="profile_name">
                     &nbsp;&nbsp;&nbsp;&nbsp;<img class="mr-3 rounded-circle" th:src="${chatRoom.thumbnailPath}">&nbsp;&nbsp;
                     <span th:text="${#authentication.principal.user.nickname}"></span>

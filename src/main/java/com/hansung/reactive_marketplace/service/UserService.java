@@ -44,6 +44,14 @@ public class UserService {
                 });
     }
 
+    public Mono<User> findUserByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    public Mono<User> findUserById(String userId) {
+        return userRepository.findById(userId);
+    }
+
     public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto, FilePart image) {
         return userRepository.findById(userUpdateReqDto.id())
                 .flatMap(user -> {

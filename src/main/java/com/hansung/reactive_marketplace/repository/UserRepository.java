@@ -10,8 +10,6 @@ public interface UserRepository extends ReactiveMongoRepository<User, String> {
 
     Mono<User> findByUsername(String username);
 
-    Mono<User> findByNickname(String nickname);
-
     @Query(value = "{ '_id' : ?0 }")
     @Update("{ '$set' : { 'nickname' : ?1, 'password' : ?2, 'email' : ?3 }}")
     Mono<Void> updateUser(String id, String nickname, String password, String email);
