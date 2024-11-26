@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", function() {
     const roomId = document.getElementById("roomId").value;
-    const sender = document.getElementById("sender").value;
+    const senderId = document.getElementById("senderId").value;
 
     const eventSource = new EventSource(`http://localhost:8081/chat/${roomId}`);
 
     eventSource.onmessage = (event) => {
 
         const data = JSON.parse(event.data);
-        if(data.sender === sender) { // 로그인한 유저가 보내는 메세지
+        if(data.senderId === senderId) { // 로그인한 유저가 보내는 메세지
             // 파란박스 (오른쪽)
             initMyMessage(data);
         } else {
@@ -75,8 +75,8 @@ async function addMessage() {
         const msgInput = document.querySelector("#chat-outgoing-msg");
         const data = {
             msg: msgInput.value,
-            sender: document.querySelector("#sender").value,
-            receiver: document.querySelector("#receiver").value,
+            senderId: document.querySelector("#senderId").value,
+            receiverId: document.querySelector("#receiverId").value,
             roomId: document.querySelector("#roomId").value
         };
 
