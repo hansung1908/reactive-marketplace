@@ -35,20 +35,16 @@ public class ProductController {
 
     @GetMapping("/")
     public Mono<Rendering> ProductList() {
-        return productService.findProductList()
-                .collectList() // model 추가를 위한 flux -> mono<list> 변환
-                .map(productList -> Rendering.view("index")
-                        .modelAttribute("productList", productList)
-                        .build());
+        return Mono.just(Rendering.view("index")
+                .modelAttribute("productList", productService.findProductList())
+                .build());
     }
 
     @GetMapping("/product/my/{userId}")
     public Mono<Rendering> MyProductList(@PathVariable("userId") String userId) {
-        return productService.findMyProductList(userId)
-                .collectList()// model 추가를 위한 flux -> mono<list> 변환
-                .map(myProductList -> Rendering.view("product/myProductListForm")
-                        .modelAttribute("myProductList", myProductList)
-                        .build());
+        return Mono.just(Rendering.view("product/myProductListForm")
+                .modelAttribute("myProductList", productService.findMyProductList(userId))
+                .build());
     }
 
     @GetMapping("/product/updateForm/{id}")

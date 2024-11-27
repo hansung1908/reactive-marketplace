@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.result.view.Rendering;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Controller
@@ -29,10 +30,8 @@ public class ChatController {
 
     @GetMapping("/chat/chatRoom/{userId}")
     public Mono<Rendering> findChatRoomList(@PathVariable("userId") String userId) {
-        return chatService.findChatRoomList(userId)
-                .collectList()// model 추가를 위한 flux -> mono<list> 변환
-                .map(chatRooms -> Rendering.view("chat/chatRoomForm")
-                        .modelAttribute("chatRooms", chatRooms)
-                        .build());
+        return Mono.just(Rendering.view("chat/chatRoomForm")
+                .modelAttribute("chatRooms", chatService.findChatRoomList(userId))
+                .build());
     }
 }
