@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -33,7 +34,10 @@ public class SecurityConfig {
                         .pathMatchers("/products", "/login", "/user/save").permitAll()
                         .anyExchange().authenticated())
 
-                .formLogin(Customizer.withDefaults())
+                .formLogin(formLoginSpec -> formLoginSpec.disable())
+                .httpBasic(httpBasicSpec -> httpBasicSpec.disable())
+
+                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance()) // session을 STATELESS 상태로 변경
 
                 .logout(logoutSpec -> logoutSpec
                         .logoutSuccessHandler(customLogoutHandler));

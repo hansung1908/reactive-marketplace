@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
@@ -20,27 +20,34 @@ public class UserServiceImpl implements UserService{
     private final ImageService imageService;
 
     public UserServiceImpl(UserRepository userRepository,
-                       BCryptPasswordEncoder bCryptPasswordEncoder, ImageService imageService) {
+                           BCryptPasswordEncoder bCryptPasswordEncoder, ImageService imageService) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.imageService = imageService;
     }
 
     public Mono<User> saveUser(UserSaveReqDto userSaveReqDto, FilePart image) {
-        User user = new User.Builder()
-                .username(userSaveReqDto.username())
-                .nickname(userSaveReqDto.nickname())
-                .password(bCryptPasswordEncoder.encode(userSaveReqDto.password()))
-                .email(userSaveReqDto.email())
-                .build();
-
-        return userRepository.save(user)
-                .flatMap(savedUser -> {
-                    if (image != null) {
-                        return imageService.uploadImage(image, savedUser.getId(), userSaveReqDto.imageSource())
-                                .thenReturn(savedUser);
+        return userRepository.existsByUsername(userSaveReqDto.username())
+                .flatMap(exist -> {
+                    if (exist) { // 중복이 있으면 error
+                        return Mono.error(new RuntimeException("Username already exists"));
                     }
-                    return Mono.just(savedUser);
+
+                    User user = new User.Builder()
+                            .username(userSaveReqDto.username())
+                            .nickname(userSaveReqDto.nickname())
+                            .password(bCryptPasswordEncoder.encode(userSaveReqDto.password()))
+                            .email(userSaveReqDto.email())
+                            .build();
+
+                    return userRepository.save(user) // 없으면 회원가입 진행
+                            .flatMap(savedUser -> {
+                                if (image != null) {
+                                    return imageService.uploadImage(image, savedUser.getId(), userSaveReqDto.imageSource())
+                                            .thenReturn(savedUser);
+                                }
+                                return Mono.just(savedUser);
+                            });
                 });
     }
 
