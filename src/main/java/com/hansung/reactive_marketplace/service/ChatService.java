@@ -1,9 +1,9 @@
 package com.hansung.reactive_marketplace.service;
 
+import com.hansung.reactive_marketplace.domain.Chat;
 import com.hansung.reactive_marketplace.dto.request.ChatSaveReqDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomListResDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomResDto;
-import com.hansung.reactive_marketplace.domain.Chat;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
