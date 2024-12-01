@@ -1,7 +1,6 @@
 package com.hansung.reactive_marketplace.util;
 
-import com.hansung.reactive_marketplace.security.CustomUserDetail;
-import com.hansung.reactive_marketplace.service.UserService;
+import com.hansung.reactive_marketplace.security.CustomReactiveUserDetailService;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,13 +17,15 @@ import java.util.Date;
 @Component
 public class JwtUtils {
 
+    private static final long expiredMs = 60 * 60 * 24L;
+
     private final SecretKey secretKey;
 
-    private final UserService userService;
+    private final CustomReactiveUserDetailService customReactiveUserDetailService;
 
-    public JwtUtils(@Value("${spring.jwt.secret}")String secret, UserService userService) {
+    public JwtUtils(@Value("${spring.jwt.secret}")String secret, CustomReactiveUserDetailService customReactiveUserDetailService) {
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
-        this.userService = userService;
+        this.customReactiveUserDetailService = customReactiveUserDetailService;
     }
 
     // jwt token에서 username 값을 추출
@@ -57,7 +58,7 @@ public class JwtUtils {
     }
 
     // jwt token 생성
-    public String createJwt(String username, String role, long expiredMs) {
+    public String createJwt(String username, String role) {
         return Jwts.builder() // jwt token 빌더 생성
                 .claim("username", username) // username 추가
                 .claim("role", role) // roel 추가
@@ -68,8 +69,7 @@ public class JwtUtils {
     }
 
     public Mono<Authentication> getAthentication(String token) {
-        return userService.findUserByUsername(extractUsername(token))
-                .map(user -> new CustomUserDetail(user))
-                .map(userDetail -> new UsernamePasswordAuthenticationToken(userDetail.getUsername(), userDetail.getPassword(), userDetail.getAuthorities()));
+        return customReactiveUserDetailService.findByUsername(extractUsername(token))
+                .map(userDetail -> new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities()));
     }
 }
