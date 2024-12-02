@@ -2,23 +2,23 @@ package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.LoginReqDto;
+import com.hansung.reactive_marketplace.jwt.JwtCategory;
 import com.hansung.reactive_marketplace.security.CustomReactiveUserDetailService;
 import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import com.hansung.reactive_marketplace.util.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.*;
 
-@WebFluxTest(AuthController.class)  // AuthController만 테스트하는 WebFluxTest 설정
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) // 전체 컨텍스트 로드를 위한 어노테이션
 public class AuthControllerTest {
 
     @Autowired
@@ -38,18 +38,19 @@ public class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
+        webTestClient = WebTestClient.bindToController(new AuthController(bCryptPasswordEncoder, customReactiveUserDetailService, jwtUtils)).build();
+
         // 테스트 데이터 설정
         validLoginReqDto = new LoginReqDto("validUsername", "validPassword");  // 유효한 로그인 요청
         invalidLoginReqDto = new LoginReqDto("invalidUsername", "invalidPassword");  // 잘못된 로그인 요청
     }
 
     @Test
-    @WithMockUser(username = "validUsername", roles = "USER")
     void testLoginSuccess() {
         // 로그인에 성공할 유저 데이터 준비
         User user = new User.Builder()
                 .username("validUsername")
-                .nickname("Test User")
+                .nickname("TestUser")
                 .password("validPassword")
                 .email("testuser@example.com")
                 .build();
@@ -58,22 +59,27 @@ public class AuthControllerTest {
         CustomUserDetail userDetail = new CustomUserDetail(user);
 
         // 암호화된 비밀번호
-        String encodedPassword = bCryptPasswordEncoder.encode(validLoginReqDto.password());  // 예시 암호화된 비밀번호
+        String encodedPassword = bCryptPasswordEncoder.encode(user.getPassword());
+
+        // 다중 토큰 생성
+        String accessToken = "mockAccessToken";
+        String refreshToken = "mockRefreshToken";
 
         // Mocking 서비스 동작
-        when(customReactiveUserDetailService.findByUsername(validLoginReqDto.username())).thenReturn(Mono.just(userDetail));  // 사용자 찾기
-        when(bCryptPasswordEncoder.matches(validLoginReqDto.password(), encodedPassword)).thenReturn(true);  // 비밀번호 비교
-        when(jwtUtils.createJwt(validLoginReqDto.username(), "USER")).thenReturn("mocked-jwt-token");  // JWT 생성
+        when(customReactiveUserDetailService.findByUsername(validLoginReqDto.username())).thenReturn(Mono.just(userDetail));
+        when(bCryptPasswordEncoder.matches(validLoginReqDto.password(), encodedPassword)).thenReturn(true);
+        when(jwtUtils.createJwt(JwtCategory.ACCESS, validLoginReqDto.username(), "USER")).thenReturn(accessToken);
+        when(jwtUtils.createJwt(JwtCategory.REFRESH, validLoginReqDto.username(), "USER")).thenReturn(refreshToken);
 
         // 로그인 테스트 수행
-        webTestClient.mutateWith(csrf())  // CSRF 토큰을 자동으로 포함
-                .post()  // POST 요청
-                .uri("/auth/login")  // URI 설정
-                .bodyValue(validLoginReqDto)  // 요청 본문에 로그인 데이터 설정
-                .exchange()  // 요청 전송
-                .expectStatus().isOk()  // 상태 코드 200 OK 확인
-                .expectBody()
-                .jsonPath("$.token").isEqualTo("mocked-jwt-token");  // 응답 JSON에서 token 필드가 "mocked-jwt-token"인지 확인
+        webTestClient.post()
+                .uri("/auth/login")
+                .bodyValue(validLoginReqDto)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueEquals(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .expectHeader().valueMatches(HttpHeaders.SET_COOKIE, "jwt=" + refreshToken + "; Path=/; Max-Age=86400; Expires=.*; Secure; HttpOnly")
+                .expectBody(String.class).isEqualTo("Login successful");
     }
 
     @Test
@@ -82,24 +88,26 @@ public class AuthControllerTest {
         User user = new User.Builder()
                 .username("invalidUsername")
                 .nickname("Test User")
-                .password("invalidPassword")
+                .password("wrongPassword")
                 .email("testuser@example.com")
                 .build();
 
         // CustomUserDetail 객체 생성
         CustomUserDetail userDetail = new CustomUserDetail(user);
 
+        // 암호화된 비밀번호
+        String encodedPassword = bCryptPasswordEncoder.encode(user.getPassword());
+
         // 잘못된 비밀번호 비교
         when(customReactiveUserDetailService.findByUsername(invalidLoginReqDto.username())).thenReturn(Mono.just(userDetail));  // 사용자 찾기
-        when(bCryptPasswordEncoder.matches(invalidLoginReqDto.password(), user.getPassword())).thenReturn(false);  // 비밀번호 불일치 처리
+        when(bCryptPasswordEncoder.matches(invalidLoginReqDto.password(), encodedPassword)).thenReturn(false);  // 비밀번호 불일치 처리
 
         // 로그인 실패 테스트 수행 (잘못된 자격 증명)
-        webTestClient.mutateWith(csrf())  // CSRF 토큰을 자동으로 포함
-                .post()  // POST 요청
-                .uri("/auth/login")  // URI 설정
-                .bodyValue(invalidLoginReqDto)  // 요청 본문에 잘못된 로그인 데이터 설정
-                .exchange()  // 요청 전송
-                .expectStatus().isUnauthorized();  // 상태 코드 401 Unauthorized 확인
+        webTestClient.post()
+                .uri("/auth/login")
+                .bodyValue(invalidLoginReqDto)
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 
     @Test
@@ -108,11 +116,10 @@ public class AuthControllerTest {
         when(customReactiveUserDetailService.findByUsername(invalidLoginReqDto.username())).thenReturn(Mono.empty());  // 사용자 없음
 
         // 로그인 실패 테스트 수행 (사용자 없음)
-        webTestClient.mutateWith(csrf())  // CSRF 토큰을 자동으로 포함
-                .post()  // POST 요청
-                .uri("/auth/login")  // URI 설정
-                .bodyValue(invalidLoginReqDto)  // 요청 본문에 잘못된 로그인 데이터 설정
-                .exchange()  // 요청 전송
-                .expectStatus().isUnauthorized();  // 상태 코드 401 Unauthorized 확인
+        webTestClient.post()
+                .uri("/auth/login")
+                .bodyValue(invalidLoginReqDto)
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 }

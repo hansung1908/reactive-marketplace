@@ -22,9 +22,9 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
         return Mono.just(authentication)
-                .filter(auth -> !jwtUtils.isExpired(authentication.getCredentials().toString()))
-                .switchIfEmpty(Mono.error(new BadCredentialsException("JWT token is expired or invalid")))
-                .map(auth -> {
+                .filter(auth -> !jwtUtils.isExpired(authentication.getCredentials().toString())) // 유효기간이 지났는지 검증
+                .switchIfEmpty(Mono.error(new BadCredentialsException("JWT token is expired or invalid"))) // 지났으면 error 발생
+                .map(auth -> { // 검증 통과하면 securityContext에 해당 인증 객체 저장
                     SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
                     securityContext.setAuthentication(auth);
                     ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext));
