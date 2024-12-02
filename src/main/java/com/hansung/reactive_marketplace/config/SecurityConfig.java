@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .anonymous(Customizer.withDefaults()) // thymeleaf spring security에서 anonymous 사용을 위한 활성화
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
                         .pathMatchers("/", "/js/**", "image/**", "/user/saveForm").permitAll()
-                        .pathMatchers("/products", "/login", "/user/save").permitAll()
+                        .pathMatchers("/products", "/auth/**", "/user/save").permitAll()
                         .anyExchange().authenticated())
 
                 .formLogin(formLoginSpec -> formLoginSpec.disable())
@@ -57,7 +57,7 @@ public class SecurityConfig {
 
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance()) // session을 STATELESS 상태로 변경
 
-                .addFilterAt(authenticationWebFilter(jwtAuthenticationManager, jwtServerAuthenticationConverter), SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAt(authenticationWebFilter(jwtAuthenticationManager, jwtServerAuthenticationConverter), SecurityWebFiltersOrder.AUTHENTICATION) // jwt 로그인 검증 필터 추가
 
                 .logout(logoutSpec -> logoutSpec
                         .logoutSuccessHandler(customLogoutHandler));

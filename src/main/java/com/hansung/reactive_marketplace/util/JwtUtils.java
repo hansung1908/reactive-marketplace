@@ -1,5 +1,6 @@
 package com.hansung.reactive_marketplace.util;
 
+import com.hansung.reactive_marketplace.jwt.JwtCategory;
 import com.hansung.reactive_marketplace.security.CustomReactiveUserDetailService;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +18,7 @@ import java.util.Date;
 @Component
 public class JwtUtils {
 
-    private static final long expiredMs = 60 * 60 * 24L;
+    private static final long expiredMs = 60 * 60L;
 
     private final SecretKey secretKey;
 
@@ -58,8 +59,9 @@ public class JwtUtils {
     }
 
     // jwt token 생성
-    public String createJwt(String username, String role) {
+    public String createJwt(JwtCategory jwtCategory, String username, String role) {
         return Jwts.builder() // jwt token 빌더 생성
+                .claim("category", jwtCategory)
                 .claim("username", username) // username 추가
                 .claim("role", role) // roel 추가
                 .issuedAt(new Date(System.currentTimeMillis())) // 발행 시간(iat) 설정
