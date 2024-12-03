@@ -24,6 +24,6 @@ public class JwtServerAuthenticationConverter implements ServerAuthenticationCon
         return Mono.justOrEmpty(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION)) // header에서 authorization 추출
                 .filter(header -> header.startsWith(BEARER)) // Bearer로 시작하는지 검증
                 .map(header -> header.substring(BEARER.length())) // 있다면 이를 제거한 토큰 반환
-                .flatMap(token -> jwtUtils.getAthentication(token)); // 토큰 정보를 바탕으로 인증 객체 생성
+                .map(token -> new JwtToken(token, jwtUtils.createUserDetails(token)));
     }
 }
