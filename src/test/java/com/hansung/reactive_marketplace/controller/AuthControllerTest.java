@@ -2,7 +2,7 @@ package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.LoginReqDto;
-import com.hansung.reactive_marketplace.jwt.JwtCategory;
+import com.hansung.reactive_marketplace.jwt.JwtAuthenticationManager;
 import com.hansung.reactive_marketplace.security.CustomReactiveUserDetailService;
 import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import com.hansung.reactive_marketplace.util.JwtUtils;
@@ -12,10 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) // 전체 컨텍스트 로드를 위한 어노테이션
@@ -33,11 +36,15 @@ public class AuthControllerTest {
     @MockBean
     private JwtUtils jwtUtils;  // JWT 생성 유틸리티 모킹
 
+    @MockBean
+    private JwtAuthenticationManager authenticationManager;
+
     private LoginReqDto validLoginReqDto;  // 유효한 로그인 요청 DTO
     private LoginReqDto invalidLoginReqDto;  // 잘못된 로그인 요청 DTO
 
     @BeforeEach
     void setUp() {
+        // 컨트롤러 바인딩 설정
         webTestClient = WebTestClient.bindToController(new AuthController(bCryptPasswordEncoder, customReactiveUserDetailService, jwtUtils)).build();
 
         // 테스트 데이터 설정
@@ -58,22 +65,28 @@ public class AuthControllerTest {
         // CustomUserDetail 객체 생성 (User 데이터로부터)
         CustomUserDetail userDetail = new CustomUserDetail(user);
 
-        // 암호화된 비밀번호
-        String encodedPassword = bCryptPasswordEncoder.encode(user.getPassword());
-
         // 다중 토큰 생성
         String accessToken = "mockAccessToken";
         String refreshToken = "mockRefreshToken";
+        JwtUtils.TokenPair mockTokenPair = new JwtUtils.TokenPair(accessToken, refreshToken);
+
+        // 모의 응답 생성
+        ResponseEntity<String> mockResponse = ResponseEntity.ok()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer mockAccessToken")
+                .header(HttpHeaders.SET_COOKIE, "jwt=mockRefreshToken; Path=/; Max-Age=86400; Expires=.*; Secure; HttpOnly")
+                .body("Login successful");
 
         // Mocking 서비스 동작
         when(customReactiveUserDetailService.findByUsername(validLoginReqDto.username())).thenReturn(Mono.just(userDetail));
-        when(bCryptPasswordEncoder.matches(validLoginReqDto.password(), encodedPassword)).thenReturn(true);
-        when(jwtUtils.createJwt(JwtCategory.ACCESS, validLoginReqDto.username(), "USER")).thenReturn(accessToken);
-        when(jwtUtils.createJwt(JwtCategory.REFRESH, validLoginReqDto.username(), "USER")).thenReturn(refreshToken);
+        when(bCryptPasswordEncoder.matches(validLoginReqDto.password(), userDetail.getPassword())).thenReturn(true);
+        when(jwtUtils.generateTokens(any(UserDetails.class))).thenReturn(Mono.just(mockTokenPair));
+        when(jwtUtils.createLoginResponse(mockTokenPair)).thenReturn(mockResponse);
 
         // 로그인 테스트 수행
         webTestClient.post()
                 .uri("/auth/login")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .cookie("jwt", refreshToken)
                 .bodyValue(validLoginReqDto)
                 .exchange()
                 .expectStatus().isOk()
@@ -95,12 +108,9 @@ public class AuthControllerTest {
         // CustomUserDetail 객체 생성
         CustomUserDetail userDetail = new CustomUserDetail(user);
 
-        // 암호화된 비밀번호
-        String encodedPassword = bCryptPasswordEncoder.encode(user.getPassword());
-
         // 잘못된 비밀번호 비교
         when(customReactiveUserDetailService.findByUsername(invalidLoginReqDto.username())).thenReturn(Mono.just(userDetail));  // 사용자 찾기
-        when(bCryptPasswordEncoder.matches(invalidLoginReqDto.password(), encodedPassword)).thenReturn(false);  // 비밀번호 불일치 처리
+        when(bCryptPasswordEncoder.matches(invalidLoginReqDto.password(), userDetail.getPassword())).thenReturn(false);  // 비밀번호 불일치 처리
 
         // 로그인 실패 테스트 수행 (잘못된 자격 증명)
         webTestClient.post()
