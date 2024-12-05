@@ -1,14 +1,11 @@
 package com.hansung.reactive_marketplace.util;
 
 import com.hansung.reactive_marketplace.jwt.JwtCategory;
-import com.hansung.reactive_marketplace.security.CustomReactiveUserDetailService;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -29,11 +26,8 @@ public class JwtUtils {
 
     private final SecretKey secretKey;
 
-    private final CustomReactiveUserDetailService customReactiveUserDetailService;
-
-    public JwtUtils(@Value("${spring.jwt.secret}")String secret, CustomReactiveUserDetailService customReactiveUserDetailService) {
+    public JwtUtils(@Value("${spring.jwt.secret}")String secret) {
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
-        this.customReactiveUserDetailService = customReactiveUserDetailService;
     }
 
     // jwt token에서 username 값을 추출
@@ -67,32 +61,16 @@ public class JwtUtils {
 
     // jwt token 생성
     public String createJwt(JwtCategory jwtCategory, String username, String role) {
+        Date issuedAt = new Date();
+        Date expiration = new Date(issuedAt.getTime() + expiredMs);
         return Jwts.builder() // jwt token 빌더 생성
                 .claim("category", jwtCategory)
                 .claim("username", username) // username 추가
                 .claim("role", role) // role 추가
-                .issuedAt(new Date(System.currentTimeMillis())) // 발행 시간(iat) 설정
-                .expiration(new Date(System.currentTimeMillis() + expiredMs)) // 만료 기한(exp) 설정
+                .issuedAt(issuedAt) // 발행 시간(iat) 설정
+                .expiration(expiration) // 만료 기한(exp) 설정
                 .signWith(secretKey) // secretKey 암호화
                 .compact(); // 문자열로 직렬화 + 토큰 실제 생성
-    }
-
-    // userDetail 생성
-    public UserDetails createUserDetails(String token) {
-        String username = extractUsername(token);
-        return User.builder()
-                .username(username)
-                .authorities(createAuthorities(token))
-                .password("")
-                .build();
-    }
-
-    // Authority 생성
-    public List<SimpleGrantedAuthority> createAuthorities(String token) {
-        return extractRole(token).stream()
-                .map(role -> "ROLE_" + role)
-                .map(SimpleGrantedAuthority::new)
-                .toList();
     }
 
     public Mono<TokenPair> generateTokens(UserDetails user) {

@@ -1,6 +1,6 @@
 package com.hansung.reactive_marketplace.domain;
 
-public enum Authority {
+public enum Role {
     USER,
     ADMIN
 }
