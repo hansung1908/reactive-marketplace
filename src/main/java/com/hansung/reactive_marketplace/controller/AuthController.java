@@ -2,10 +2,12 @@ package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.dto.request.LoginReqDto;
 import com.hansung.reactive_marketplace.security.CustomReactiveUserDetailService;
+import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import com.hansung.reactive_marketplace.util.JwtUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,8 +41,9 @@ public class AuthController {
     }
 
     @GetMapping("/auth/profile")
-    public Mono<ResponseEntity<String>> profile(Authentication authentication) {
-        return Mono.just(ResponseEntity.ok()
-                .body(authentication.getName()));
+    public Mono<String> profile() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication().getName())
+                .map(name -> "Hello, " + name);
     }
 }

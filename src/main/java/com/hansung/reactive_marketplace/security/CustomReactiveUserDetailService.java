@@ -20,4 +20,9 @@ public class CustomReactiveUserDetailService implements ReactiveUserDetailsServi
         return userRepository.findByUsername(username)
                 .map(user -> new CustomUserDetail(user));
     }
+
+    public Mono<CustomUserDetail> findCustomUserDetailByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> new CustomUserDetail(user));
+    }
 }

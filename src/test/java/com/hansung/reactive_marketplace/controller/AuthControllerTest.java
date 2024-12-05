@@ -13,11 +13,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -131,5 +135,28 @@ public class AuthControllerTest {
                 .bodyValue(invalidLoginReqDto)
                 .exchange()
                 .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    @WithMockUser(username = "testuser", roles = "USER")
+    void testSecurityContextAuthentication() {
+        webTestClient.get().uri("/auth/profile")
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(String.class)
+                .getResponseBody()
+                .as(StepVerifier::create)
+                .expectNextCount(1)
+                .verifyComplete();
+
+        // SecurityContext에서 Authentication 객체 확인
+        StepVerifier.create(ReactiveSecurityContextHolder.getContext())
+                .assertNext(context -> {
+                    assertNotNull(context.getAuthentication());
+                    assertEquals("testuser", context.getAuthentication().getName());
+                    assertTrue(context.getAuthentication().getAuthorities().stream()
+                            .anyMatch(a -> a.getAuthority().equals("ROLE_USER")));
+                })
+                .verifyComplete();
     }
 }

@@ -22,7 +22,7 @@ public class User {
 
     private String email;
 
-    private Authority authority;
+    private Role role;
 
     @CreatedDate
     private LocalDateTime created_at;
@@ -35,7 +35,7 @@ public class User {
         this.nickname = builder.nickname;
         this.password = builder.password;
         this.email = builder.email;
-        this.authority = Authority.USER; // 기본값으로 USER 권한 부여
+        this.role = Role.USER; // 기본값으로 USER 권한 부여
     }
 
     public static class Builder {
