@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:insert="~{layout/header}"></div>
+</head>
+<body>
+<div th:insert="~{layout/navbar}"></div>
+
+<div class="container mt-5 pt-4">
+    <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+        <div class="col p-4 d-flex flex-column position-static">
+            <form id="auth-login">
+                <strong class="d-inline-block mb-2 text-primary-emphasis">로그인</strong>
+                <div class="form-group mb-1">
+                    <label for="username">username</label>
+                    <input type="text" class="form-control" id="username" placeholder="username">
+                </div>
+                <div class="form-group mb-1">
+                    <label for="password">password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Password">
+                </div>
+                <button type="submit" class="btn btn-secondary mb-1">로그인</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:insert="~{layout/footer}"></div>
+<script src="/js/auth.js"></script>
+</body>
+</html>

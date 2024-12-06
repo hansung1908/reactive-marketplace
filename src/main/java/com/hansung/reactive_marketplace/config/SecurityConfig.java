@@ -54,7 +54,7 @@ public class SecurityConfig {
         http.csrf(csrfSpec -> csrfSpec.disable())
                 .anonymous(Customizer.withDefaults()) // thymeleaf spring security에서 anonymous 사용을 위한 활성화
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
-                        .pathMatchers("/", "/js/**", "image/**", "/user/saveForm").permitAll()
+                        .pathMatchers("/", "/js/**", "image/**", "/user/saveForm", "/user/loginForm").permitAll()
                         .pathMatchers("/products", "/auth/**", "/user/save").permitAll()
                         .anyExchange().authenticated())
 
