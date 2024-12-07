@@ -4,8 +4,11 @@ import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
+import com.hansung.reactive_marketplace.dto.response.UserProfileResDto;
 import com.hansung.reactive_marketplace.repository.UserRepository;
+import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -57,6 +60,20 @@ public class UserServiceImpl implements UserService {
 
     public Mono<User> findUserById(String userId) {
         return userRepository.findById(userId);
+    }
+
+    @Override
+    public Mono<UserProfileResDto> findUserProfile(Authentication authentication) {
+        CustomUserDetail userDetail = (CustomUserDetail) authentication.getPrincipal();
+
+        return imageService.findProfileImageById(userDetail.getUser().getId())
+                .flatMap(image -> findUserById(userDetail.getUser().getId())
+                        .map(user -> new UserProfileResDto(
+                                user.getUsername(),
+                                user.getNickname(),
+                                user.getEmail(),
+                                image.getImagePath()
+                        )));
     }
 
     public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto, FilePart image) {
