@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.List;
 @Component
 public class JwtUtils {
 
-    private static final long expiredMs = 24 * 60 * 60L;
+    private static final long expiredMs = 24 * 60 * 60 * 1000L;
 
     private final SecretKey secretKey;
 
@@ -61,14 +60,12 @@ public class JwtUtils {
 
     // jwt token 생성
     public String createJwt(JwtCategory jwtCategory, String username, String role) {
-        Date issuedAt = new Date();
-        Date expiration = new Date(issuedAt.getTime() + expiredMs);
         return Jwts.builder() // jwt token 빌더 생성
                 .claim("category", jwtCategory)
                 .claim("username", username) // username 추가
                 .claim("role", role) // role 추가
-                .issuedAt(issuedAt) // 발행 시간(iat) 설정
-                .expiration(expiration) // 만료 기한(exp) 설정
+                .issuedAt(new Date(System.currentTimeMillis())) // 발행 시간(iat) 설정
+                .expiration(new Date(System.currentTimeMillis() + expiredMs)) // 만료 기한(exp) 설정
                 .signWith(secretKey) // secretKey 암호화
                 .compact(); // 문자열로 직렬화 + 토큰 실제 생성
     }
@@ -76,11 +73,12 @@ public class JwtUtils {
     public Mono<TokenPair> generateTokens(UserDetails user) {
         String username = user.getUsername();
         String role = user.getAuthorities().toString();
+
         String accessToken = createJwt(JwtCategory.ACCESS, username, role);
         String refreshToken = createJwt(JwtCategory.REFRESH, username, role);
+
         return Mono.just(new TokenPair(accessToken, refreshToken));
     }
-
     public ResponseEntity<String> createLoginResponse(TokenPair tokens) {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.accessToken());
@@ -89,7 +87,6 @@ public class JwtUtils {
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(Duration.ofHours(24))
                 .build();
         headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
 
@@ -97,6 +94,5 @@ public class JwtUtils {
                 .headers(headers)
                 .body("Login successful");
     }
-
     public record TokenPair(String accessToken, String refreshToken) {}
 }
