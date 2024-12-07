@@ -1,19 +1,19 @@
 package com.hansung.reactive_marketplace.controller;
 
-import com.hansung.reactive_marketplace.service.ImageService;
+import com.hansung.reactive_marketplace.service.UserService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.reactive.result.view.Rendering;
 import reactor.core.publisher.Mono;
 
 @Controller
 public class UserController {
 
-    private final ImageService imageService;
+    private final UserService userService;
 
-    public UserController(ImageService imageService) {
-        this.imageService = imageService;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping("/user/saveForm")
@@ -26,9 +26,9 @@ public class UserController {
         return "user/loginForm";
     }
 
-    @GetMapping("/user/profileForm/{id}")
-    public Mono<Rendering> profileForm(@PathVariable("id") String id) {
-        return imageService.findProfileImageById(id)
+    @GetMapping("/user/profileForm")
+    public Mono<Rendering> profileForm(Authentication authentication) {
+        return userService.findUserProfile(authentication)
                 .map(profile -> Rendering.view("user/profileForm")
                         .modelAttribute("profile", profile)
                         .build());
