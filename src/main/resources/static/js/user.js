@@ -80,6 +80,34 @@ async function deleteUser() {
     }
 }
 
+async function loginUser() {
+    try {
+        const data = {
+            username: document.querySelector('#username').value,
+            password: document.querySelector('#password').value
+        };
+
+        const response = await fetch("/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        if(response.ok) {
+            // 응답 헤더에서 JWT 토큰 추출
+            const jwtToken  = response.headers.get('Authorization');
+            // 로컬 스토리지에 저장
+            localStorage.setItem('jwtToken', jwtToken);
+
+            window.location.href = '/';
+        }
+    } catch (error) {
+        console.error('Error:', error); // 오류 처리
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 현재 페이지 URL 경로 가져오기
     const currentPath = window.location.pathname;
@@ -112,6 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (confirmed) {
                 deleteUser();
             }
+        });
+    }
+
+    else if (currentPath === '/user/loginForm') {
+        document.getElementById('user-login').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작을 방지
+
+            loginUser();
         });
     }
 });
