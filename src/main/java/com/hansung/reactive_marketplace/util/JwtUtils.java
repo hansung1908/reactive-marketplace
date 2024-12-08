@@ -80,18 +80,14 @@ public class JwtUtils {
         return Mono.just(new TokenPair(accessToken, refreshToken));
     }
     public ResponseEntity<String> createLoginResponse(TokenPair tokens) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.accessToken());
-
-        ResponseCookie cookie = ResponseCookie.from("jwt", tokens.refreshToken())
+        ResponseCookie cookie = ResponseCookie.from("JWT_TOKEN", tokens.accessToken())
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
                 .build();
-        headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok()
-                .headers(headers)
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body("Login successful");
     }
     public record TokenPair(String accessToken, String refreshToken) {}

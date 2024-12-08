@@ -11,13 +11,12 @@ public class WebFluxConfig implements WebFluxConfigurer {
 
     @Override
     public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
-        configurer.customCodecs().register(new OctetStreamDecoder(new ObjectMapper())); // 디코더 추가
+        configurer.customCodecs().register(new OctetStreamDecoder(new ObjectMapper())); // octet-stream 디코더 추가
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/image/**") // 해당 요청에 대해서
                 .addResourceLocations("file:///C:/image/"); // 해당 외부 경로로 지정
-
     }
 }
