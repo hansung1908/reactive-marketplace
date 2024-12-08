@@ -6,7 +6,7 @@ import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.dto.response.UserProfileResDto;
 import com.hansung.reactive_marketplace.repository.UserRepository;
-import com.hansung.reactive_marketplace.security.CustomUserDetail;
+import com.hansung.reactive_marketplace.util.AuthUtils;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -64,10 +64,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<UserProfileResDto> findUserProfile(Authentication authentication) {
-        CustomUserDetail userDetail = (CustomUserDetail) authentication.getPrincipal();
-
-        return imageService.findProfileImageById(userDetail.getUser().getId())
-                .flatMap(image -> findUserById(userDetail.getUser().getId())
+        return imageService.findProfileImageById(AuthUtils.getAuthenticationUser(authentication).getId())
+                .flatMap(image -> findUserById(AuthUtils.getAuthenticationUser(authentication).getId())
                         .map(user -> new UserProfileResDto(
                                 user.getUsername(),
                                 user.getNickname(),

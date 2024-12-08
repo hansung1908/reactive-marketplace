@@ -6,6 +6,8 @@ import com.hansung.reactive_marketplace.dto.response.ChatRoomListResDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomResDto;
 import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
+import com.hansung.reactive_marketplace.util.AuthUtils;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -86,8 +88,8 @@ public class ChatServiceImpl implements ChatService{
         return chatRepository.save(chat);
     }
 
-    public Flux<ChatRoomListResDto> findChatRoomList(String userId) {
-        return chatRoomRepository.findChatRoomListBySellerOrBuyer(userId)
+    public Flux<ChatRoomListResDto> findChatRoomList(Authentication authentication) {
+        return chatRoomRepository.findChatRoomListBySellerOrBuyer(AuthUtils.getAuthenticationUser(authentication).getId())
                 .flatMap(chatRoom -> Mono.zip(
                         productService.findProductById(chatRoom.getProductId()),
                         chatRepository.findRecentChat(chatRoom.getId()),

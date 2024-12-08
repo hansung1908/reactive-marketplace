@@ -9,6 +9,7 @@ import com.hansung.reactive_marketplace.dto.response.MyProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.security.core.Authentication;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -24,7 +25,7 @@ public interface ProductService {
     Flux<ProductListResDto> findProductList();
 
     // 내 상품 목록 조회
-    Flux<MyProductListResDto> findMyProductList(String userId);
+    Flux<MyProductListResDto> findMyProductList(Authentication authentication);
 
     // 상품 ID로 조회
     Mono<Product> findProductById(String productId);
