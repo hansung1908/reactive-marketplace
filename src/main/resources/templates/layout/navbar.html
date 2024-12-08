@@ -18,14 +18,10 @@
             </ul>
 
             <ul class="navbar-nav ms-auto hidden" id="userNavbar">
-                <li class="nav-item"><a class="nav-link" id="user-profile">프로필</a></li>
+                <li class="nav-item"><a class="nav-link" href="/user/profileForm">프로필</a></li>
                 <li class="nav-item"><a class="nav-link" href="/product/saveForm">상품 등록</a></li>
-                <li class="nav-item">
-<!--                    <a class="nav-link" th:href="@{/product/my/{userId}(userId=${#authentication.principal.user.id})}">내 상품 목록</a>-->
-                </li>
-                <li class="nav-item">
-<!--                    <a class="nav-link" th:href="@{/chat/chatRoom/{userId}(userId=${#authentication.principal.user.id})}">채팅방 목록</a>-->
-                </li>
+                <li class="nav-item"><a class="nav-link" href="/product/myList">내 상품 목록</a></li>
+                <li class="nav-item"><a class="nav-link" href="/chat/chatRoomList">채팅방 목록</a></li>
                 <li class="nav-item"><a class="nav-link" id="user-logout">로그아웃</a></li>
             </ul>
         </div>

@@ -2,6 +2,7 @@ package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.service.ImageService;
 import com.hansung.reactive_marketplace.service.ProductService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,10 +41,10 @@ public class ProductController {
                 .build());
     }
 
-    @GetMapping("/product/my/{userId}")
-    public Mono<Rendering> MyProductList(@PathVariable("userId") String userId) {
+    @GetMapping("/product/myList")
+    public Mono<Rendering> MyProductList(Authentication authentication) {
         return Mono.just(Rendering.view("product/myProductListForm")
-                .modelAttribute("myProductList", productService.findMyProductList(userId))
+                .modelAttribute("myProductList", productService.findMyProductList(authentication))
                 .build());
     }
 

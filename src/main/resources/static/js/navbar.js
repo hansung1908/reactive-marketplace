@@ -5,12 +5,6 @@ const userNavbar = document.getElementById('userNavbar');
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthStatus();
 
-    document.getElementById('user-profile').addEventListener('click', function(event) {
-        event.preventDefault(); // 기본 폼 제출 동작을 방지
-
-        getUserProfile();
-    });
-
     document.getElementById('user-logout').addEventListener('click', function(event) {
         event.preventDefault(); // 기본 폼 제출 동작을 방지
 
@@ -20,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 토큰 상태 체크 및 화면 표시
 function checkAuthStatus() {
-    const token = localStorage.getItem('jwtToken');
+    const token = localStorage.getItem('isLoggedIn');
 
     if (token) {
         guestNavbar.classList.add('hidden');
@@ -31,31 +25,18 @@ function checkAuthStatus() {
     }
 }
 
-async function getUserProfile() {
+async function logoutUser() {
     try {
-        // JWT 토큰을 로컬 스토리지에서 가져옵니다.
-        const token = localStorage.getItem('jwtToken');
-
-        const url = '/user/profileForm';
-
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                'X-Test-Header': 'TestValue', // 추가할 헤더
-                'Authorization': token
-            }
+        const response = await fetch("/auth/logout", {
+            method: "POST"
         });
 
         if(response.ok) {
-            window.location.href = url;
+            localStorage.removeItem('isLoggedIn'); // 로그인 확인 값 제거
+
+            window.location.href = '/'; // 로그아웃 후 메인 페이지로 redirect
         }
     } catch (error) {
         console.error('Error:', error);
     }
-}
-
-function logoutUser() {
-    localStorage.removeItem('jwtToken');
-
-    window.location.href = '/'; // 로그아웃 후 메인 페이지로 redirect
 }

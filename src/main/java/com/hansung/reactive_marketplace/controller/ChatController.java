@@ -1,9 +1,9 @@
 package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.service.ChatService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.result.view.Rendering;
 import reactor.core.publisher.Mono;
@@ -27,10 +27,10 @@ public class ChatController {
                         .build());
     }
 
-    @GetMapping("/chat/chatRoom/{userId}")
-    public Mono<Rendering> findChatRoomList(@PathVariable("userId") String userId) {
+    @GetMapping("/chat/chatRoomList")
+    public Mono<Rendering> findChatRoomList(Authentication authentication) {
         return Mono.just(Rendering.view("chat/chatRoomForm")
-                .modelAttribute("chatRooms", chatService.findChatRoomList(userId))
+                .modelAttribute("chatRooms", chatService.findChatRoomList(authentication))
                 .build());
     }
 }

@@ -10,8 +10,10 @@ import com.hansung.reactive_marketplace.dto.response.MyProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
+import com.hansung.reactive_marketplace.util.AuthUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -81,8 +83,8 @@ public class ProductServiceImpl implements ProductService{
                         )));
     }
 
-    public Flux<MyProductListResDto> findMyProductList(String userId) {
-        return productRepository.findMyProductList(userId, Sort.by(Sort.Direction.DESC, "createdAt"))
+    public Flux<MyProductListResDto> findMyProductList(Authentication authentication) {
+        return productRepository.findMyProductList(AuthUtils.getAuthenticationUser(authentication).getId(), Sort.by(Sort.Direction.DESC, "createdAt"))
                 .concatMap(product -> imageService.findProductImageById(product.getId()) // 순차적 처리를 보장하기 위한 concatMap
                         .map(image -> new MyProductListResDto(
                                 product.getId(),
