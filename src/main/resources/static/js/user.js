@@ -96,10 +96,8 @@ async function loginUser() {
         });
 
         if(response.ok) {
-            // 응답 헤더에서 JWT 토큰 추출
-            const jwtToken  = response.headers.get('Authorization');
-            // 로컬 스토리지에 저장
-            localStorage.setItem('jwtToken', jwtToken);
+            // 로그인 성공 여부를 로컬 스토리지에 저장
+            localStorage.setItem('isLoggedIn', 'true');
 
             window.location.href = '/';
         }

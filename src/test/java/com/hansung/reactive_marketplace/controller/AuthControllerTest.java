@@ -72,8 +72,7 @@ public class AuthControllerTest {
 
         // 모의 응답 생성
         ResponseEntity<String> mockResponse = ResponseEntity.ok()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer mockAccessToken")
-                .header(HttpHeaders.SET_COOKIE, "jwt=mockRefreshToken; Path=/; Max-Age=86400; Expires=.*; Secure; HttpOnly")
+                .header(HttpHeaders.SET_COOKIE, "JWT_TOKEN=mockAccessToken")
                 .body("Login successful");
 
         // Mocking 서비스 동작
@@ -85,13 +84,11 @@ public class AuthControllerTest {
         // 로그인 테스트 수행
         webTestClient.post()
                 .uri("/auth/login")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .cookie("jwt", refreshToken)
+                .cookie("JWT_TOKEN", accessToken)
                 .bodyValue(validLoginReqDto)
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().valueEquals(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .expectHeader().valueMatches(HttpHeaders.SET_COOKIE, "jwt=" + refreshToken + "; Path=/; Max-Age=86400; Expires=.*; Secure; HttpOnly")
+                .expectHeader().valueMatches(HttpHeaders.SET_COOKIE, "JWT_TOKEN=mockAccessToken")
                 .expectBody(String.class).isEqualTo("Login successful");
     }
 
@@ -131,5 +128,17 @@ public class AuthControllerTest {
                 .bodyValue(invalidLoginReqDto)
                 .exchange()
                 .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    void logoutTest() {
+        // 로그아웃 테스트 수행
+        webTestClient.post()
+                .uri("/auth/logout")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueMatches("Set-Cookie",
+                        "JWT_TOKEN=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; HttpOnly")
+                .expectBody(String.class).isEqualTo("Logout successful");
     }
 }
