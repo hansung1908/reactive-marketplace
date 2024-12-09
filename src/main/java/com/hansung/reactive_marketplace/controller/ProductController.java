@@ -43,7 +43,7 @@ public class ProductController {
 
     @GetMapping("/product/myList")
     public Mono<Rendering> MyProductList(Authentication authentication) {
-        return Mono.just(Rendering.view("product/myProductListForm")
+        return Mono.just(Rendering.view("product/myListForm")
                 .modelAttribute("myProductList", productService.findMyProductList(authentication))
                 .build());
     }

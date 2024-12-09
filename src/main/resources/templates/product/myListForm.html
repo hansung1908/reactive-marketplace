@@ -11,15 +11,16 @@
         <div class="col-md-6" th:each="product : ${myProductList}">
             <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
                 <div class="col p-4 d-flex flex-column position-static">
+                    <input type="hidden" id="id" th:value="${product.id}"/>
                     <strong class="d-inline-block mb-2 text-primary-emphasis" th:text="${product.status}">판매상태</strong>
                     <h3 class="mb-2" th:text="${product.title}">제목</h3>
                     <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="${product.price} + '원'">가격</h5>
                     <div class="mb-1 text-body-secondary" th:text="${product.createdAt}">등록시간</div>
-                    <p class="card-text mb-auto" th:text="${product.description}" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">내용</p>
-                    <a th:href="@{/product/detail/{id}(id=${product.id})}" class="icon-link gap-1 icon-link-hover stretched-link">
-                        자세히 보기
-                        <svg class="bi"><use xlink:href="#chevron-right"/></svg>
-                    </a>
+                    <p class="card-text mb-auto" th:text="${product.description}" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">내용</p>
+
+                    <a class="btn btn-outline-dark flex-shrink-0" id="product-detail">자세히 보기</a>
+                    <a class="btn btn-outline-dark flex-shrink-0" id="product-updateForm">수정</a>
+                    <a class="btn btn-danger" id="product-delete">삭제</a></li>
                 </div>
                 <div class="col-auto d-none d-lg-block">
                     <img class="card-img-top mb-5 mb-md-0" th:src="${product.thumbnailPath}" style="max-width: 300px; max-height: 4000px;"/>
@@ -30,6 +31,6 @@
 </div>
 
 <div th:insert="~{layout/footer}"></div>
-<script src="/js/user.js"></script>
+<script src="/js/product.js"></script>
 </body>
 </html>
