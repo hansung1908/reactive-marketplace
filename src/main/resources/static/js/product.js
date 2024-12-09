@@ -27,6 +27,42 @@ async function saveProduct() {
     }
 }
 
+async function getProductDetail() {
+    try {
+        const id = document.querySelector('#id').value;
+
+        const url = "/product/detail/" + id;
+
+        const response = await fetch(url, {
+            method: "GET"
+        });
+
+        if(response.ok) {
+            window.location.href = url;
+        }
+    } catch (error) {
+        console.error('Error:', error); // 오류 처리
+    }
+}
+
+async function getProductUpdateForm() {
+    try {
+        const id = document.querySelector('#id').value;
+
+        const url = "/product/updateForm/" + id;
+
+        const response = await fetch(url, {
+            method: "GET"
+        });
+
+        if(response.ok) {
+            window.location.href = url;
+        }
+    } catch (error) {
+        console.error('Error:', error); // 오류 처리
+    }
+}
+
 async function updateProduct() {
     try {
         const formData = new FormData();
@@ -36,7 +72,7 @@ async function updateProduct() {
             formData.append("image", image);
         }
 
-        const id = document.querySelector('#id').value
+        const id = document.querySelector('#id').value;
 
         formData.append('product', JSON.stringify({
             id: id,
@@ -107,8 +143,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    else if (currentPath.startsWith('/product/detail')) {
-        document.getElementById('product-delete').addEventListener('submit', function(event) {
+    else if (currentPath === "/") {
+        document.getElementById('product-detail').addEventListener('click', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작을 방지
+
+            getProductDetail();
+        });
+    }
+
+    else if (currentPath === "/product/myList") {
+        document.getElementById('product-detail').addEventListener('click', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작을 방지
+
+            getProductDetail();
+        });
+
+        document.getElementById('product-updateForm').addEventListener('click', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작을 방지
+
+            getProductUpdateForm();
+        });
+
+        document.getElementById('product-delete').addEventListener('click', function(event) {
             event.preventDefault(); // 기본 폼 제출 동작을 방지
 
             const confirmed = confirm("정말로 상품을 삭제 하시겠습니까?");
