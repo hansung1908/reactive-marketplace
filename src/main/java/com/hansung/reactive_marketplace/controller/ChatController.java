@@ -4,7 +4,7 @@ import com.hansung.reactive_marketplace.service.ChatService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.reactive.result.view.Rendering;
 import reactor.core.publisher.Mono;
 
@@ -17,11 +17,9 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @GetMapping("/chat/open")
-    public Mono<Rendering> openChat(@RequestParam("productId") String productId,
-                                    @RequestParam("sellerId") String sellerId,
-                                    @RequestParam("buyerId") String buyerId) {
-        return chatService.openChat(productId, sellerId, buyerId)
+    @GetMapping("/chat/open/{productId}")
+    public Mono<Rendering> openChat(@PathVariable("productId") String productId, Authentication authentication) {
+        return chatService.openChatByBuyerId(productId, authentication)
                 .map(chatRoom -> Rendering.view("chat/chatForm")
                         .modelAttribute("chatRoom", chatRoom)
                         .build());

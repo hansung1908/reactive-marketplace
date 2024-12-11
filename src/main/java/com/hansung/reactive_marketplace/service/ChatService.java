@@ -14,7 +14,7 @@ public interface ChatService {
     Flux<Chat> findMsgByRoomId(String roomId);
 
     // 채팅방을 여는 메소드
-    Mono<ChatRoomResDto> openChat(String productId, String sellerId, String buyerId);
+    Mono<ChatRoomResDto> openChatByBuyerId(String productId, Authentication authentication);
 
     // 채팅 메시지를 저장하는 메소드
     Mono<Chat> saveMsg(ChatSaveReqDto chatSaveReqDto);

@@ -11,17 +11,14 @@
         <div class="col-md-6" th:each="chatRoom : ${chatRooms}">
             <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
                 <div class="col p-4 d-flex flex-column position-static">
+                    <input type="hidden" id="productId" th:value="${chatRoom.productId}">
                     <strong class="d-inline-block mb-2 text-primary-emphasis" th:text="${chatRoom.recentCreatedAt}">최근 채팅 일자</strong>
                     <h3 class="mb-2" th:text="${chatRoom.productTitle}">상품 제목</h3>
                     <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'seller : ' + ${chatRoom.sellerNickname}">판매자</h5>
                     <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'buyer : ' + ${chatRoom.buyerNickname}">구매자</h5>
                     <p class="card-text mb-auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;" th:text="${chatRoom.recentMsg}">최근 채팅 내용</p>
-                    <form id="chat-open">
-                        <input type="hidden" id="productId" th:value="${chatRoom.productId}">
-                        <input type="hidden" id="sellerId" th:value="${chatRoom.sellerId}">
-                        <input type="hidden" id="buyerId" th:value="${chatRoom.buyerId}">
-                        <button type="submit" class="btn btn-outline-dark flex-shrink-0">채팅방 입장</button>
-                    </form>
+
+                    <a class="btn btn-outline-dark flex-shrink-0" id="chat-open">1:1 대화</a>
                 </div>
                 <div class="col-auto d-none d-lg-block">
                     <img class="card-img-top mb-5 mb-md-0" th:src="${chatRoom.thumbnailPath}" style="max-width: 300px; max-height: 4000px;"/>

@@ -1,10 +1,8 @@
 async function openChat() {
     try {
         const productId = document.querySelector('#productId').value;
-        const sellerId = document.querySelector('#sellerId').value;
-        const buyerId = document.querySelector('#buyerId').value;
 
-        const url = `/chat/open?productId=${encodeURIComponent(productId)}&sellerId=${encodeURIComponent(sellerId)}&buyerId=${encodeURIComponent(buyerId)}`;
+        const url = "/chat/open/" + productId;
 
         const response = await fetch(url, {
             method: "GET"
@@ -23,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPath = window.location.pathname;
 
     if (currentPath.startsWith('/product/detail')) {
-        document.getElementById('chat-open').addEventListener('submit', function(event) {
+        document.getElementById('chat-open').addEventListener('click', function(event) {
             event.preventDefault(); // 기본 폼 제출 동작을 방지
 
             openChat();
@@ -31,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     else if (currentPath.startsWith('/chat/chatRoom')) {
-        document.getElementById('chat-open').addEventListener('submit', function(event) {
+        document.getElementById('chat-open').addEventListener('click', function(event) {
             event.preventDefault(); // 기본 폼 제출 동작을 방지
 
             openChat();
