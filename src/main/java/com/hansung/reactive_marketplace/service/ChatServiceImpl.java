@@ -8,14 +8,13 @@ import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @Service
-public class ChatServiceImpl implements ChatService{
+public class ChatServiceImpl implements ChatService {
 
     private final ChatRepository chatRepository;
 
@@ -40,41 +39,36 @@ public class ChatServiceImpl implements ChatService{
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Mono<ChatRoomResDto> openChat(String productId, String sellerId, String buyerId) {
-        return chatRoomRepository.findChatRoom(productId, sellerId, buyerId)
-                .flatMap(chatRoom -> ReactiveSecurityContextHolder.getContext()
-                        .flatMap(securityContext -> userService.findUserByUsername(securityContext.getAuthentication().getName()) // 로그인된 사용자 username으로 user 정보 가져오기
-                                .flatMap(user -> imageService.findProfileImageById(user.getId())
-                                        .map(image -> new ChatRoomResDto(
-                                                chatRoom.getId(),
-                                                chatRoom.getSellerId(),
-                                                chatRoom.getBuyerId(),
-                                                image.getThumbnailPath()
-                                        ))
-                                )
+    public Mono<ChatRoomResDto> openChatByBuyerId(String productId, Authentication authentication) {
+        return chatRoomRepository.findChatRoom(productId, AuthUtils.getAuthenticationUser(authentication).getId())
+                .flatMap(chatRoom -> imageService.findProfileImageById(AuthUtils.getAuthenticationUser(authentication).getId())
+                        .map(image -> new ChatRoomResDto(
+                                chatRoom.getId(),
+                                chatRoom.getSellerId(),
+                                chatRoom.getBuyerId(),
+                                image.getThumbnailPath()
                         ))
-                .switchIfEmpty(Mono.defer(() -> { // 새로운 채팅방 생성 로직
-                    ChatRoom chatRoom = new ChatRoom.Builder()
-                            .productId(productId)
-                            .sellerId(sellerId)
-                            .buyerId(buyerId)
-                            .build();
+                        .switchIfEmpty(Mono.defer(() ->
+                                productService.findProductById(productId)
+                                        .flatMap(product -> {
+                                            ChatRoom newChatRoom = new ChatRoom.Builder()
+                                                    .productId(productId)
+                                                    .sellerId(product.getId())
+                                                    .buyerId(AuthUtils.getAuthenticationUser(authentication).getId())
+                                                    .build();
 
-                    return chatRoomRepository.save(chatRoom)
-                            .flatMap(savedChatRoom -> ReactiveSecurityContextHolder.getContext()
-                                    .flatMap(securityContext -> userService.findUserByUsername(securityContext.getAuthentication().getName()) // 로그인된 사용자 username으로 user 정보 가져오기
-                                            .flatMap(user -> imageService.findProfileImageById(user.getId())
-                                                    .map(image -> new ChatRoomResDto(
-                                                                    savedChatRoom.getId(),
-                                                                    savedChatRoom.getSellerId(),
-                                                                    savedChatRoom.getBuyerId(),
-                                                                    image.getThumbnailPath()
-                                                            )
-                                                    )
-                                            )
-                                    )
-                            );
-                }));
+                                            return chatRoomRepository.save(newChatRoom)
+                                                    .flatMap(savedChatRoom ->
+                                                            imageService.findProfileImageById(AuthUtils.getAuthenticationUser(authentication).getId())
+                                                                    .map(image -> new ChatRoomResDto(
+                                                                            savedChatRoom.getId(),
+                                                                            savedChatRoom.getSellerId(),
+                                                                            savedChatRoom.getBuyerId(),
+                                                                            image.getThumbnailPath()
+                                                                    ))
+                                                    );
+                                        })
+                        )));
     }
 
     public Mono<Chat> saveMsg(ChatSaveReqDto chatSaveReqDto) {
