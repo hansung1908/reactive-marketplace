@@ -66,7 +66,6 @@ public class ProductServiceImpl implements ProductService{
                                     product.getTitle(),
                                     product.getPrice(),
                                     product.getDescription(),
-                                    product.getUserId(),
                                     user.getNickname(),
                                     image.getImagePath()));
                 });

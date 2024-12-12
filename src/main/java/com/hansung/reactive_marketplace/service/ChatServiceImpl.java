@@ -2,8 +2,9 @@ package com.hansung.reactive_marketplace.service;
 
 import com.hansung.reactive_marketplace.domain.*;
 import com.hansung.reactive_marketplace.dto.request.ChatSaveReqDto;
-import com.hansung.reactive_marketplace.dto.response.ChatRoomListResDto;
+import com.hansung.reactive_marketplace.dto.response.BuyerChatRoomListResDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomResDto;
+import com.hansung.reactive_marketplace.dto.response.SellerChatRoomListResDto;
 import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
@@ -39,7 +40,18 @@ public class ChatServiceImpl implements ChatService {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Mono<ChatRoomResDto> openChatByBuyerId(String productId, Authentication authentication) {
+    public Mono<ChatRoomResDto> openChatBySeller(String productId, String buyerId, Authentication authentication) {
+        return chatRoomRepository.findChatRoom(productId, buyerId)
+                .flatMap(chatRoom -> imageService.findProfileImageById(AuthUtils.getAuthenticationUser(authentication).getId())
+                        .map(image -> new ChatRoomResDto(
+                                chatRoom.getId(),
+                                chatRoom.getSellerId(),
+                                chatRoom.getBuyerId(),
+                                image.getThumbnailPath()
+                        )));
+    }
+
+    public Mono<ChatRoomResDto> openChatByBuyer(String productId, Authentication authentication) {
         return chatRoomRepository.findChatRoom(productId, AuthUtils.getAuthenticationUser(authentication).getId())
                 .flatMap(chatRoom -> imageService.findProfileImageById(AuthUtils.getAuthenticationUser(authentication).getId())
                         .map(image -> new ChatRoomResDto(
@@ -82,8 +94,8 @@ public class ChatServiceImpl implements ChatService {
         return chatRepository.save(chat);
     }
 
-    public Flux<ChatRoomListResDto> findChatRoomList(Authentication authentication) {
-        return chatRoomRepository.findChatRoomListBySellerOrBuyer(AuthUtils.getAuthenticationUser(authentication).getId())
+    public Flux<SellerChatRoomListResDto> findChatRoomListBySeller(Authentication authentication) {
+        return chatRoomRepository.findChatRoomListBySeller(AuthUtils.getAuthenticationUser(authentication).getId())
                 .flatMap(chatRoom -> Mono.zip(
                         productService.findProductById(chatRoom.getProductId()),
                         chatRepository.findRecentChat(chatRoom.getId()),
@@ -97,12 +109,37 @@ public class ChatServiceImpl implements ChatService {
                     User seller = tuple.getT4();
                     User buyer = tuple.getT5();
 
-                    return new ChatRoomListResDto(
+                    return new SellerChatRoomListResDto(
                             chatRoom.getProductId(),
                             product.getTitle(),
-                            chatRoom.getSellerId(),
                             seller.getNickname(),
                             chatRoom.getBuyerId(),
+                            buyer.getNickname(),
+                            chat.getMsg(),
+                            chat.getCreatedAt(),
+                            image.getThumbnailPath());
+                }));
+    }
+
+    public Flux<BuyerChatRoomListResDto> findChatRoomListByBuyer(Authentication authentication) {
+        return chatRoomRepository.findChatRoomListByBuyer(AuthUtils.getAuthenticationUser(authentication).getId())
+                .flatMap(chatRoom -> Mono.zip(
+                        productService.findProductById(chatRoom.getProductId()),
+                        chatRepository.findRecentChat(chatRoom.getId()),
+                        imageService.findProductImageById(chatRoom.getProductId()),
+                        userService.findUserById(chatRoom.getSellerId()),
+                        userService.findUserById(chatRoom.getBuyerId())
+                ).map(tuple -> {
+                    Product product = tuple.getT1();
+                    Chat chat = tuple.getT2();
+                    Image image = tuple.getT3();
+                    User seller = tuple.getT4();
+                    User buyer = tuple.getT5();
+
+                    return new BuyerChatRoomListResDto(
+                            chatRoom.getProductId(),
+                            product.getTitle(),
+                            seller.getNickname(),
                             buyer.getNickname(),
                             chat.getMsg(),
                             chat.getCreatedAt(),
