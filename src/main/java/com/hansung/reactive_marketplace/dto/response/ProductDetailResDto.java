@@ -5,6 +5,5 @@ public record ProductDetailResDto(
         String title,
         int price,
         String description,
-        String userId,
         String nickname,
         String imagePath) {}

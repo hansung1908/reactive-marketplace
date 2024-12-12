@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:insert="~{layout/header}"></div>
+</head>
+<body>
+<div th:insert="~{layout/navbar}"></div>
+
+<div class="container mt-5 pt-4">
+    <div class="row mb-2">
+        <div class="col-md-6" th:each="sellerChatRoom : ${sellerChatRoomList}">
+            <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                <div class="col p-4 d-flex flex-column position-static">
+                    <input type="hidden" id="sellerProductId" th:value="${sellerChatRoom.productId}">
+                    <input type="hidden" id="buyerId" th:value="${sellerChatRoom.buyerId}">
+                    <strong class="d-inline-block mb-2 text-primary-emphasis" th:text="${sellerChatRoom.recentCreatedAt}">최근 채팅 일자</strong>
+                    <h3 class="mb-2" th:text="${SellerChatRoom.productTitle}">상품 제목</h3>
+                    <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'seller : ' + ${sellerChatRoom.sellerNickname}">판매자</h5>
+                    <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'buyer : ' + ${sellerChatRoom.buyerNickname}">구매자</h5>
+                    <p class="card-text mb-auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;" th:text="${sellerChatRoom.recentMsg}">최근 채팅 내용</p>
+
+                    <a class="btn btn-outline-dark flex-shrink-0" id="chat-open-seller">1:1 대화</a>
+                </div>
+                <div class="col-auto d-none d-lg-block">
+                    <img class="card-img-top mb-5 mb-md-0" th:src="${sellerChatRoom.thumbnailPath}" style="max-width: 300px; max-height: 4000px;"/>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6" th:each="buyerChatRoom : ${buyerChatRoomList}">
+            <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                <div class="col p-4 d-flex flex-column position-static">
+                    <input type="hidden" id="buyerProductId" th:value="${buyerChatRoom.productId}">
+                    <strong class="d-inline-block mb-2 text-primary-emphasis" th:text="${buyerChatRoom.recentCreatedAt}">최근 채팅 일자</strong>
+                    <h3 class="mb-2" th:text="${buyerChatRoom.productTitle}">상품 제목</h3>
+                    <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'seller : ' + ${buyerChatRoom.sellerNickname}">판매자</h5>
+                    <h5 class="d-inline-block mb-2 text-primary-emphasis" th:text="'buyer : ' + ${buyerChatRoom.buyerNickname}">구매자</h5>
+                    <p class="card-text mb-auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;" th:text="${buyerChatRoom.recentMsg}">최근 채팅 내용</p>
+
+                    <a class="btn btn-outline-dark flex-shrink-0" id="chat-open-buyer">1:1 대화</a>
+                </div>
+                <div class="col-auto d-none d-lg-block">
+                    <img class="card-img-top mb-5 mb-md-0" th:src="${buyerChatRoom.thumbnailPath}" style="max-width: 300px; max-height: 4000px;"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:insert="~{layout/footer}"></div>
+<script src="/js/user.js"></script>
+<script src="/js/chatRoom.js"></script>
+</body>
+</html>

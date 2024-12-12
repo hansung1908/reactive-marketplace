@@ -17,18 +17,29 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @GetMapping("/chat/open/{productId}")
-    public Mono<Rendering> openChat(@PathVariable("productId") String productId, Authentication authentication) {
-        return chatService.openChatByBuyerId(productId, authentication)
-                .map(chatRoom -> Rendering.view("chat/chatForm")
+    @GetMapping("/chat/chatRoom/{productId}/{buyerId}")
+    public Mono<Rendering> openChatBySeller(@PathVariable("productId") String productId,
+                                            @PathVariable("buyerId") String buyerId,
+                                            Authentication authentication) {
+        return chatService.openChatBySeller(productId, buyerId, authentication)
+                .map(chatRoom -> Rendering.view("chat/chatRoomForm")
+                        .modelAttribute("chatRoom", chatRoom)
+                        .build());
+    }
+
+    @GetMapping("/chat/chatRoom/{productId}")
+    public Mono<Rendering> openChatByBuyer(@PathVariable("productId") String productId, Authentication authentication) {
+        return chatService.openChatByBuyer(productId, authentication)
+                .map(chatRoom -> Rendering.view("chat/chatRoomForm")
                         .modelAttribute("chatRoom", chatRoom)
                         .build());
     }
 
     @GetMapping("/chat/chatRoomList")
     public Mono<Rendering> findChatRoomList(Authentication authentication) {
-        return Mono.just(Rendering.view("chat/chatRoomForm")
-                .modelAttribute("chatRooms", chatService.findChatRoomList(authentication))
+        return Mono.just(Rendering.view("chat/chatRoomListForm")
+                .modelAttribute("sellerChatRoomList", chatService.findChatRoomListBySeller(authentication))
+                .modelAttribute("buyerChatRoomList", chatService.findChatRoomListByBuyer(authentication))
                 .build());
     }
 }
