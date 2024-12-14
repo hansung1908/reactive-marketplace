@@ -14,7 +14,9 @@
             </div>
 
             <div class="col-md-6">
-                <input type="hidden" id="buyerProductId" th:value="${product.id}"/>
+                <input type="hidden" id="productIdByBuyer" th:value="${product.id}"/>
+                <input type="hidden" id="sellerIdByBuyer" th:value="${product.sellerId}"/>
+                <input type="hidden" id="buyerIdByBuyer" th:value="${product.buyerId}"/>
                 <div class="small mb-1" th:text="${product.nickname}">업로더 이름</div>
                 <h1 class="display-5 fw-bolder" th:text="${product.title}">제목</h1>
                 <span class="fs-5 mb-5" th:text="${product.price} + '원'">가격</span>

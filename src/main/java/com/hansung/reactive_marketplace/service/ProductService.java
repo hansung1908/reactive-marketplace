@@ -8,6 +8,7 @@ import com.hansung.reactive_marketplace.dto.request.ProductUpdateReqDto;
 import com.hansung.reactive_marketplace.dto.response.MyProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
+import com.hansung.reactive_marketplace.dto.response.ProductUpdateResDto;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import reactor.core.publisher.Flux;
@@ -19,7 +20,10 @@ public interface ProductService {
     Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, User user);
 
     // 상품 상세 조회
-    Mono<ProductDetailResDto> findProductDetail(String productId);
+    Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication);
+
+    // 상품 수정 폼에 표시할 내용 조회
+    Mono<ProductUpdateResDto> findProductForUpdateForm(String productId);
 
     // 상품 목록 조회
     Flux<ProductListResDto> findProductList();

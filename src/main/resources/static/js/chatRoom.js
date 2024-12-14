@@ -1,11 +1,12 @@
 async function openChatBySeller() {
     try {
-        const productId = document.querySelector('#sellerProductId').value;
-        const buyerId = document.querySelector('#buyerId').value;
+        const productId = document.querySelector('#productIdBySeller').value;
+        const sellerId = document.querySelector('#sellerIdBySeller').value;
+        const buyerId = document.querySelector('#buyerIdBySeller').value;
 
-        const url = `/chat/chatRoom?productId=${encodeURIComponent(productId)}&buyerId=${encodeURIComponent(buyerId)}`;
+        const url = `/chat/chatRoom?productId=${encodeURIComponent(productId)}&sellerId=${encodeURIComponent(sellerId)}&buyerId=${encodeURIComponent(buyerId)}`;
 
-        const response = await fetch("/chat/chatroom", {
+        const response = await fetch(url, {
             method: "GET"
         });
 
@@ -19,9 +20,11 @@ async function openChatBySeller() {
 
 async function openChatByBuyer() {
     try {
-        const productId = document.querySelector('#buyerProductId').value;
+        const productId = document.querySelector('#productIdByBuyer').value;
+        const sellerId = document.querySelector('#sellerIdByBuyer').value;
+        const buyerId = document.querySelector('#buyerIdByBuyer').value;
 
-        const url = `/chat/chatRoom?productId=${encodeURIComponent(productId)}`;
+        const url = `/chat/chatRoom?productId=${encodeURIComponent(productId)}&sellerId=${encodeURIComponent(sellerId)}&buyerId=${encodeURIComponent(buyerId)}`;
 
         const response = await fetch(url, {
             method: "GET"

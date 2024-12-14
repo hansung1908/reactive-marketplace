@@ -9,6 +9,7 @@ import com.hansung.reactive_marketplace.dto.request.ProductUpdateReqDto;
 import com.hansung.reactive_marketplace.dto.response.MyProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
+import com.hansung.reactive_marketplace.dto.response.ProductUpdateResDto;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import org.springframework.data.domain.Sort;
@@ -51,7 +52,7 @@ public class ProductServiceImpl implements ProductService{
                 });
     }
 
-    public Mono<ProductDetailResDto> findProductDetail(String productId) {
+    public Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication) {
         Mono<Product> productMono = productRepository.findById(productId);
         Mono<Image> imageMono = imageService.findProductImageById(productId);
 
@@ -62,6 +63,28 @@ public class ProductServiceImpl implements ProductService{
 
                     return userService.findUserById(product.getUserId())
                             .map(user -> new ProductDetailResDto(
+                                    product.getId(),
+                                    product.getTitle(),
+                                    product.getPrice(),
+                                    product.getDescription(),
+                                    user.getNickname(),
+                                    image.getImagePath(),
+                                    product.getUserId(),
+                                    AuthUtils.getAuthenticationUser(authentication).getId()));
+                });
+    }
+
+    public Mono<ProductUpdateResDto> findProductForUpdateForm(String productId) {
+        Mono<Product> productMono = productRepository.findById(productId);
+        Mono<Image> imageMono = imageService.findProductImageById(productId);
+
+        return Mono.zip(productMono, imageMono)
+                .flatMap(tuple -> {
+                    Product product = tuple.getT1();
+                    Image image = tuple.getT2();
+
+                    return userService.findUserById(product.getUserId())
+                            .map(user -> new ProductUpdateResDto(
                                     product.getId(),
                                     product.getTitle(),
                                     product.getPrice(),
