@@ -13,8 +13,11 @@
         <div class="row gx-4 gx-lg-5 align-items-center">
             <div id="user_chat_data" class="user_chat_data">
                 <input type="hidden" id="roomId" th:value="${chatRoom.id}"/>
+                <input type="hidden" id="senderId" th:value="${chatRoom.senderId}"/>
+                <input type="hidden" id="receiverId" th:value="${chatRoom.receiverId}"/>
                 <div class="profile_name">
-                    &nbsp;&nbsp;&nbsp;&nbsp;<img class="mr-3 rounded-circle" th:src="${chatRoom.thumbnailPath}">&nbsp;&nbsp;
+                    &nbsp;&nbsp;&nbsp;&nbsp;<img class="mr-3 rounded-circle" th:src="${chatRoom.receiverThumbnailPath}">&nbsp;&nbsp;
+                    <span th:text="${chatRoom.receiverNickname}"></span>
                 </div>
 
                 <div class="container-fluid chat_section" id="chat-box"></div>
@@ -32,6 +35,6 @@
 </div>
 
 <div th:insert="~{layout/footer}"></div>
-<!--<script src="/js/chat.js"></script>-->
+<script src="/js/chat.js"></script>
 </body>
 </html>

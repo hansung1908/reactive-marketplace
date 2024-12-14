@@ -27,8 +27,8 @@ public class ProductController {
     }
 
     @GetMapping("/product/detail/{id}")
-    public Mono<Rendering> ProductDetail(@PathVariable("id") String id) {
-        return productService.findProductDetail(id)
+    public Mono<Rendering> ProductDetail(@PathVariable("id") String id, Authentication authentication) {
+        return productService.findProductDetail(id, authentication)
                 .map(product -> Rendering.view("product/detailForm")
                         .modelAttribute("product", product)
                         .build());
@@ -50,7 +50,7 @@ public class ProductController {
 
     @GetMapping("/product/updateForm/{id}")
     public Mono<Rendering> updateForm(@PathVariable("id") String id) {
-        return productService.findProductDetail(id)
+        return productService.findProductForUpdateForm(id)
                 .map(product -> Rendering.view("product/updateForm")
                         .modelAttribute("product", product)
                         .build());

@@ -8,12 +8,12 @@ import reactor.core.publisher.Mono;
 
 public interface ChatRoomRepository extends ReactiveMongoRepository<ChatRoom, String> {
 
-    @Query(value = "{ productId : ?0, buyerId : ?1 }")
+    @Query(value = "{ 'productId' : ?0, 'buyerId' : ?1 }")
     Mono<ChatRoom> findChatRoom(String productId, String buyerId);
 
-    @Query(value = "{ buyerId : ?0 }")
-    Flux<ChatRoom> findChatRoomListByBuyer(String userId);
-
-    @Query(value = "{ sellerId : ?0 }")
+    @Query(value = "{ 'sellerId' : ?0 }")
     Flux<ChatRoom> findChatRoomListBySeller(String userId);
+
+    @Query(value = "{ 'buyerId' : ?0 }")
+    Flux<ChatRoom> findChatRoomListByBuyer(String userId);
 }

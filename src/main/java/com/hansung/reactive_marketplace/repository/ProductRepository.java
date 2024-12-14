@@ -14,7 +14,7 @@ public interface ProductRepository extends ReactiveMongoRepository<Product, Stri
     @Query(value = "{}", fields = "{ '_id' : 1, 'title' : 1, 'price' : 1 }")
     Flux<Product> findProductList(Sort sort);
 
-    @Query(value = "{ 'userId' : ?0 }", fields = "{ '_id' : 1, 'title' : 1, 'description' : 1, 'price' : 1, 'status' : 1, 'createdAt' : 1 }")
+    @Query(value = "{ 'userId' : ?0 }")
     Flux<Product> findMyProductList(String userId, Sort sort);
 
     @Query(value = "{ '_id' : ?0 }")
