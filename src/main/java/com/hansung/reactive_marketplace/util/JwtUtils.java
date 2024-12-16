@@ -1,6 +1,5 @@
 package com.hansung.reactive_marketplace.util;
 
-import com.hansung.reactive_marketplace.jwt.JwtCategory;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +20,7 @@ import java.util.List;
 @Component
 public class JwtUtils {
 
-    private static final long expiredMs = 24 * 60 * 60 * 1000L;
+    private static final long expiredMs = 24 * 60 * 60 * 1000L; // 시간 * 분 * 초 * 밀리초 -> 24시간
 
     private final SecretKey secretKey;
 
@@ -59,9 +58,8 @@ public class JwtUtils {
     }
 
     // jwt token 생성
-    public String createJwt(JwtCategory jwtCategory, String username, String role) {
+    public String createJwt(String username, String role) {
         return Jwts.builder() // jwt token 빌더 생성
-                .claim("category", jwtCategory)
                 .claim("username", username) // username 추가
                 .claim("role", role) // role 추가
                 .issuedAt(new Date(System.currentTimeMillis())) // 발행 시간(iat) 설정
@@ -70,17 +68,16 @@ public class JwtUtils {
                 .compact(); // 문자열로 직렬화 + 토큰 실제 생성
     }
 
-    public Mono<TokenPair> generateTokens(UserDetails user) {
+    public Mono<String> generateTokens(UserDetails user) {
         String username = user.getUsername();
         String role = user.getAuthorities().toString();
 
-        String accessToken = createJwt(JwtCategory.ACCESS, username, role);
-        String refreshToken = createJwt(JwtCategory.REFRESH, username, role);
+        String accessToken = createJwt(username, role);
 
-        return Mono.just(new TokenPair(accessToken, refreshToken));
+        return Mono.just(accessToken);
     }
-    public ResponseEntity<String> createLoginResponse(TokenPair tokens) {
-        ResponseCookie cookie = ResponseCookie.from("JWT_TOKEN", tokens.accessToken())
+    public ResponseEntity<String> createLoginResponse(String token) {
+        ResponseCookie cookie = ResponseCookie.from("JWT_TOKEN", token)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
@@ -90,5 +87,4 @@ public class JwtUtils {
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body("Login successful");
     }
-    public record TokenPair(String accessToken, String refreshToken) {}
 }
