@@ -65,21 +65,19 @@ public class AuthControllerTest {
         // CustomUserDetail 객체 생성 (User 데이터로부터)
         CustomUserDetail userDetail = new CustomUserDetail(user);
 
-        // 다중 토큰 생성
-        String accessToken = "mockAccessToken";
-        String refreshToken = "mockRefreshToken";
-        JwtUtils.TokenPair mockTokenPair = new JwtUtils.TokenPair(accessToken, refreshToken);
+        // 모의 토큰 생성
+        String accessToken = "mockToken";
 
         // 모의 응답 생성
         ResponseEntity<String> mockResponse = ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, "JWT_TOKEN=mockAccessToken")
+                .header(HttpHeaders.SET_COOKIE, "JWT_TOKEN=mockToken")
                 .body("Login successful");
 
         // Mocking 서비스 동작
         when(customReactiveUserDetailService.findByUsername(validLoginReqDto.username())).thenReturn(Mono.just(userDetail));
         when(bCryptPasswordEncoder.matches(validLoginReqDto.password(), userDetail.getPassword())).thenReturn(true);
-        when(jwtUtils.generateTokens(any(UserDetails.class))).thenReturn(Mono.just(mockTokenPair));
-        when(jwtUtils.createLoginResponse(mockTokenPair)).thenReturn(mockResponse);
+        when(jwtUtils.generateTokens(any(UserDetails.class))).thenReturn(Mono.just(accessToken));
+        when(jwtUtils.createLoginResponse(accessToken)).thenReturn(mockResponse);
 
         // 로그인 테스트 수행
         webTestClient.post()
@@ -88,7 +86,7 @@ public class AuthControllerTest {
                 .bodyValue(validLoginReqDto)
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().valueMatches(HttpHeaders.SET_COOKIE, "JWT_TOKEN=mockAccessToken")
+                .expectHeader().valueMatches(HttpHeaders.SET_COOKIE, "JWT_TOKEN=mockToken")
                 .expectBody(String.class).isEqualTo("Login successful");
     }
 
