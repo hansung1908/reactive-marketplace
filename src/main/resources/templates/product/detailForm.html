@@ -14,21 +14,18 @@
             </div>
 
             <div class="col-md-6">
-                <input type="hidden" id="productIdByBuyer" th:value="${product.id}"/>
-                <input type="hidden" id="sellerIdByBuyer" th:value="${product.sellerId}"/>
-                <input type="hidden" id="buyerIdByBuyer" th:value="${product.buyerId}"/>
                 <div class="small mb-1" th:text="${product.nickname}">업로더 이름</div>
                 <h1 class="display-5 fw-bolder" th:text="${product.title}">제목</h1>
                 <span class="fs-5 mb-5" th:text="${product.price} + '원'">가격</span>
                 <p class="lead" th:text="${product.description}">설명</p>
 
-                <a class="btn btn-outline-dark flex-shrink-0" id="chat-open-buyer">1:1 대화</a>
+                <a class="btn btn-outline-dark flex-shrink-0"
+                   th:href="@{/chat/chatRoom(productId=${product.id}, sellerId=${product.sellerId}, buyerId=${product.buyerId})}">1:1 대화</a>
             </div>
         </div>
     </div>
 </div>
 
 <div th:insert="~{layout/footer}"></div>
-<script src="/js/chatRoom.js"></script>
 </body>
 </html>
