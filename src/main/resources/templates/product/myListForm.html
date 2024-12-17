@@ -18,9 +18,8 @@
                     <div class="mb-1 text-body-secondary" th:text="${product.createdAt}">등록시간</div>
                     <p class="card-text mb-auto" th:text="${product.description}" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">내용</p>
 
-                    <a class="btn btn-outline-dark flex-shrink-0" id="product-detail">자세히 보기</a>
-                    <a class="btn btn-outline-dark flex-shrink-0" id="product-updateForm">수정</a>
-                    <a class="btn btn-danger" id="product-delete">삭제</a></li>
+                    <a class="btn btn-outline-dark flex-shrink-0" th:href="@{/product/detail/{id}(id=${product.id})}">자세히 보기</a>
+                    <a class="btn btn-outline-dark flex-shrink-0" th:href="@{/product/updateForm/{id}(id=${product.id})}">수정</a>
                 </div>
                 <div class="col-auto d-none d-lg-block">
                     <img class="card-img-top mb-5 mb-md-0" th:src="${product.thumbnailPath}" style="max-width: 300px; max-height: 4000px;"/>
@@ -31,6 +30,5 @@
 </div>
 
 <div th:insert="~{layout/footer}"></div>
-<script src="/js/product.js"></script>
 </body>
 </html>

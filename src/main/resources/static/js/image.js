@@ -1,3 +1,4 @@
+// 이미지 미리보기 표시
 function previewImage() {
     const imageInput = document.getElementById('image');
     const previewImage = document.getElementById('preview');

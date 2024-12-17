@@ -11,7 +11,9 @@
         <div class="container py-5">
             <h1 class="text-body-emphasis">Full-width jumbotron</h1>
             <p class="col-lg-8 mx-auto lead">
-                This takes the basic jumbotron above and makes its background edge-to-edge with a <code>.container</code> inside to align content. Similar to above, it's been recreated with built-in grid and utility classes.
+                This takes the basic jumbotron above and makes its background edge-to-edge with a
+                <code>.container</code> inside to align content. Similar to above, it's been recreated with built-in
+                grid and utility classes.
             </p>
         </div>
     </div>
@@ -22,7 +24,6 @@
         <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
             <div class="col mb-5" th:each="product : ${productList}">
                 <div class="card h-100">
-                    <input type="hidden" id="id" th:value="${product.id}"/>
                     <img class="card-img-top" th:src="${product.thumbnailPath}"/>
                     <div class="card-body p-4">
                         <div class="text-center">
@@ -32,7 +33,7 @@
                     </div>
                     <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
                         <div class="text-center">
-                            <a class="btn btn-outline-dark mt-auto" id="product-detail">자세히 보기</a>
+                            <a class="btn btn-outline-dark mt-auto" th:href="@{/product/detail/{id}(id=${product.id})}">자세히 보기</a>
                         </div>
                     </div>
                 </div>
@@ -42,6 +43,5 @@
 </div>
 
 <div th:insert="~{layout/footer}"></div>
-<script src="/js/product.js"></script>
 </body>
 </html>
