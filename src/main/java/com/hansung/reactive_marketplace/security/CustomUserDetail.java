@@ -3,10 +3,12 @@ package com.hansung.reactive_marketplace.security;
 import com.hansung.reactive_marketplace.domain.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Getter
 public class CustomUserDetail implements UserDetails {
@@ -19,10 +21,14 @@ public class CustomUserDetail implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Collection<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(() -> "ROLE_" + user.getRole());
+        return Stream.of(user.getRole())
+                .map(role -> "ROLE_" + role)
+                .map(role -> new SimpleGrantedAuthority(role))
+                .collect(Collectors.toList());
+    }
 
-        return authorities;
+    public String getRole() {
+        return "ROLE_" + user.getRole();
     }
 
     @Override

@@ -13,7 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -74,9 +73,9 @@ public class AuthControllerTest {
                 .body("Login successful");
 
         // Mocking 서비스 동작
-        when(customReactiveUserDetailService.findByUsername(validLoginReqDto.username())).thenReturn(Mono.just(userDetail));
+        when(customReactiveUserDetailService.findCustomUserDetailByUsername(validLoginReqDto.username())).thenReturn(Mono.just(userDetail));
         when(bCryptPasswordEncoder.matches(validLoginReqDto.password(), userDetail.getPassword())).thenReturn(true);
-        when(jwtUtils.generateTokens(any(UserDetails.class))).thenReturn(Mono.just(accessToken));
+        when(jwtUtils.generateToken(any(CustomUserDetail.class))).thenReturn(Mono.just(accessToken));
         when(jwtUtils.createLoginResponse(accessToken)).thenReturn(mockResponse);
 
         // 로그인 테스트 수행
@@ -104,7 +103,7 @@ public class AuthControllerTest {
         CustomUserDetail userDetail = new CustomUserDetail(user);
 
         // 잘못된 비밀번호 비교
-        when(customReactiveUserDetailService.findByUsername(invalidLoginReqDto.username())).thenReturn(Mono.just(userDetail));  // 사용자 찾기
+        when(customReactiveUserDetailService.findCustomUserDetailByUsername(invalidLoginReqDto.username())).thenReturn(Mono.just(userDetail));  // 사용자 찾기
         when(bCryptPasswordEncoder.matches(invalidLoginReqDto.password(), userDetail.getPassword())).thenReturn(false);  // 비밀번호 불일치 처리
 
         // 로그인 실패 테스트 수행 (잘못된 자격 증명)
@@ -118,7 +117,7 @@ public class AuthControllerTest {
     @Test
     void testLoginFailureUserNotFound() {
         // 사용자 데이터가 존재하지 않을 경우 테스트
-        when(customReactiveUserDetailService.findByUsername(invalidLoginReqDto.username())).thenReturn(Mono.empty());  // 사용자 없음
+        when(customReactiveUserDetailService.findCustomUserDetailByUsername(invalidLoginReqDto.username())).thenReturn(Mono.empty());  // 사용자 없음
 
         // 로그인 실패 테스트 수행 (사용자 없음)
         webTestClient.post()
