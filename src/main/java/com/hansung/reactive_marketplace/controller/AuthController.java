@@ -30,10 +30,10 @@ public class AuthController {
 
     @PostMapping("/auth/login")
     public Mono<ResponseEntity<String>> login(@RequestBody LoginReqDto loginReqDto) {
-        return customReactiveUserDetailService.findByUsername(loginReqDto.username())
+        return customReactiveUserDetailService.findCustomUserDetailByUsername(loginReqDto.username())
                 .filter(user -> bCryptPasswordEncoder.matches(loginReqDto.password(), user.getPassword()))
-                .flatMap(userDetails -> jwtUtils.generateTokens(userDetails))
-                .map(tokenPair -> jwtUtils.createLoginResponse(tokenPair))
+                .flatMap(userDetail -> jwtUtils.generateToken(userDetail))
+                .map(token -> jwtUtils.createLoginResponse(token))
                 .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Invalid username or password")));
     }

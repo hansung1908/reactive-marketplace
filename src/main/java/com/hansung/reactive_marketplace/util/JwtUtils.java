@@ -1,11 +1,11 @@
 package com.hansung.reactive_marketplace.util;
 
+import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -35,13 +35,6 @@ public class JwtUtils {
                 .get("username", String.class); // String returnType으로 username 추출
     }
 
-    // jwt token에서 password 값을 추출
-    public String extractPassword(String token) {
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token) // parser를 통해 secretKey와 token을 검증
-                .getPayload() // payload 추출
-                .get("password", String.class); // String returnType으로 username 추출
-    }
-
     // jwt token에서 role 값을 추출
     public List<String> extractRole(String token) {
         return Collections.singletonList(Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token)
@@ -68,18 +61,14 @@ public class JwtUtils {
                 .compact(); // 문자열로 직렬화 + 토큰 실제 생성
     }
 
-    public Mono<String> generateTokens(UserDetails user) {
-        String username = user.getUsername();
-        String role = user.getAuthorities().toString();
-
-        String accessToken = createJwt(username, role);
-
-        return Mono.just(accessToken);
+    public Mono<String> generateToken(CustomUserDetail user) {
+        return Mono.just(createJwt(user.getUsername(), user.getRole()));
     }
     public ResponseEntity<String> createLoginResponse(String token) {
         ResponseCookie cookie = ResponseCookie.from("JWT_TOKEN", token)
                 .httpOnly(true)
                 .secure(true)
+                .sameSite("Strict")
                 .path("/")
                 .build();
 

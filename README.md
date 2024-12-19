@@ -268,3 +268,36 @@ $count: # 개수 세기
 - 객체 직렬화를 지원
 - dto 같은 단순 데이터 전송 객체에 유용
 </details>
+
+<details>
+  <summary>jwt 도입</summary>
+
+- json web token
+- 구조 :
+  - 헤더: 토큰 타입, 암호화 알고리즘 명시
+  - 페이로드: JWT에 넣을 데이터, JWT 발급 / 만료일 등 명시
+  - 시그니처: 헤더, 페이로드가 변조 되었는지를 확인하는 역할
+- 장점 :
+  - 서버의 확장성이 높으며 대량의 트래픽이 발생해도 대처할 수 있음
+  - (서버가 분리되어 있는 경우) 특정 DB/서버에 의존하지 않아도 인증할 수 있음
+  - -> userId를 받던 코드를 authentication 객체로 받아 처리하도록 수정
+- 단점 : 
+  - state-ful(세션) 방식보다 비교적 많은 양의 데이터가 반복적으로 전송되므로 네트워크 성능저하가 될 수 있음
+  - 데이터 노출로 인한 보안적인 문제 존재
+  - -> 후술할 보안 옵션을 통해 토큰 보안 구축
+
+### 개발 사항
+- 토큰 관련 사항
+  - 편의성과 보안을 위해 토큰을 쿠키에 등록
+  - 쿠키에 토큰을 등록하면 요청마다 자동으로 포함되어 별도의 등록 코드가 필요없음
+  - 다만, 자동 등록으로 csrf 공격에 취약
+  - 그래서 http-onlu 옵션을 추가해 js 접근을 막고
+  - secure 옵션을 추가해 https 프로토콜에서만 전송하도록 설계
+  - 추가로 SameSite 옵션을 추가하여 xss 공격 제한
+- webflux에서 구현시 알아둬야할 사항
+  - session을 stateless 상태로 만들기 위해 NoOpServerSecurityContextRepository.getInstance()를 securityWebFilterChain에 등록
+  - mvc와 다르게 ReactiveAuthenticationManager와 ServerAuthenticationConverter가 필요
+  - 각각 인증 절차와 토큰 변환 절차를 구현후 AuthenticationWebFilter에 설정
+  - 그후 securityWebFilterChain에 등록
+  - /login 엔드포인트를 컨트롤러에 설정하여 로그인 성공시 토큰 발급 절차 구현
+</details>
