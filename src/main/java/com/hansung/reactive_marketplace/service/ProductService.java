@@ -1,7 +1,6 @@
 package com.hansung.reactive_marketplace.service;
 
 import com.hansung.reactive_marketplace.domain.Product;
-import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.ProductDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductUpdateReqDto;
@@ -17,7 +16,7 @@ import reactor.core.publisher.Mono;
 public interface ProductService {
 
     // 상품 저장
-    Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, User user);
+    Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, Authentication authentication);
 
     // 상품 상세 조회
     Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication);

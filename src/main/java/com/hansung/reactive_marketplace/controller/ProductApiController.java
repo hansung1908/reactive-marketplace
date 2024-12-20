@@ -4,10 +4,9 @@ import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.dto.request.ProductDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductUpdateReqDto;
-import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import com.hansung.reactive_marketplace.service.ProductService;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -23,8 +22,8 @@ public class ProductApiController {
     @PostMapping("/product/save")
     public Mono<Product> save(@RequestPart("product") ProductSaveReqDto productSaveReqDto,
                               @RequestPart(value = "image") FilePart image, // 상품 이미지는 반드시 필요 (required = true (기본값))
-                              @AuthenticationPrincipal CustomUserDetail userDetail) {
-        return productService.saveProduct(productSaveReqDto, image, userDetail.getUser());
+                              Authentication authentication) {
+        return productService.saveProduct(productSaveReqDto, image, authentication);
     }
 
     @PutMapping("/product/update")
