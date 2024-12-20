@@ -2,7 +2,6 @@ package com.hansung.reactive_marketplace.service;
 
 import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.Product;
-import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.ProductDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductUpdateReqDto;
@@ -34,12 +33,12 @@ public class ProductServiceImpl implements ProductService{
         this.imageService = imageService;
     }
 
-    public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, User user) {
+    public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, Authentication authentication) {
         Product product = new Product.Builder()
                 .title(productSaveReqDto.title())
                 .description(productSaveReqDto.description())
                 .price(productSaveReqDto.price())
-                .userId(user.getId())
+                .userId(AuthUtils.getAuthenticationUser(authentication).getId())
                 .build();
 
         return productRepository.save(product)
