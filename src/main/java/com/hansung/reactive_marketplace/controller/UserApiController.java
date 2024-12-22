@@ -1,10 +1,11 @@
 package com.hansung.reactive_marketplace.controller;
 
-import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.service.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -19,19 +20,29 @@ public class UserApiController {
     }
 
     @PostMapping("/user/save")
-    public Mono<User> save(@RequestPart("user") UserSaveReqDto userSaveReqDto,
-                           @RequestPart(value = "image", required = false) FilePart image) {
-        return userService.saveUser(userSaveReqDto, image);
+    public Mono<ResponseEntity<String>> save(@RequestPart("user") UserSaveReqDto userSaveReqDto,
+                                             @RequestPart(value = "image", required = false) FilePart image) {
+        return userService.saveUser(userSaveReqDto, image)
+                .then(Mono.just(ResponseEntity.status(HttpStatus.CREATED)
+                        .body("User saved successfully")))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Error saving user: " + e.getMessage())));
     }
 
     @PutMapping("/user/update")
-    public Mono<Void> update(@RequestPart("user") UserUpdateReqDto userUpdateReqDto,
-                             @RequestPart(value = "image", required = false) FilePart image) {
-        return userService.updateUser(userUpdateReqDto, image);
+    public Mono<ResponseEntity<String>> update(@RequestPart("user") UserUpdateReqDto userUpdateReqDto,
+                                               @RequestPart(value = "image", required = false) FilePart image) {
+        return userService.updateUser(userUpdateReqDto, image)
+                .then(Mono.just(ResponseEntity.ok("User updated successfully")))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Error updating user: " + e.getMessage())));
     }
 
     @DeleteMapping("/user/delete")
-    public Mono<Void> delete(@RequestBody UserDeleteReqDto userDeleteReqDto) {
-        return userService.deleteUser(userDeleteReqDto);
+    public Mono<ResponseEntity<String>> delete(@RequestBody UserDeleteReqDto userDeleteReqDto) {
+        return userService.deleteUser(userDeleteReqDto)
+                .then(Mono.just(ResponseEntity.ok("User deleted successfully")))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Error deleting user: " + e.getMessage())));
     }
 }
