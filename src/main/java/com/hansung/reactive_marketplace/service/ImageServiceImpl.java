@@ -2,6 +2,8 @@ package com.hansung.reactive_marketplace.service;
 
 import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.ImageSource;
+import com.hansung.reactive_marketplace.exception.ApiException;
+import com.hansung.reactive_marketplace.exception.ExceptionMessage;
 import com.hansung.reactive_marketplace.repository.ImageRepository;
 import com.hansung.reactive_marketplace.util.ImageUtils;
 import net.coobird.thumbnailator.Thumbnails;
@@ -37,6 +39,10 @@ public class ImageServiceImpl implements ImageService{
     }
 
     public Mono<Image> uploadImage(FilePart image, String id, ImageSource imageSource) {
+        if (image == null) {
+            return Mono.error(new ApiException(ExceptionMessage.IMAGE_UPLOAD_FAILED));
+        }
+
         String imageName = ImageUtils.generateUniqueImageName(image.filename());
 
         Image imageData = new Image.Builder()
@@ -92,11 +98,13 @@ public class ImageServiceImpl implements ImageService{
             }
         }
 
-        return imageRepository.save(imageData);
+        return imageRepository.save(imageData)
+                .onErrorMap(e -> new ApiException(ExceptionMessage.IMAGE_UPLOAD_FAILED));
     }
 
     public Mono<Image> findProductImageById(String productId) {
-        return imageRepository.findByProductId(productId);
+        return imageRepository.findByProductId(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)));
     }
 
     public Mono<Image> findProfileImageById(String userId) {
@@ -111,29 +119,35 @@ public class ImageServiceImpl implements ImageService{
 
     public Mono<Void> deleteProductImageById(String productId) {
         return imageRepository.findByProductId(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> {
                     try {
                         Files.deleteIfExists(Paths.get(image.getImagePath()));
                         Files.deleteIfExists(Paths.get(image.getThumbnailPath()));
                         return Mono.just(image);
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        return Mono.error(new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
                     }
                 })
-                .then(imageRepository.deleteByProductId(productId));
+                .then(imageRepository.deleteByProductId(productId))
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
     }
 
     public Mono<Void> deleteProfileImageById(String userId) {
         return imageRepository.findByUserId(userId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> {
                     try {
                         Files.deleteIfExists(Paths.get(image.getImagePath()));
                         Files.deleteIfExists(Paths.get(image.getThumbnailPath()));
                         return Mono.just(image);
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        return Mono.error(new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
                     }
                 })
-                .then(imageRepository.deleteByUserId(userId));
+                .then(imageRepository.deleteByUserId(userId))
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
     }
 }

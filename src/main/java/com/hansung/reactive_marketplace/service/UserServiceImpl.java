@@ -5,6 +5,8 @@ import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.dto.response.UserProfileResDto;
+import com.hansung.reactive_marketplace.exception.ApiException;
+import com.hansung.reactive_marketplace.exception.ExceptionMessage;
 import com.hansung.reactive_marketplace.repository.UserRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import org.springframework.http.codec.multipart.FilePart;
@@ -33,7 +35,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsByUsername(userSaveReqDto.username())
                 .flatMap(exist -> {
                     if (exist) { // 중복이 있으면 error
-                        return Mono.error(new RuntimeException("Username already exists"));
+                        return Mono.error(new ApiException(ExceptionMessage.USERNAME_ALREADY_EXISTS));
                     }
 
                     User user = new User.Builder()
@@ -55,23 +57,28 @@ public class UserServiceImpl implements UserService {
     }
 
     public Mono<User> findUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+        return userRepository.findByUsername(username)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)));
     }
 
     public Mono<User> findUserById(String userId) {
-        return userRepository.findById(userId);
+        return userRepository.findById(userId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)));
     }
 
     @Override
     public Mono<UserProfileResDto> findUserProfile(Authentication authentication) {
         return imageService.findProfileImageById(AuthUtils.getAuthenticationUser(authentication).getId())
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)))
                 .flatMap(image -> findUserById(AuthUtils.getAuthenticationUser(authentication).getId())
                         .map(user -> new UserProfileResDto(
                                 user.getUsername(),
                                 user.getNickname(),
                                 user.getEmail(),
                                 image.getImagePath()
-                        )));
+                        )))
+                .onErrorResume(e -> e instanceof ApiException ? Mono.error(e) :
+                        Mono.error(new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR)));
     }
 
     public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto, FilePart image) {
@@ -103,6 +110,10 @@ public class UserServiceImpl implements UserService {
     }
 
     public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
-        return userRepository.deleteById(userDeleteReqDto.id());
+        return userRepository.findById(userDeleteReqDto.id())
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)))
+                .flatMap(user -> userRepository.deleteById(user.getId()))
+                .onErrorResume(e -> e instanceof ApiException ? Mono.error(e) :
+                        Mono.error(new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR)));
     }
 }

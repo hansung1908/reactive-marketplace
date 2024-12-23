@@ -9,6 +9,8 @@ import com.hansung.reactive_marketplace.dto.response.MyProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductUpdateResDto;
+import com.hansung.reactive_marketplace.exception.ApiException;
+import com.hansung.reactive_marketplace.exception.ExceptionMessage;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import org.springframework.data.domain.Sort;
@@ -48,12 +50,16 @@ public class ProductServiceImpl implements ProductService{
                                 .thenReturn(savedProduct);
                     }
                     return Mono.just(savedProduct);
-                });
+                })
+                .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR)); // 저장 중 에러 처리
     }
 
     public Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication) {
-        Mono<Product> productMono = productRepository.findById(productId);
-        Mono<Image> imageMono = imageService.findProductImageById(productId);
+        Mono<Product> productMono = productRepository.findById(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND))); // 상품을 찾을 수 없음
+
+        Mono<Image> imageMono = imageService.findProductImageById(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND))); // 이미지가 없음
 
         return Mono.zip(productMono, imageMono)
                 .flatMap(tuple -> {
@@ -74,8 +80,11 @@ public class ProductServiceImpl implements ProductService{
     }
 
     public Mono<ProductUpdateResDto> findProductForUpdateForm(String productId) {
-        Mono<Product> productMono = productRepository.findById(productId);
-        Mono<Image> imageMono = imageService.findProductImageById(productId);
+        Mono<Product> productMono = productRepository.findById(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)));
+
+        Mono<Image> imageMono = imageService.findProductImageById(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)));
 
         return Mono.zip(productMono, imageMono)
                 .flatMap(tuple -> {
@@ -123,27 +132,36 @@ public class ProductServiceImpl implements ProductService{
     }
 
     public Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto, FilePart image) {
-        Mono<Void> updateProductMono = productRepository.updateProduct(
-                productUpdateReqDto.id(),
-                productUpdateReqDto.description(),
-                productUpdateReqDto.price(),
-                productUpdateReqDto.status()
-        );
+        return productRepository.findById(productUpdateReqDto.id())
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND))) // 상품을 찾을 수 없음
+                .flatMap(existingProduct -> {
+                    Mono<Void> updateProductMono = productRepository.updateProduct(
+                            productUpdateReqDto.id(),
+                            productUpdateReqDto.description(),
+                            productUpdateReqDto.price(),
+                            productUpdateReqDto.status()
+                    );
 
-        // 반환값이 없는 상태에서 조건문을 사용하기 위해 분리
-        if (image != null) {
-            return updateProductMono.then(
-                    imageService.deleteProductImageById(productUpdateReqDto.id())
-                            .then(imageService.uploadImage(image, productUpdateReqDto.id(), productUpdateReqDto.imageSource()))
-                            .then() // Mono<Void> 반환을 위한 then
-            );
-        } else {
-            return updateProductMono;
-        }
+                    if (image != null) {
+                        return updateProductMono.then(
+                                imageService.deleteProductImageById(productUpdateReqDto.id())
+                                        .then(imageService.uploadImage(image, productUpdateReqDto.id(), productUpdateReqDto.imageSource()))
+                                        .then()
+                        );
+                    } else {
+                        return updateProductMono;
+                    }
+                })
+                .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR)); // 업데이트 중 에러 처리
     }
 
     public Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto) {
-        return productRepository.deleteById(productDeleteReqDto.id())
-                .then(imageService.deleteProductImageById(productDeleteReqDto.id()));
+        return productRepository.findById(productDeleteReqDto.id())
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND))) // 상품을 찾을 수 없음
+                .flatMap(existingProduct ->
+                        productRepository.deleteById(existingProduct.getId())
+                                .then(imageService.deleteProductImageById(existingProduct.getId()))
+                                .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR)) // 삭제 중 에러 처리
+                );
     }
 }

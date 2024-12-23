@@ -4,6 +4,8 @@ import com.hansung.reactive_marketplace.domain.*;
 import com.hansung.reactive_marketplace.dto.request.ChatSaveReqDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomListResDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomResDto;
+import com.hansung.reactive_marketplace.exception.ApiException;
+import com.hansung.reactive_marketplace.exception.ExceptionMessage;
 import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
@@ -36,6 +38,7 @@ public class ChatServiceImpl implements ChatService {
 
     public Flux<Chat> findMsgByRoomId(String roomId) {
         return chatRepository.findMsgByRoomId(roomId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.CHAT_NOT_FOUND)))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -75,8 +78,11 @@ public class ChatServiceImpl implements ChatService {
                                                                         ))
                                                         );
                                             })
-                                    )));
-                });
+                                    )))
+                            .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)));
+                })
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.CHAT_ROOM_CREATION_FAILED));
     }
 
     public Mono<Chat> saveMsg(ChatSaveReqDto chatSaveReqDto) {
@@ -87,17 +93,20 @@ public class ChatServiceImpl implements ChatService {
                 .roomId(chatSaveReqDto.roomId())
                 .build();
 
-        return chatRepository.save(chat);
+        return chatRepository.save(chat)
+                .onErrorMap(e -> new ApiException(ExceptionMessage.CHAT_SAVE_FAILED));
     }
 
     public Flux<ChatRoomListResDto> findChatRoomListBySeller(Authentication authentication) {
         return chatRoomRepository.findChatRoomListBySeller(AuthUtils.getAuthenticationUser(authentication).getId())
-                .flatMap(chatRoom -> createChatRoomListResponse(chatRoom));
+                .flatMap(chatRoom -> createChatRoomListResponse(chatRoom))
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.CHAT_ROOM_NOT_FOUND)));
     }
 
     public Flux<ChatRoomListResDto> findChatRoomListByBuyer(Authentication authentication) {
         return chatRoomRepository.findChatRoomListByBuyer(AuthUtils.getAuthenticationUser(authentication).getId())
-                .flatMap(chatRoom -> createChatRoomListResponse(chatRoom));
+                .flatMap(chatRoom -> createChatRoomListResponse(chatRoom))
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.CHAT_ROOM_NOT_FOUND)));
     }
 
     public Mono<ChatRoomListResDto> createChatRoomListResponse(ChatRoom chatRoom) {
@@ -123,6 +132,6 @@ public class ChatServiceImpl implements ChatService {
                     chat.getMsg(),
                     chat.getCreatedAt(),
                     image.getThumbnailPath());
-        });
+        }).onErrorResume(e -> Mono.error(new ApiException(ExceptionMessage.CHAT_ROOM_INFO_FETCH_FAILED)));
     }
 }
