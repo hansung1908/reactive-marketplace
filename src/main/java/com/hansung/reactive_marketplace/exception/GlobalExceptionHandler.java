@@ -12,7 +12,7 @@ import org.springframework.web.server.WebExceptionHandler;
 import reactor.core.publisher.Mono;
 
 @Component
-@Order(-2)
+@Order(-2) // Order(-1) 에 등록된 DefaultErrorWebExceptionHandler 보다 높은 우선순위를 부여하기 위함
 public class GlobalExceptionHandler implements WebExceptionHandler {
 
     private final ObjectMapper objectMapper;
@@ -52,5 +52,3 @@ public class GlobalExceptionHandler implements WebExceptionHandler {
             String message,
             int status) {}
 }
-
-
