@@ -22,6 +22,9 @@ async function saveUser() {
 
         if(response.ok) {
             window.location.href = '/';
+        } else {
+            const errorData = await response.json();
+            alert(`회원가입 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
         }
     } catch (error) {
         console.error('Error:', error); // 오류 처리
@@ -52,6 +55,9 @@ async function updateUser() {
 
         if(response.ok) {
             window.location.href = '/';
+        } else {
+            const errorData = await response.json();
+            alert(`회원 정보 수정 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -74,6 +80,9 @@ async function deleteUser() {
 
         if(response.ok) {
             window.location.href = '/';
+        } else {
+            const errorData = await response.json();
+            alert(`회원 탈퇴 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -100,6 +109,9 @@ async function loginUser() {
             localStorage.setItem('isLoggedIn', 'true');
 
             window.location.href = '/';
+        } else {
+            const errorData = await response.json();
+            alert(`로그인 실패: ${errorData.message || '아이디 또는 비밀번호가 올바르지 않습니다.'}`);
         }
     } catch (error) {
         console.error('Error:', error); // 오류 처리

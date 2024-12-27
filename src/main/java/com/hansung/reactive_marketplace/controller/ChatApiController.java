@@ -28,8 +28,6 @@ public class ChatApiController {
     public Mono<ResponseEntity<String>> saveMsg(@RequestBody ChatSaveReqDto chatSaveReqDto) {
         return chatService.saveMsg(chatSaveReqDto)
                 .then(Mono.just(ResponseEntity.status(HttpStatus.CREATED)
-                        .body("Chat message saved successfully")))
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Error saving chat message: " + e.getMessage())));
+                        .body("Chat message saved successfully")));
     }
 }
