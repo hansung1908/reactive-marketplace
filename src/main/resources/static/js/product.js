@@ -21,6 +21,9 @@ async function saveProduct() {
 
         if(response.ok) {
             window.location.href = '/';
+        } else {
+            const errorData = await response.json();
+            alert(`상품 등록 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
         }
     } catch (error) {
         console.error('Error:', error); // 오류 처리
@@ -53,6 +56,9 @@ async function updateProduct() {
 
         if(response.ok) {
             window.location.href = '/product/detail/' + id;
+        } else {
+            const errorData = await response.json();
+            alert(`상품 수정 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -75,6 +81,9 @@ async function deleteProduct() {
 
         if(response.ok) {
             window.location.href = '/';
+        } else {
+            const errorData = await response.json();
+            alert(`상품 삭제 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
         }
     } catch (error) {
         console.error('Error:', error);

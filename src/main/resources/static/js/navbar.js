@@ -35,7 +35,9 @@ async function logoutUser() {
             localStorage.removeItem('isLoggedIn'); // 로그인 확인 값 제거
 
             window.location.href = '/'; // 로그아웃 후 메인 페이지로 redirect
-        }
+        } else { // 서버에서 오류 응답을 받은 경우
+            const errorData = await response.json();
+            alert(`로그아웃 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
     } catch (error) {
         console.error('Error:', error);
     }

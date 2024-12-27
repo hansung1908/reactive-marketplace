@@ -91,7 +91,8 @@ async function addMessage() {
         if (response.ok) {
             msgInput.value = ""; // 입력 필드를 비움
         } else {
-            console.error('Failed to send message:', response.status);
+            const errorData = await response.json();
+            alert(`메시지 전송 실패: ${errorData.message || '알 수 없는 오류가 발생했습니다.'}`);
         }
     } catch (error) {
         console.error('Error:', error);
