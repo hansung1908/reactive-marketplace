@@ -23,6 +23,7 @@ public enum ExceptionMessage {
     CHAT_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "채팅 메시지 저장에 실패했습니다."),
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
     CHAT_ROOM_INFO_FETCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "채팅방 정보 조회에 실패했습니다."),
+    SELLER_SAME_AS_LOGGED_IN_USER(HttpStatus.BAD_REQUEST, "판매자와 로그인된 사용자가 동일하여 1:1 대화를 할 수 없습니다."),
 
     // 그외 나머지 예외
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "알 수 없는 서버 에러입니다.");

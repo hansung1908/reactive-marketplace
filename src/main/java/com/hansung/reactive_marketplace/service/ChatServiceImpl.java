@@ -45,6 +45,10 @@ public class ChatServiceImpl implements ChatService {
     public Mono<ChatRoomResDto> openChat(String productId, String sellerId, String buyerId, Authentication authentication) {
         return Mono.just(AuthUtils.getAuthenticationUser(authentication))
                 .flatMap(authUser -> {
+                    if (authUser.getId().equals(sellerId)) {
+                        return Mono.error(new ApiException(ExceptionMessage.SELLER_SAME_AS_LOGGED_IN_USER));
+                    }
+
                     String senderId = authUser.getId().equals(sellerId) ? sellerId : buyerId;
                     String receiverId = authUser.getId().equals(sellerId) ? buyerId : sellerId;
 
