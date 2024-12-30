@@ -301,3 +301,16 @@ $count: # 개수 세기
   - 그후 securityWebFilterChain에 등록
   - /login 엔드포인트를 컨트롤러에 설정하여 로그인 성공시 토큰 발급 절차 구현
 </details>
+
+<details>
+  <summary>리액티브 환경에서 전역 예외 처리</summary>
+
+- 기존 동기 방식에선 @ControllerAdvice와 @ExceptionHandler를 이용하여 전역 예외 처리 구현
+- 비동기 방식에선 WebExceptionHandler 인터페이스를 구현하여 전역 예외 처리 코드 구성
+- 이때 기존에 작동하던 DefaultErrorWebExceptionHandler가 @Order(-1)에 우선순위를 가져 먼저 실행됨
+- 그래서 보다 높은 우선순위를 부여하기 위해 @Order(-2) 설정
+---
+- enum 타입을 통해 각 서비스 api에서 발생할 수 있는 오류에 이름 지정
+- 어디서 어떤 예외가 발생했는지 확인하기 편함
+- 각 서비스에 switchIfEmpty 오퍼레이션이나 onErrorResume 오퍼레이션을 통해 예외 트리거를 설정
+</details>
