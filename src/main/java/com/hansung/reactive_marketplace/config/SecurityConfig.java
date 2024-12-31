@@ -49,10 +49,6 @@ public class SecurityConfig {
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
                         .anyExchange().permitAll())
 
-                .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint(new RedirectServerAuthenticationEntryPoint("/user/loginForm"))
-                ) // exception 발생시 로그인 페이지로 redirect
-
                 .addFilterAt(authenticationWebFilter(authenticationManager, authenticationConverter),
                         SecurityWebFiltersOrder.AUTHENTICATION) // jwt 로그인 검증 필터 추가
 

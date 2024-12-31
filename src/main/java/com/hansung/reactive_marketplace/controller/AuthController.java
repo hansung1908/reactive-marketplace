@@ -1,6 +1,8 @@
 package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.dto.request.LoginReqDto;
+import com.hansung.reactive_marketplace.exception.ApiException;
+import com.hansung.reactive_marketplace.exception.ExceptionMessage;
 import com.hansung.reactive_marketplace.security.CustomReactiveUserDetailService;
 import com.hansung.reactive_marketplace.util.JwtUtils;
 import org.springframework.http.HttpHeaders;
@@ -34,8 +36,7 @@ public class AuthController {
                 .filter(user -> bCryptPasswordEncoder.matches(loginReqDto.password(), user.getPassword()))
                 .flatMap(userDetail -> jwtUtils.generateToken(userDetail))
                 .map(token -> jwtUtils.createLoginResponse(token))
-                .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("Invalid username or password")));
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.UNAUTHORIZED)));
     }
 
     @PostMapping("/auth/logout")
