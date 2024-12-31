@@ -300,6 +300,7 @@ $count: # 개수 세기
   - 각각 인증 절차와 토큰 변환 절차를 구현후 AuthenticationWebFilter에 설정
   - 그후 securityWebFilterChain에 등록
   - /login 엔드포인트를 컨트롤러에 설정하여 로그인 성공시 토큰 발급 절차 구현
+  - converter 부분에서 토큰을 가져오는 부분을 justOrEmpty로 하여 로그인을 안한 상태에서 첫 페이지 접속이 가능하도록 설계
 </details>
 
 <details>
@@ -309,8 +310,24 @@ $count: # 개수 세기
 - 비동기 방식에선 WebExceptionHandler 인터페이스를 구현하여 전역 예외 처리 코드 구성
 - 이때 기존에 작동하던 DefaultErrorWebExceptionHandler가 @Order(-1)에 우선순위를 가져 먼저 실행됨
 - 그래서 보다 높은 우선순위를 부여하기 위해 @Order(-2) 설정
+- 이때 우선순위가 바뀌면서 SecurityConfig.class에서 설정한 exceptionHandling이 작동하지 않음
+- 그래서 aop를 사용하여 컨트롤러에서 발생하는 authentication null exception을 따로 처리
 ---
 - enum 타입을 통해 각 서비스 api에서 발생할 수 있는 오류에 이름 지정
 - 어디서 어떤 예외가 발생했는지 확인하기 편함
 - 각 서비스에 switchIfEmpty 오퍼레이션이나 onErrorResume 오퍼레이션을 통해 예외 트리거를 설정
+</details>
+
+<details>
+  <summary>리액티브 환경에서 aop 적용</summary>
+
+- 구현 이유
+  - 전역 예외 처리를 적용하며 기존에 만든 exceptionHandling 설정이 작동 x
+  - 그래서 로그인을 안한 유저의 요청에 대한 별도의 처리가 필요
+  - controller에서 authentication을 사용하는 부분에서 null exception이 발생
+  - 해당 지점을 트리거로 예외 처리하는 aop 적용 코드 작성
+---
+- webflux에서 구현시 알아둬야할 사항
+  - joinPoint.proceed()는 동기적으로 작동하므로 지양해야 함
+  - 반환 타입을 mono나 flux로 하여 비동기 처리를 지원
 </details>
