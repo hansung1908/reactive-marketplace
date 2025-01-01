@@ -1,8 +1,8 @@
 package com.hansung.reactive_marketplace.exception;
 
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class AuthenticationAspect {
 
-    @Around("execution(* com.hansung.reactive_marketplace.controller.*.*(.., org.springframework.security.core.Authentication, ..))")
+    @Before("execution(* com.hansung.reactive_marketplace.controller.*.*(.., org.springframework.security.core.Authentication, ..))")
     private Mono<Authentication> checkAuthentication(ProceedingJoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
         for (Object arg : args) {
