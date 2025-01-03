@@ -2,6 +2,8 @@ package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.LoginReqDto;
+import com.hansung.reactive_marketplace.exception.ApiException;
+import com.hansung.reactive_marketplace.exception.ExceptionMessage;
 import com.hansung.reactive_marketplace.jwt.JwtAuthenticationManager;
 import com.hansung.reactive_marketplace.security.CustomReactiveUserDetailService;
 import com.hansung.reactive_marketplace.security.CustomUserDetail;
@@ -12,10 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -25,6 +29,9 @@ public class AuthControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;  // 테스트 클라이언트 (WebFlux 기반의 테스트용 클라이언트)
+
+    @Autowired
+    private AuthController authController;
 
     @MockBean
     private CustomReactiveUserDetailService customReactiveUserDetailService;  // 사용자 상세 정보 서비스 모킹
@@ -107,11 +114,10 @@ public class AuthControllerTest {
         when(bCryptPasswordEncoder.matches(invalidLoginReqDto.password(), userDetail.getPassword())).thenReturn(false);  // 비밀번호 불일치 처리
 
         // 로그인 실패 테스트 수행 (잘못된 자격 증명)
-        webTestClient.post()
-                .uri("/auth/login")
-                .bodyValue(invalidLoginReqDto)
-                .exchange()
-                .expectStatus().isUnauthorized();
+        StepVerifier.create(authController.login(invalidLoginReqDto))
+                .expectErrorMatches(throwable -> throwable instanceof ApiException
+                        && ((ApiException) throwable).getException() == ExceptionMessage.UNAUTHORIZED)
+                .verify();
     }
 
     @Test
@@ -120,11 +126,10 @@ public class AuthControllerTest {
         when(customReactiveUserDetailService.findCustomUserDetailByUsername(invalidLoginReqDto.username())).thenReturn(Mono.empty());  // 사용자 없음
 
         // 로그인 실패 테스트 수행 (사용자 없음)
-        webTestClient.post()
-                .uri("/auth/login")
-                .bodyValue(invalidLoginReqDto)
-                .exchange()
-                .expectStatus().isUnauthorized();
+        StepVerifier.create(authController.login(invalidLoginReqDto))
+                .expectErrorMatches(throwable -> throwable instanceof ApiException
+                        && ((ApiException) throwable).getException() == ExceptionMessage.UNAUTHORIZED)
+                .verify();
     }
 
     @Test
