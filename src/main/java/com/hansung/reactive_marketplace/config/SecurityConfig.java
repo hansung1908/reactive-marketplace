@@ -47,7 +47,13 @@ public class SecurityConfig {
                 .httpBasic(httpBasicSpec -> httpBasicSpec.disable())
 
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
-                        .anyExchange().permitAll())
+                        .pathMatchers("/", "/auth/**", "/js/**", "/css/**", "/image/**", "/img/**").permitAll()
+                        .pathMatchers("/user/loginForm", "/user/saveForm", "/user/save").permitAll()
+                        .anyExchange().authenticated())
+
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(new RedirectServerAuthenticationEntryPoint("/user/loginForm"))
+                ) // exception 발생시 로그인 페이지로 redirect
 
                 .addFilterAt(authenticationWebFilter(authenticationManager, authenticationConverter),
                         SecurityWebFiltersOrder.AUTHENTICATION) // jwt 로그인 검증 필터 추가
