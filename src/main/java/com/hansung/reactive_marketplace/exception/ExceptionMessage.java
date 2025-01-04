@@ -8,6 +8,7 @@ public enum ExceptionMessage {
     USERNAME_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 사용자명입니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호가 일치하지 않습니다."),
 
     // 상품 관련 예외
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
@@ -21,7 +22,6 @@ public enum ExceptionMessage {
     CHAT_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅 메시지를 찾을 수 없습니다."),
     CHAT_ROOM_CREATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "채팅방 생성에 실패했습니다."),
     CHAT_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "채팅 메시지 저장에 실패했습니다."),
-    CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
     CHAT_ROOM_INFO_FETCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "채팅방 정보 조회에 실패했습니다."),
     SELLER_SAME_AS_LOGGED_IN_USER(HttpStatus.BAD_REQUEST, "판매자와 로그인된 사용자가 동일하여 1:1 대화를 할 수 없습니다."),
 

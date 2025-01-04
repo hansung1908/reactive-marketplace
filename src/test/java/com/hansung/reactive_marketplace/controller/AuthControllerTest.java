@@ -116,7 +116,7 @@ public class AuthControllerTest {
         // 로그인 실패 테스트 수행 (잘못된 자격 증명)
         StepVerifier.create(authController.login(invalidLoginReqDto))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException
-                        && ((ApiException) throwable).getException() == ExceptionMessage.UNAUTHORIZED)
+                        && ((ApiException) throwable).getException() == ExceptionMessage.INVALID_CREDENTIALS)
                 .verify();
     }
 
@@ -128,7 +128,7 @@ public class AuthControllerTest {
         // 로그인 실패 테스트 수행 (사용자 없음)
         StepVerifier.create(authController.login(invalidLoginReqDto))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException
-                        && ((ApiException) throwable).getException() == ExceptionMessage.UNAUTHORIZED)
+                        && ((ApiException) throwable).getException() == ExceptionMessage.INVALID_CREDENTIALS)
                 .verify();
     }
 

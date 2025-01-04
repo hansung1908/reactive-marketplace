@@ -103,14 +103,12 @@ public class ChatServiceImpl implements ChatService {
 
     public Flux<ChatRoomListResDto> findChatRoomListBySeller(Authentication authentication) {
         return chatRoomRepository.findChatRoomListBySeller(AuthUtils.getAuthenticationUser(authentication).getId())
-                .flatMap(chatRoom -> createChatRoomListResponse(chatRoom))
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.CHAT_ROOM_NOT_FOUND)));
+                .flatMap(chatRoom -> createChatRoomListResponse(chatRoom));
     }
 
     public Flux<ChatRoomListResDto> findChatRoomListByBuyer(Authentication authentication) {
         return chatRoomRepository.findChatRoomListByBuyer(AuthUtils.getAuthenticationUser(authentication).getId())
-                .flatMap(chatRoom -> createChatRoomListResponse(chatRoom))
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.CHAT_ROOM_NOT_FOUND)));
+                .flatMap(chatRoom -> createChatRoomListResponse(chatRoom));
     }
 
     public Mono<ChatRoomListResDto> createChatRoomListResponse(ChatRoom chatRoom) {
