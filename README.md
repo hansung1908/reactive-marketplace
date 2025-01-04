@@ -319,17 +319,7 @@ $count: # 개수 세기
 </details>
 
 <details>
-  <summary>리액티브 환경에서 aop 적용</summary>
+  <summary>리액티브 환경에서 적용에 주의해야 할 것</summary>
 
-- 구현 이유
-  - 전역 예외 처리를 적용하며 기존에 만든 exceptionHandling 설정이 작동 x
-  - 그래서 로그인을 안한 유저의 요청에 대한 별도의 처리가 필요
-  - controller에서 authentication을 사용하는 부분에서 null exception이 발생
-  - 해당 지점을 트리거로 예외 처리하는 aop 적용 코드 작성
----
-- webflux에서 구현시 알아둬야할 사항
-  - joinPoint.proceed()는 동기적으로 작동하므로 지양해야 함
-  - 반환 타입을 mono나 flux로 하여 비동기 처리를 지원
-  - @Around는 동기적인 방식으로 설계되어 있고 메소드 리턴 타입을 맞춰야 되서 사용 x
-  - 대신 리액티브 스트림 흐름에 영향을 주지 않으면서 유효성 검사를 하기에 적합한 @Before 사용
+- aop는 webflux에서 완전히 호환되지 않아 비동기 동작을 보장할 수 없음
 </details>

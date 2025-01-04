@@ -8,7 +8,7 @@
 
 <div class="container mt-5 pt-4">
     <div class="row mb-2">
-        <div class="col-md-6" th:each="product : ${myProductList}">
+        <div class="col-md-6" th:if="${not #lists.isEmpty(myProductList)}" th:each="product : ${myProductList}">
             <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
                 <div class="col p-4 d-flex flex-column position-static">
                     <input type="hidden" id="id" th:value="${product.id}"/>
@@ -25,6 +25,10 @@
                     <img class="card-img-top mb-5 mb-md-0" th:src="${product.thumbnailPath}" style="max-width: 300px; max-height: 4000px;"/>
                 </div>
             </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(myProductList)}">
+            <p>현재 등록한 상품이 없습니다.</p>
         </div>
     </div>
 </div>

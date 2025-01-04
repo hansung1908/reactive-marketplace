@@ -36,7 +36,7 @@ public class AuthController {
                 .filter(user -> bCryptPasswordEncoder.matches(loginReqDto.password(), user.getPassword()))
                 .flatMap(userDetail -> jwtUtils.generateToken(userDetail))
                 .map(token -> jwtUtils.createLoginResponse(token))
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.UNAUTHORIZED)));
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.INVALID_CREDENTIALS)));
     }
 
     @PostMapping("/auth/logout")
