@@ -20,7 +20,7 @@
                 <p class="lead" th:text="${product.description}">설명</p>
 
                 <a class="btn btn-outline-dark flex-shrink-0"
-                   th:href="@{/chat/chatRoom(productId=${product.id}, sellerId=${product.sellerId}, buyerId=${product.buyerId})}">1:1 대화</a>
+                   th:href="@{/chat/chatRoom(productId=${product.id}, sellerId=${product.sellerId}, buyerId=${product.buyerId}, clickPage='DETAIL')}">1:1 대화</a>
             </div>
         </div>
     </div>

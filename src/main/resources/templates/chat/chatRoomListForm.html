@@ -19,7 +19,7 @@
                         <p class="card-text mb-auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;" th:text="${sellerChatRoom?.recentMsg}">최근 채팅 내용</p>
 
                         <a class="btn btn-outline-dark flex-shrink-0"
-                           th:href="@{/chat/chatRoom(productId=${sellerChatRoom?.productId}, sellerId=${sellerChatRoom?.sellerId}, buyerId=${sellerChatRoom?.buyerId})}">1:1 대화</a>
+                           th:href="@{/chat/chatRoom(productId=${sellerChatRoom?.productId}, sellerId=${sellerChatRoom?.sellerId}, buyerId=${sellerChatRoom?.buyerId}, clickPage='LIST')}">1:1 대화</a>
                     </div>
                     <div class="col-auto d-none d-lg-block">
                         <img class="card-img-top mb-5 mb-md-0" th:src="${sellerChatRoom?.thumbnailPath}" style="max-width: 300px;"/>
@@ -39,7 +39,7 @@
                         <p class="card-text mb-auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;" th:text="${buyerChatRoom?.recentMsg}">최근 채팅 내용</p>
 
                         <a class="btn btn-outline-dark flex-shrink-0"
-                           th:href="@{/chat/chatRoom(productId=${buyerChatRoom?.productId}, sellerId=${buyerChatRoom?.sellerId}, buyerId=${buyerChatRoom?.buyerId})}">1:1 대화</a>
+                           th:href="@{/chat/chatRoom(productId=${buyerChatRoom?.productId}, sellerId=${buyerChatRoom?.sellerId}, buyerId=${buyerChatRoom?.buyerId}, clickPage='LIST')}">1:1 대화</a>
                     </div>
                     <div class="col-auto d-none d-lg-block">
                         <img class="card-img-top mb-5 mb-md-0" th:src="${buyerChatRoom?.thumbnailPath}" style="max-width: 300px; max-height: 4000px;"/>

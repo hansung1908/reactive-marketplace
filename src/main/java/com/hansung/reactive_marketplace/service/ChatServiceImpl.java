@@ -15,6 +15,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.Objects;
+
 @Service
 public class ChatServiceImpl implements ChatService {
 
@@ -42,10 +44,10 @@ public class ChatServiceImpl implements ChatService {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Mono<ChatRoomResDto> openChat(String productId, String sellerId, String buyerId, Authentication authentication) {
+    public Mono<ChatRoomResDto> openChat(String productId, String sellerId, String buyerId, Authentication authentication, ChatClickPage clickPage) {
         return Mono.just(AuthUtils.getAuthenticationUser(authentication))
                 .flatMap(authUser -> {
-                    if (authUser.getId().equals(sellerId)) {
+                    if (authUser.getId().equals(sellerId) && clickPage.equals(ChatClickPage.DETAIL)) {
                         return Mono.error(new ApiException(ExceptionMessage.SELLER_SAME_AS_LOGGED_IN_USER));
                     }
 
