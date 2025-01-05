@@ -1,5 +1,6 @@
 package com.hansung.reactive_marketplace.controller;
 
+import com.hansung.reactive_marketplace.domain.ChatClickPage;
 import com.hansung.reactive_marketplace.service.ChatService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -21,8 +22,9 @@ public class ChatController {
     public Mono<Rendering> openChat(@RequestParam("productId") String productId,
                                     @RequestParam("sellerId") String sellerId,
                                     @RequestParam("buyerId") String buyerId,
+                                    @RequestParam("clickPage") ChatClickPage clickPage,
                                     Authentication authentication) {
-        return chatService.openChat(productId, sellerId, buyerId, authentication)
+        return chatService.openChat(productId, sellerId, buyerId, authentication, clickPage)
                 .map(chatRoom -> Rendering.view("chat/chatRoomForm")
                         .modelAttribute("chatRoom", chatRoom)
                         .build());

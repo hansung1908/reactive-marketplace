@@ -35,7 +35,7 @@ public class GlobalExceptionHandler implements WebExceptionHandler {
         } else {
             response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
             return response.writeWith(Mono.just(response.bufferFactory().wrap(
-                    createErrorResponse("알 수 없는 서버 에러입니다.", HttpStatus.INTERNAL_SERVER_ERROR.value()))));
+                    createErrorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value()))));
         }
     }
 
