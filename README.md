@@ -76,6 +76,9 @@
 ```shell
 db.createCollection("chat", { capped: true, size: 1048576 });
 ```
+- 처음 @CreatedDate를 설정하면 utc 시간대로 설정되어 9시간의 차이가 발생
+- 시간대를 변경하기 위해선 DateTimeProvider를 구현하여 utc+9 시간대(한국 시간대)로 설정 
+- 해당 provider를 @EnableReactiveMongoAuditing에 dateTimeProviderRef로 설정
 </details>
 
 <details>
