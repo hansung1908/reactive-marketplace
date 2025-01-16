@@ -19,25 +19,17 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // 파란박스 만들기
 function getSendMsgBox(data) {
-    let md = data.createdAt.substring(5,10)
-    let tm = data.createdAt.substring(11,16)
-    convertTime = tm + " | " + md
-
     return `<div class="sent_msg">
                 <p>${data.msg}</p>
-                <span class="time_date"> ${convertTime} </span>
+                <span class="time_date"> ${data.createdAt} </span>
             </div>`;
 }
 
 //회색박스 만들기
 function getReceiveMsgBox(data) {
-    let md = data.createdAt.substring(5,10)
-    let tm = data.createdAt.substring(11,16)
-    convertTime = tm + " | " + md
-
     return `<div class="received_withd_msg">
                 <p>${data.msg}</p>
-                <span class="time_date"> ${convertTime} </span>
+                <span class="time_date"> ${data.createdAt} </span>
             </div>`;
 }
 
