@@ -3,6 +3,7 @@ package com.hansung.reactive_marketplace.controller;
 import com.hansung.reactive_marketplace.domain.Chat;
 import com.hansung.reactive_marketplace.dto.request.ChatSaveReqDto;
 import com.hansung.reactive_marketplace.service.ChatService;
+import com.hansung.reactive_marketplace.service.messaging.RedisPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +16,11 @@ public class ChatApiController {
 
     private final ChatService chatService;
 
-    public ChatApiController(ChatService chatService) {
+    private final RedisPublisher redisPublisher;
+
+    public ChatApiController(ChatService chatService, RedisPublisher redisPublisher) {
         this.chatService = chatService;
+        this.redisPublisher = redisPublisher;
     }
 
     @GetMapping(value = "/chat/{roomId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -27,7 +31,12 @@ public class ChatApiController {
     @PostMapping("/chat")
     public Mono<ResponseEntity<String>> saveMsg(@RequestBody ChatSaveReqDto chatSaveReqDto) {
         return chatService.saveMsg(chatSaveReqDto)
-                .then(Mono.just(ResponseEntity.status(HttpStatus.CREATED)
-                        .body("Chat message saved successfully")));
+                .flatMap(savedMessage -> {
+                    // Redis를 통해 메시지 발행
+                    return redisPublisher.publish("chat-messages", savedMessage)
+                            .then(Mono.just(savedMessage));
+                })
+                .map(savedMessage -> ResponseEntity.status(HttpStatus.CREATED)
+                        .body("Chat message saved and published successfully"));
     }
 }
