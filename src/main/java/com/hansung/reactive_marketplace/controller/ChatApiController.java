@@ -31,11 +31,7 @@ public class ChatApiController {
     @PostMapping("/chat")
     public Mono<ResponseEntity<String>> saveMsg(@RequestBody ChatSaveReqDto chatSaveReqDto) {
         return chatService.saveMsg(chatSaveReqDto)
-                .flatMap(savedMessage -> {
-                    // Redis를 통해 메시지 발행
-                    return redisPublisher.publish("chat-messages", savedMessage)
-                            .then(Mono.just(savedMessage));
-                })
+                .flatMap(savedMessage -> redisPublisher.publish(chatSaveReqDto.receiverId(), savedMessage))// Redis를 통해 메시지 발행
                 .map(savedMessage -> ResponseEntity.status(HttpStatus.CREATED)
                         .body("Chat message saved and published successfully"));
     }
