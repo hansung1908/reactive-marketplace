@@ -8,14 +8,13 @@ import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
 import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
+import com.hansung.reactive_marketplace.service.messaging.RedisPublisher;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.util.Objects;
 
 @Service
 public class ChatServiceImpl implements ChatService {
@@ -30,12 +29,15 @@ public class ChatServiceImpl implements ChatService {
 
     private final ImageService imageService;
 
-    public ChatServiceImpl(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ProductService productService, UserService userService, ImageService imageService) {
+    private final RedisPublisher redisPublisher;
+
+    public ChatServiceImpl(ChatRepository chatRepository, ChatRoomRepository chatRoomRepository, ProductService productService, UserService userService, ImageService imageService, RedisPublisher redisPublisher) {
         this.chatRepository = chatRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.productService = productService;
         this.userService = userService;
         this.imageService = imageService;
+        this.redisPublisher = redisPublisher;
     }
 
     public Flux<Chat> findMsgByRoomId(String roomId) {
@@ -100,6 +102,8 @@ public class ChatServiceImpl implements ChatService {
                 .build();
 
         return chatRepository.save(chat)
+                .flatMap(savedMessage -> redisPublisher.publish(chatSaveReqDto.receiverId(), savedMessage)
+                        .thenReturn(savedMessage)) // Redis를 통해 메시지 발행
                 .onErrorMap(e -> new ApiException(ExceptionMessage.CHAT_SAVE_FAILED));
     }
 
