@@ -28,7 +28,7 @@ public class Image {
     private String imagePath;
 
     @CreatedDate
-    private LocalDateTime createdDate;
+    private LocalDateTime createdAt;
 
     private String thumbnailPath;
 
@@ -123,7 +123,7 @@ public class Image {
                 ", imageType='" + imageType + '\'' +
                 ", imageSize=" + imageSize +
                 ", imagePath='" + imagePath + '\'' +
-                ", createdDate=" + createdDate +
+                ", createdAt=" + createdAt +
                 ", thumbnailPath='" + thumbnailPath + '\'' +
                 '}';
     }

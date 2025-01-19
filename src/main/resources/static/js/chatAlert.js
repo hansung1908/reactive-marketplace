@@ -1,9 +1,7 @@
 const eventSource = new EventSource('/chat/notifications');
 
 eventSource.addEventListener('chat-message', (event) => {
-    const chatMessage = JSON.parse(event.data);
-
-    alert(`New message from ${chatMessage.roomId}: ${chatMessage.msg}`);
+    alert(`New message : ${event.data}`);
 });
 
 eventSource.onerror = (error) => {

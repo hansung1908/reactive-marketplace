@@ -25,7 +25,7 @@ public class User {
     private Role role;
 
     @CreatedDate
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     protected User() {
     }
@@ -77,7 +77,7 @@ public class User {
                 ", nickname='" + nickname + '\'' +
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
-                ", created_at=" + created_at +
+                ", createdAt=" + createdAt +
                 '}';
     }
 }

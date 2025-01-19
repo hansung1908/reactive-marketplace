@@ -102,7 +102,7 @@ public class ChatServiceImpl implements ChatService {
                 .build();
 
         return chatRepository.save(chat)
-                .flatMap(savedMessage -> redisPublisher.publish(chatSaveReqDto.receiverId(), savedMessage)
+                .flatMap(savedMessage -> redisPublisher.publish(chatSaveReqDto.receiverId(), savedMessage.getMsg())
                         .thenReturn(savedMessage)) // Redis를 통해 메시지 발행
                 .onErrorMap(e -> new ApiException(ExceptionMessage.CHAT_SAVE_FAILED));
     }
