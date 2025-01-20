@@ -82,6 +82,22 @@ db.createCollection("chat", { capped: true, size: 1048576 });
 </details>
 
 <details>
+  <summary>mongodb localdatetime 문제</summary>
+
+- mongodb는 localdatetime 저장시 지역 시간대를 지원하지 않아 무조건 utc로 저장
+
+### 해결 시도
+- 처음 @CreatedDate를 설정하면 utc 시간대로 설정되어 9시간의 차이가 발생
+- 시간대를 변경하기 위해선 DateTimeProvider를 구현하여 utc+9 시간대(한국 시간대)로 설정
+- 해당 provider를 @EnableReactiveMongoAuditing에 dateTimeProviderRef로 설정
+- 결과 -> 저장시 제대로 9시간 추가되어 저장되지만 db에서 객체로 출력시 해당 시간대로 조정되서 9시간이 또 추가되어 출력
+
+### 결론
+- 기존 설정대로 utc 시간대로 저장
+- 이를 잘 인지하여 향후 개발 과정에서 해당 문제에 맞춰 개발하는 것이 최선이라 판단
+</details>
+
+<details>
   <summary>mongodb-aggregation</summary>
 
 ### 기본 명령어
