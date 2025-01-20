@@ -1,4 +1,4 @@
-package com.hansung.reactive_marketplace;
+package com.hansung.reactive_marketplace.db;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,14 +9,14 @@ import org.springframework.data.redis.core.RedisTemplate;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-class RedisIntegrationTest {
+public class RedisTest {
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
     @Test
     @DisplayName("Redis 연결 및 CRUD 작업 테스트")
-     void testRedisCRUDOperations() {
+    void testRedisCRUDOperations() {
         // 테스트 키와 값 정의
         String testKey = "testKey";
         String testValue = "testValue";
