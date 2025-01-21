@@ -10,6 +10,7 @@ import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
 import com.hansung.reactive_marketplace.service.messaging.RedisPublisher;
 import com.hansung.reactive_marketplace.util.AuthUtils;
+import com.hansung.reactive_marketplace.util.DateTimeUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -138,7 +139,7 @@ public class ChatServiceImpl implements ChatService {
                     chatRoom.getBuyerId(),
                     buyer.getNickname(),
                     chat.getMsg(),
-                    chat.getCreatedAt(),
+                    DateTimeUtils.format(chat.getCreatedAt()),
                     image.getThumbnailPath());
         }).onErrorResume(e -> Mono.error(new ApiException(ExceptionMessage.CHAT_ROOM_INFO_FETCH_FAILED)));
     }

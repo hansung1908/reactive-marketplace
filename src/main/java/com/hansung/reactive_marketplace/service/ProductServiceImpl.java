@@ -13,6 +13,7 @@ import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
+import com.hansung.reactive_marketplace.util.DateTimeUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
@@ -122,7 +123,7 @@ public class ProductServiceImpl implements ProductService{
                                 product.getDescription(),
                                 product.getPrice(),
                                 product.getStatus(),
-                                product.getCreatedAt(),
+                                DateTimeUtils.format(product.getCreatedAt()),
                                 image.getThumbnailPath()
                         )));
     }
