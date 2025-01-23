@@ -38,22 +38,22 @@ public class UserServiceImpl implements UserService {
                 .filter(exist -> !exist) // 중복이 있는 상태를 empty 상태로 변환
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USERNAME_ALREADY_EXISTS)))
                 .flatMap(nonExist -> { // 없으면 회원가입 진행
-                    User user = new User.Builder()
-                            .username(userSaveReqDto.username())
-                            .nickname(userSaveReqDto.nickname())
-                            .password(bCryptPasswordEncoder.encode(userSaveReqDto.password()))
-                            .email(userSaveReqDto.email())
-                            .build();
-
-                    return userRepository.save(user)
-                            .flatMap(savedUser ->
+                    return Mono.fromCallable(() -> new User.Builder()
+                                    .username(userSaveReqDto.username())
+                                    .nickname(userSaveReqDto.nickname())
+                                    .password(bCryptPasswordEncoder.encode(userSaveReqDto.password()))
+                                    .email(userSaveReqDto.email())
+                                    .build())
+                            .flatMap(user -> Mono.zip(
+                                    userRepository.save(user),
                                     Mono.justOrEmpty(image)
-                                            .flatMap(img -> imageService.uploadImage(image, savedUser.getId(), userSaveReqDto.imageSource())
-                                                    .thenReturn(savedUser))
-                                            .switchIfEmpty(Mono.just(savedUser))
-                            );
+                                            .flatMap(img -> imageService.uploadImage(img, user.getId(), userSaveReqDto.imageSource()))
+                                            .switchIfEmpty(Mono.empty())
+                            ))
+                            .map(tuple -> tuple.getT1());
                 })
-                .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
 
     public Mono<User> findUserByUsername(String username) {
@@ -76,7 +76,8 @@ public class UserServiceImpl implements UserService {
                                 user.getEmail(),
                                 image.getImagePath()
                         )))
-                .onErrorMap(e -> new ApiException(ExceptionMessage.USER_NOT_FOUND));
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.USER_NOT_FOUND));
     }
 
     public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto, FilePart image) {
@@ -88,27 +89,30 @@ public class UserServiceImpl implements UserService {
                             .orElse(user.getPassword());
 
                     return userRepository.updateUser(
-                            userUpdateReqDto.id(),
-                            userUpdateReqDto.nickname(),
-                            password,
-                            userUpdateReqDto.email()
-                    ).flatMap(updateResult ->
-                            Mono.justOrEmpty(image)
-                                    .flatMap(img ->
-                                            imageService.deleteProfileImageById(userUpdateReqDto.id())
-                                                    .then(imageService.uploadImage(image, userUpdateReqDto.id(), userUpdateReqDto.imageSource()))
+                                    userUpdateReqDto.id(),
+                                    userUpdateReqDto.nickname(),
+                                    password,
+                                    userUpdateReqDto.email()
+                            )
+                            .then(Mono.justOrEmpty(image)
+                                    .flatMap(img -> imageService.findProfileImageById(userUpdateReqDto.id())
+                                            .filter(findImg -> !findImg.getImagePath().equals("/img/profile.png"))
+                                            .flatMap(existingImage -> imageService.deleteProfileImageById(userUpdateReqDto.id()))
+                                            .then(imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource()))
+                                            .switchIfEmpty(imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource()))
                                     )
-                                    .switchIfEmpty(Mono.empty())
-                                    .then(Mono.just(updateResult))
-                    );
+                            )
+                            .then();
                 })
-                .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
 
     public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
         return userRepository.findById(userDeleteReqDto.id()) // deleteById는 id 유무와 상관없이 실행하므로 체크 필요
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)))
                 .flatMap(user -> userRepository.deleteById(user.getId()))
-                .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
 }
