@@ -109,12 +109,11 @@ public class ImageServiceImpl implements ImageService{
 
     public Mono<Image> findProfileImageById(String userId) {
         return imageRepository.findByUserId(userId)
-                .switchIfEmpty(Mono.defer(() ->
-                            Mono.just(new Image.Builder() // 이미지가 없으면 기본 이미지로 대체
+                .switchIfEmpty(Mono.fromCallable(() -> new Image.Builder() // 이미지가 없으면 기본 이미지로 대체
                                     .imagePath("/img/profile.png")
                                     .thumbnailPath("/img/profile.png")
                                     .build())
-                            ));
+                            );
     }
 
     public Mono<Void> deleteProductImageById(String productId) {
@@ -122,8 +121,8 @@ public class ImageServiceImpl implements ImageService{
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> {
                     try {
-                        Files.deleteIfExists(Paths.get(image.getImagePath()));
-                        Files.deleteIfExists(Paths.get(image.getThumbnailPath()));
+                        Files.delete(Paths.get(image.getImagePath()));
+                        Files.delete(Paths.get(image.getThumbnailPath()));
                         return Mono.just(image);
                     } catch (IOException e) {
                         return Mono.error(new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
@@ -139,8 +138,8 @@ public class ImageServiceImpl implements ImageService{
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> {
                     try {
-                        Files.deleteIfExists(Paths.get(image.getImagePath()));
-                        Files.deleteIfExists(Paths.get(image.getThumbnailPath()));
+                        Files.delete(Paths.get(image.getImagePath()));
+                        Files.delete(Paths.get(image.getThumbnailPath()));
                         return Mono.just(image);
                     } catch (IOException e) {
                         return Mono.error(new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));

@@ -30,6 +30,8 @@
 - just() : 리액티브 타입 생성, static 메소드
 - range(n, m) : n부터 m까지 숫자의 리액티브 타입 생성 (카운터), static 메소드
 - subscribe() : 리액티브 타입 호출
+- defer() : supplier를 구독하여 반환되는 값을 전달, 지연 실행 (구독하지 않으면 인스턴스화 진행 x), 다른 mono 반환
+- fromCallable() : Callable supplier를 구독하여 반환되는 값을 전달, 지연 전달, 단일 값 반환
 ---
 - interval(), delayElements() : Duration.ofSeconds()를 통해 초 단위로 값 방출
 - delaySubscription() : Duration.ofSeconds()를 통해 구독 지연 설정
@@ -341,4 +343,5 @@ $count: # 개수 세기
   <summary>리액티브 환경에서 적용에 주의해야 할 것</summary>
 
 - aop는 webflux에서 완전히 호환되지 않아 비동기 동작을 보장할 수 없음
+- if문은 filter + switchifempty나 justorempty로 리액티브하게 변경
 </details>

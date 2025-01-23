@@ -1,7 +1,9 @@
 package com.hansung.reactive_marketplace.exception;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+@Getter
 public enum ExceptionMessage {
 
     // 유저 관련 예외
@@ -34,13 +36,5 @@ public enum ExceptionMessage {
     ExceptionMessage(HttpStatus statusCode, String message) {
         this.statusCode = statusCode;
         this.message = message;
-    }
-
-    public HttpStatus getStatusCode() {
-        return statusCode;
-    }
-
-    public String getMessage() {
-        return message;
     }
 }
