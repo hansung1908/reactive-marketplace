@@ -202,6 +202,24 @@ $count: # 개수 세기
 </details>
 
 <details>
+  <summary>spring-data-redis-reactive</summary>
+
+- webflux 같은 논블로킹 방식으로 동작하는 reactive 버전 redis
+- 실시간 알람 서비스나 캐시 기능 구현시 빠른 처리 속도와 효율적인 리소스 관리를 보장
+
+### 실시간 알람 서비스
+- redis sub / pub 기능을 활용하여 구현
+- redisPublisher의 convertAndSend 기능을 구현해 알람 토픽을 생성
+- redisSubscriber의 listenTo과 sse(server-sent-events)를 통해 적은 리소스로 알람을 발행
+- controller에 produces = MediaType.TEXT_EVENT_STREAM_VALUE를 설정하여 실시간성을 확보
+
+### 캐시 기능
+- application.yml에 redis host, port 설정
+- redis configuration 파일을 따로 만들어 user 객체에 대한 직렬화 template 설정
+- service에 redisTemplate 주입하고 .opsForValue()를 시작으로 .get(), .set(), .delete() 등 오퍼레이션 실행
+</details>
+
+<details>
   <summary>Rendering</summary>
 
 - 리액티브 환경에서 뷰를 렌더링하는 방식
@@ -344,4 +362,5 @@ $count: # 개수 세기
 
 - aop는 webflux에서 완전히 호환되지 않아 비동기 동작을 보장할 수 없음
 - if문은 filter + switchifempty나 justorempty로 리액티브하게 변경
+- 여러 작업에서 한 곳에서라도 오류가 나면 전체 롤백이 필요한 경우 zip()을 이용하여 하나의 스트림으로 합침
 </details>
