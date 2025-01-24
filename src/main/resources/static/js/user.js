@@ -79,6 +79,7 @@ async function deleteUser() {
         });
 
         if(response.ok) {
+            localStorage.removeItem('isLoggedIn'); // 로그인 확인 값 제거
             window.location.href = '/';
         } else {
             const errorData = await response.json();
