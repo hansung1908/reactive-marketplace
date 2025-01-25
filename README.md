@@ -19,7 +19,6 @@
 - Mono(0 ~ 1개의 값 반환) 타입 + Flux(1개 이상의 값 반환) 타입
 - Netty, Undertow, Tomcat 등의 비동기 웹 서버와 통합
 - WebClient를 통해 비동기 HTTP 요청
-
 </details>
 
 <details>
@@ -78,9 +77,6 @@
 ```shell
 db.createCollection("chat", { capped: true, size: 1048576 });
 ```
-- 처음 @CreatedDate를 설정하면 utc 시간대로 설정되어 9시간의 차이가 발생
-- 시간대를 변경하기 위해선 DateTimeProvider를 구현하여 utc+9 시간대(한국 시간대)로 설정 
-- 해당 provider를 @EnableReactiveMongoAuditing에 dateTimeProviderRef로 설정
 </details>
 
 <details>
@@ -198,7 +194,6 @@ $count: # 개수 세기
 - 일반적으로 Jackson이나 Gson과 같은 라이브러리를 사용
 - Java 클래스의 필드가 JSON으로 변환되려면, 해당 필드에 대한 getter가 필요
 - 반대로, 역직렬화 시에는 setter가 필요
-
 </details>
 
 <details>
@@ -226,8 +221,7 @@ $count: # 개수 세기
 - 기존 mvc방식으로 처리하면 동기적으로 값을 처리하여 리액티브의 장점을 잃음
 - Rendering 객체는 비동기적으로 데이터 처리를 관리 가능
 - 또한 리액티브 프로그래밍 패턴을 따르므로, webflux의 이점을 최대한 활용 가능
-- flux<..>같이 여러개의 데이터를 렌더링하려면 collectList()를 사용하여 Mono<List<..>>로 변환
-
+- Mono나 Flux 타입을 해당 객체에서 ThymeleafReactiveViewResolver로 자동으로 처리하여 뷰에 렌더링
 </details>
 
 <details>
