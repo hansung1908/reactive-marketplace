@@ -20,9 +20,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.function.TupleUtils;
 
 @Service
-public class ProductServiceImpl implements ProductService{
+public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
@@ -37,70 +38,59 @@ public class ProductServiceImpl implements ProductService{
     }
 
     public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, Authentication authentication) {
-        Product product = new Product.Builder()
-                .title(productSaveReqDto.title())
-                .description(productSaveReqDto.description())
-                .price(productSaveReqDto.price())
-                .userId(AuthUtils.getAuthenticationUser(authentication).getId())
-                .build();
-
-        return productRepository.save(product)
-                .flatMap(savedProduct -> {
-                    if (image != null) {
-                        return imageService.uploadImage(image, savedProduct.getId(), productSaveReqDto.imageSource())
-                                .thenReturn(savedProduct);
-                    }
-                    return Mono.just(savedProduct);
-                })
+        return Mono.just(new Product.Builder()
+                        .title(productSaveReqDto.title())
+                        .description(productSaveReqDto.description())
+                        .price(productSaveReqDto.price())
+                        .userId(AuthUtils.getAuthenticationUser(authentication).getId())
+                        .build())
+                .flatMap(product -> productRepository.save(product))
+                .flatMap(savedProduct ->
+                        Mono.justOrEmpty(image)
+                                .flatMap(img -> imageService.uploadImage(img, savedProduct.getId(), productSaveReqDto.imageSource())
+                                        .thenReturn(savedProduct))
+                                .defaultIfEmpty(savedProduct))
                 .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR)); // 저장 중 에러 처리
     }
 
     public Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication) {
-        Mono<Product> productMono = productRepository.findById(productId)
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND))); // 상품을 찾을 수 없음
-
-        Mono<Image> imageMono = imageService.findProductImageById(productId)
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND))); // 이미지가 없음
-
-        return Mono.zip(productMono, imageMono)
-                .flatMap(tuple -> {
-                    Product product = tuple.getT1();
-                    Image image = tuple.getT2();
-
-                    return userService.findUserById(product.getUserId())
-                            .map(user -> new ProductDetailResDto(
-                                    product.getId(),
-                                    product.getTitle(),
-                                    product.getPrice(),
-                                    product.getDescription(),
-                                    user.getNickname(),
-                                    image.getImagePath(),
-                                    product.getUserId(),
-                                    AuthUtils.getAuthenticationUser(authentication).getId()));
-                });
+        return productRepository.findById(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
+                .flatMap(product ->
+                        Mono.zip(Mono.just(product),
+                                imageService.findProductImageById(productId),
+                                userService.findUserById(product.getUserId())
+                        )
+                )
+                .map(TupleUtils.function((product, image, user) -> new ProductDetailResDto(
+                        product.getId(),
+                        product.getTitle(),
+                        product.getPrice(),
+                        product.getDescription(),
+                        user.getNickname(),
+                        image.getImagePath(),
+                        product.getUserId(),
+                        AuthUtils.getAuthenticationUser(authentication).getId()))
+                );
     }
 
     public Mono<ProductUpdateResDto> findProductForUpdateForm(String productId) {
-        Mono<Product> productMono = productRepository.findById(productId)
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)));
-
-        Mono<Image> imageMono = imageService.findProductImageById(productId)
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)));
-
-        return Mono.zip(productMono, imageMono)
-                .flatMap(tuple -> {
-                    Product product = tuple.getT1();
-                    Image image = tuple.getT2();
-
-                    return userService.findUserById(product.getUserId())
-                            .map(user -> new ProductUpdateResDto(
-                                    product.getId(),
-                                    product.getTitle(),
-                                    product.getPrice(),
-                                    product.getDescription(),
-                                    user.getNickname(),
-                                    image.getImagePath()));
-                });
+        return productRepository.findById(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
+                .flatMap(product ->
+                        Mono.zip(Mono.just(product),
+                                imageService.findProductImageById(productId),
+                                userService.findUserById(product.getUserId())
+                        )
+                )
+                .map(TupleUtils.function((product, image, user) -> new ProductUpdateResDto(
+                        product.getId(),
+                        product.getTitle(),
+                        product.getPrice(),
+                        product.getDescription(),
+                        user.getNickname(),
+                        image.getImagePath()))
+                );
     }
 
     public Flux<ProductListResDto> findProductList() {
@@ -129,12 +119,13 @@ public class ProductServiceImpl implements ProductService{
     }
 
     public Mono<Product> findProductById(String productId) {
-        return productRepository.findById(productId);
+        return productRepository.findById(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)));
     }
 
     public Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto, FilePart image) {
         return productRepository.findById(productUpdateReqDto.id())
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND))) // 상품을 찾을 수 없음
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
                 .flatMap(existingProduct -> {
                     Mono<Void> updateProductMono = productRepository.updateProduct(
                             productUpdateReqDto.id(),
@@ -143,26 +134,29 @@ public class ProductServiceImpl implements ProductService{
                             productUpdateReqDto.status()
                     );
 
-                    if (image != null) {
-                        return updateProductMono.then(
-                                imageService.deleteProductImageById(productUpdateReqDto.id())
-                                        .then(imageService.uploadImage(image, productUpdateReqDto.id(), productUpdateReqDto.imageSource()))
-                                        .then()
-                        );
-                    } else {
-                        return updateProductMono;
-                    }
+                    return Mono.justOrEmpty(image)
+                            .flatMap(img ->
+                                    updateProductMono
+                                            .then(imageService.deleteProductImageById(productUpdateReqDto.id()))
+                                            .then(imageService.uploadImage(img, productUpdateReqDto.id(), productUpdateReqDto.imageSource()))
+                                            .then()
+                            )
+                            .switchIfEmpty(updateProductMono);
                 })
-                .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR)); // 업데이트 중 에러 처리
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
 
     public Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto) {
         return productRepository.findById(productDeleteReqDto.id())
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND))) // 상품을 찾을 수 없음
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
                 .flatMap(existingProduct ->
-                        productRepository.deleteById(existingProduct.getId())
-                                .then(imageService.deleteProductImageById(existingProduct.getId()))
-                                .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR)) // 삭제 중 에러 처리
-                );
+                        Mono.when(
+                                productRepository.deleteById(existingProduct.getId()),
+                                imageService.deleteProductImageById(existingProduct.getId())
+                        )
+                )
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
 }
