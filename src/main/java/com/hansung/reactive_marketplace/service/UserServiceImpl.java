@@ -1,6 +1,5 @@
 package com.hansung.reactive_marketplace.service;
 
-import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.UserDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
@@ -16,7 +15,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.function.TupleUtils;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -54,14 +52,11 @@ public class UserServiceImpl implements UserService {
                             .email(userSaveReqDto.email())
                             .build();
 
-                    Mono<User> saveUserMono = userRepository.save(newUser);
-
-                    Mono<Image> uploadImageMono = Mono.justOrEmpty(image)
-                            .flatMap(img -> imageService.uploadImage(img, newUser.getId(), userSaveReqDto.imageSource()))
-                            .switchIfEmpty(Mono.empty());
-
-                    return Mono.zip(saveUserMono, uploadImageMono)
-                            .map(TupleUtils.function((savedUser, imageData) -> savedUser));
+                    return userRepository.save(newUser)
+                            .flatMap(savedUser ->
+                                    Mono.justOrEmpty(image)
+                                            .flatMap(img -> imageService.uploadImage(img, savedUser.getId(), userSaveReqDto.imageSource()))
+                                            .thenReturn(savedUser));
                 })
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
@@ -115,9 +110,9 @@ public class UserServiceImpl implements UserService {
                     Mono<Void> updateImageMono = Mono.justOrEmpty(image)
                             .flatMap(img -> imageService.findProfileImageById(userUpdateReqDto.id())
                                     .filter(findImg -> !findImg.getImagePath().equals("/img/profile.png"))
+                                    .switchIfEmpty(Mono.defer(() -> imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource())))
                                     .flatMap(existingImage -> imageService.deleteProfileImageById(userUpdateReqDto.id()))
                                     .then(imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource()))
-                                    .switchIfEmpty(imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource()))
                             )
                             .then();
 
@@ -133,7 +128,11 @@ public class UserServiceImpl implements UserService {
     public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
         return userRepository.findById(userDeleteReqDto.id()) // deleteById는 id 유무와 상관없이 실행하므로 체크 필요
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)))
-                .flatMap(user -> userRepository.deleteById(user.getId()))
+                .flatMap(user -> userRepository.deleteById(user.getId())
+                        .then(imageService.deleteProfileImageById(user.getId()))
+                        .then(reactiveRedisTemplate.opsForValue().delete("user:" + user.getId()))
+                        .then()
+                )
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }

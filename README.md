@@ -188,19 +188,11 @@ $count: # 개수 세기
 </details>
 
 <details>
-  <summary>json 직렬화 + 역직렬화</summary>
-
-- 객체를 JSON 문자열로 변환하는 과정
-- 일반적으로 Jackson이나 Gson과 같은 라이브러리를 사용
-- Java 클래스의 필드가 JSON으로 변환되려면, 해당 필드에 대한 getter가 필요
-- 반대로, 역직렬화 시에는 setter가 필요
-</details>
-
-<details>
   <summary>spring-data-redis-reactive</summary>
 
 - webflux 같은 논블로킹 방식으로 동작하는 reactive 버전 redis
 - 실시간 알람 서비스나 캐시 기능 구현시 빠른 처리 속도와 효율적인 리소스 관리를 보장
+- redis를 사용하면 localdatetime 호환성 오류가 발생
 
 ### 실시간 알람 서비스
 - redis sub / pub 기능을 활용하여 구현
@@ -212,6 +204,19 @@ $count: # 개수 세기
 - application.yml에 redis host, port 설정
 - redis configuration 파일을 따로 만들어 user 객체에 대한 직렬화 template 설정
 - service에 redisTemplate 주입하고 .opsForValue()를 시작으로 .get(), .set(), .delete() 등 오퍼레이션 실행
+
+### 주의할 점
+- redis 기능을 구현하여 다른 서비스에 주입할 경우 localdatetime 직렬화/역직렬화 호환성 오류가 발생
+- 각 서비스의 도메인 객체에 @JsonSerialize, @JsonDeserialize 설정을 추가
+</details>
+
+<details>
+  <summary>json 직렬화 + 역직렬화</summary>
+
+- 객체를 JSON 문자열로 변환하는 과정
+- 일반적으로 Jackson이나 Gson과 같은 라이브러리를 사용
+- Java 클래스의 필드가 JSON으로 변환되려면, 해당 필드에 대한 getter가 필요
+- 반대로, 역직렬화 시에는 setter가 필요
 </details>
 
 <details>
@@ -357,4 +362,8 @@ $count: # 개수 세기
 - aop는 webflux에서 완전히 호환되지 않아 비동기 동작을 보장할 수 없음
 - if문은 filter + switchifempty나 justorempty로 리액티브하게 변경
 - 여러 작업에서 한 곳에서라도 오류가 나면 전체 롤백이 필요한 경우 zip()을 이용하여 하나의 스트림으로 합침
+---
+- switchifempty는 자바의 즉시 평가(eager evaluation) 특성으로 empty가 아닌 상황에도 불필요한 실행이 됨
+- 그래서 mono.defer()로 supplier에 넘겨 실제 호출 시점으로 실행을 지연 평가(lazy evaluation)해야 함
+- error는 mono.error()를 통해 지연 평가로 에러 처리를 구현
 </details>

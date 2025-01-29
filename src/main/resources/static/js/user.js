@@ -155,6 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     else if (currentPath === '/user/loginForm') {
+        localStorage.removeItem('isLoggedIn'); // 미처 삭제되지 못한 로그인 확인 값 제거
+
         document.getElementById('user-login').addEventListener('submit', function(event) {
             event.preventDefault(); // 기본 폼 제출 동작을 방지
 

@@ -1,6 +1,9 @@
 package com.hansung.reactive_marketplace.domain;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -23,8 +26,9 @@ public class Chat {
 
     private String roomId;
 
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @CreatedDate
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") // 채팅창 내에서 날짜 표시를 위한 포매터
     private LocalDateTime createdAt;
 
     protected Chat() {
