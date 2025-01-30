@@ -41,23 +41,22 @@ public class UserServiceImpl implements UserService {
     }
 
     public Mono<User> saveUser(UserSaveReqDto userSaveReqDto, FilePart image) {
-        return userRepository.existsByUsername(userSaveReqDto.username())
-                .filter(exist -> !exist) // 중복이 있는 상태를 empty 상태로 필터링
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USERNAME_ALREADY_EXISTS)))
-                .flatMap(nonExist -> { // 없으면 회원가입 진행
-                    User newUser = new User.Builder()
-                            .username(userSaveReqDto.username())
-                            .nickname(userSaveReqDto.nickname())
-                            .password(bCryptPasswordEncoder.encode(userSaveReqDto.password()))
-                            .email(userSaveReqDto.email())
-                            .build();
-
-                    return userRepository.save(newUser)
-                            .flatMap(savedUser ->
-                                    Mono.justOrEmpty(image)
-                                            .flatMap(img -> imageService.uploadImage(img, savedUser.getId(), userSaveReqDto.imageSource()))
-                                            .thenReturn(savedUser));
-                })
+        return Mono.just(new User.Builder()
+                        .username(userSaveReqDto.username())
+                        .nickname(userSaveReqDto.nickname())
+                        .password(bCryptPasswordEncoder.encode(userSaveReqDto.password()))
+                        .email(userSaveReqDto.email())
+                        .build())
+                .flatMap(user -> userRepository.existsByUsername(user.getUsername())
+                        .filter(exists -> !exists)
+                        .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USERNAME_ALREADY_EXISTS)))
+                        .thenReturn(user))
+                .flatMap(user -> userRepository.save(user))
+                .flatMap(savedUser ->
+                        Mono.justOrEmpty(image)
+                                .flatMap(img -> imageService.uploadImage(img, savedUser.getId(), userSaveReqDto.imageSource())
+                                        .thenReturn(savedUser))
+                                .defaultIfEmpty(savedUser))
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
@@ -71,6 +70,7 @@ public class UserServiceImpl implements UserService {
         return reactiveRedisTemplate.opsForValue().get("user:" + userId)
                 .switchIfEmpty(
                         userRepository.findById(userId)
+                                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)))
                                 .flatMap(user ->
                                         reactiveRedisTemplate.opsForValue()
                                                 .set("user:" + userId, user, Duration.ofHours(1))
@@ -125,13 +125,21 @@ public class UserServiceImpl implements UserService {
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
 
+
     public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
-        return userRepository.findById(userDeleteReqDto.id()) // deleteById는 id 유무와 상관없이 실행하므로 체크 필요
+        return userRepository.findById(userDeleteReqDto.id())
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)))
-                .flatMap(user -> userRepository.deleteById(user.getId())
-                        .then(imageService.deleteProfileImageById(user.getId()))
-                        .then(reactiveRedisTemplate.opsForValue().delete("user:" + user.getId()))
-                        .then()
+                .flatMap(user ->
+                        imageService.findProfileImageById(user.getId())
+                                .flatMap(image -> Mono.when(
+                                        userRepository.deleteById(user.getId()),
+                                        imageService.deleteProfileImageById(user.getId()),
+                                        reactiveRedisTemplate.opsForValue().delete("user:" + user.getId())
+                                ))
+                                .switchIfEmpty(Mono.when(
+                                        userRepository.deleteById(user.getId()),
+                                        reactiveRedisTemplate.opsForValue().delete("user:" + user.getId())
+                                ))
                 )
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
