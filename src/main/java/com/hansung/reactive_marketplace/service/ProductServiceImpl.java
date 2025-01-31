@@ -1,6 +1,5 @@
 package com.hansung.reactive_marketplace.service;
 
-import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.dto.request.ProductDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
@@ -11,16 +10,20 @@ import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductUpdateResDto;
 import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
+import com.hansung.reactive_marketplace.redis.ReactiveRedisHandler;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import com.hansung.reactive_marketplace.util.DateTimeUtils;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.function.TupleUtils;
+
+import java.time.Duration;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -31,10 +34,13 @@ public class ProductServiceImpl implements ProductService {
 
     private final ImageService imageService;
 
-    public ProductServiceImpl(ProductRepository productRepository, UserService userService, ImageService imageService) {
+    private final ReactiveRedisHandler reactiveRedisHandler;
+
+    public ProductServiceImpl(ProductRepository productRepository, UserService userService, ImageService imageService, ReactiveRedisHandler reactiveRedisHandler) {
         this.productRepository = productRepository;
         this.userService = userService;
         this.imageService = imageService;
+        this.reactiveRedisHandler = reactiveRedisHandler;
     }
 
     public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, Authentication authentication) {
@@ -75,22 +81,30 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public Mono<ProductUpdateResDto> findProductForUpdateForm(String productId) {
-        return productRepository.findById(productId)
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
-                .flatMap(product ->
-                        Mono.zip(Mono.just(product),
-                                imageService.findProductImageById(productId),
-                                userService.findUserById(product.getUserId())
+        return reactiveRedisHandler.getOrFetch(
+                "product:" + productId,
+                ProductUpdateResDto.class,
+                productRepository.findById(productId)
+                        .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
+                        .flatMap(product ->
+                                Mono.zip(
+                                        Mono.just(product),
+                                        imageService.findProductImageById(productId),
+                                        userService.findUserById(product.getUserId())
+                                )
                         )
-                )
-                .map(TupleUtils.function((product, image, user) -> new ProductUpdateResDto(
-                        product.getId(),
-                        product.getTitle(),
-                        product.getPrice(),
-                        product.getDescription(),
-                        user.getNickname(),
-                        image.getImagePath()))
-                );
+                        .map(TupleUtils.function((product, image, user) ->
+                                new ProductUpdateResDto(
+                                        product.getId(),
+                                        product.getTitle(),
+                                        product.getPrice(),
+                                        product.getDescription(),
+                                        user.getNickname(),
+                                        image.getImagePath()
+                                )
+                        )),
+                Duration.ofHours(1)
+        );
     }
 
     public Flux<ProductListResDto> findProductList() {
@@ -141,7 +155,7 @@ public class ProductServiceImpl implements ProductService {
                                             .then(imageService.uploadImage(img, productUpdateReqDto.id(), productUpdateReqDto.imageSource()))
                                             .then()
                             )
-                            .switchIfEmpty(updateProductMono);
+                            .switchIfEmpty(Mono.defer(() -> updateProductMono));
                 })
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
