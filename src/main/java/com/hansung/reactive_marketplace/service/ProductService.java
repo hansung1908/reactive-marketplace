@@ -34,8 +34,8 @@ public interface ProductService {
     Mono<Product> findProductById(String productId);
 
     // 상품 수정
-    Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto, FilePart image);
+    Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto, FilePart image, Authentication authentication);
 
     // 상품 삭제
-    Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto);
+    Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto, Authentication authentication);
 }

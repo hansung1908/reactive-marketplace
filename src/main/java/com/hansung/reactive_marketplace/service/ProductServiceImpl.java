@@ -15,7 +15,6 @@ import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import com.hansung.reactive_marketplace.util.DateTimeUtils;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -56,35 +55,42 @@ public class ProductServiceImpl implements ProductService {
                                 .flatMap(img -> imageService.uploadImage(img, savedProduct.getId(), productSaveReqDto.imageSource())
                                         .thenReturn(savedProduct))
                                 .defaultIfEmpty(savedProduct))
-                .onErrorMap(e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR)); // 저장 중 에러 처리
+                .flatMap(savedProduct ->
+                        reactiveRedisHandler.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
+                                .thenReturn(savedProduct)
+                )
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
 
     public Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication) {
-        return productRepository.findById(productId)
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
-                .flatMap(product ->
-                        Mono.zip(Mono.just(product),
-                                imageService.findProductImageById(productId),
-                                userService.findUserById(product.getUserId())
+        return reactiveRedisHandler.getOrFetch(
+                "product:" + productId,
+                ProductDetailResDto.class,
+                productRepository.findById(productId)
+                        .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
+                        .flatMap(product ->
+                                Mono.zip(Mono.just(product),
+                                        imageService.findProductImageById(productId),
+                                        userService.findUserById(product.getUserId())
+                                )
                         )
-                )
-                .map(TupleUtils.function((product, image, user) -> new ProductDetailResDto(
-                        product.getId(),
-                        product.getTitle(),
-                        product.getPrice(),
-                        product.getDescription(),
-                        user.getNickname(),
-                        image.getImagePath(),
-                        product.getUserId(),
-                        AuthUtils.getAuthenticationUser(authentication).getId()))
-                );
+                        .map(TupleUtils.function((product, image, user) -> new ProductDetailResDto(
+                                product.getId(),
+                                product.getTitle(),
+                                product.getPrice(),
+                                product.getDescription(),
+                                user.getNickname(),
+                                image.getImagePath(),
+                                product.getUserId(),
+                                AuthUtils.getAuthenticationUser(authentication).getId()))
+                        ),
+                Duration.ofHours(1)
+        );
     }
 
     public Mono<ProductUpdateResDto> findProductForUpdateForm(String productId) {
-        return reactiveRedisHandler.getOrFetch(
-                "product:" + productId,
-                ProductUpdateResDto.class,
-                productRepository.findById(productId)
+        return productRepository.findById(productId)
                         .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
                         .flatMap(product ->
                                 Mono.zip(
@@ -102,9 +108,7 @@ public class ProductServiceImpl implements ProductService {
                                         user.getNickname(),
                                         image.getImagePath()
                                 )
-                        )),
-                Duration.ofHours(1)
-        );
+                        ));
     }
 
     public Flux<ProductListResDto> findProductList() {
@@ -119,17 +123,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public Flux<MyProductListResDto> findMyProductList(Authentication authentication) {
-        return productRepository.findMyProductList(AuthUtils.getAuthenticationUser(authentication).getId(), Sort.by(Sort.Direction.DESC, "createdAt"))
-                .concatMap(product -> imageService.findProductImageById(product.getId()) // 순차적 처리를 보장하기 위한 concatMap
-                        .map(image -> new MyProductListResDto(
-                                product.getId(),
-                                product.getTitle(),
-                                product.getDescription(),
-                                product.getPrice(),
-                                product.getStatus(),
-                                DateTimeUtils.format(product.getCreatedAt()),
-                                image.getThumbnailPath()
-                        )));
+        return reactiveRedisHandler.getOrFetchList(
+                "myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId(),
+                MyProductListResDto.class,
+                productRepository.findMyProductList(AuthUtils.getAuthenticationUser(authentication).getId(), Sort.by(Sort.Direction.DESC, "createdAt"))
+                        .concatMap(product -> imageService.findProductImageById(product.getId()) // 순차적 처리를 보장하기 위한 concatMap
+                                .map(image -> new MyProductListResDto(
+                                        product.getId(),
+                                        product.getTitle(),
+                                        product.getDescription(),
+                                        product.getPrice(),
+                                        product.getStatus(),
+                                        DateTimeUtils.format(product.getCreatedAt()),
+                                        image.getThumbnailPath()
+                                ))),
+                Duration.ofHours(1)
+        );
     }
 
     public Mono<Product> findProductById(String productId) {
@@ -137,16 +146,20 @@ public class ProductServiceImpl implements ProductService {
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)));
     }
 
-    public Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto, FilePart image) {
+    public Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto, FilePart image, Authentication authentication) {
         return productRepository.findById(productUpdateReqDto.id())
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
                 .flatMap(existingProduct -> {
                     Mono<Void> updateProductMono = productRepository.updateProduct(
-                            productUpdateReqDto.id(),
-                            productUpdateReqDto.description(),
-                            productUpdateReqDto.price(),
-                            productUpdateReqDto.status()
-                    );
+                                    productUpdateReqDto.id(),
+                                    productUpdateReqDto.description(),
+                                    productUpdateReqDto.price(),
+                                    productUpdateReqDto.status()
+                            )
+                            .then(Mono.zip(
+                                    reactiveRedisHandler.deleteValue("product:" + productUpdateReqDto.id()),
+                                    reactiveRedisHandler.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
+                            ).then());
 
                     return Mono.justOrEmpty(image)
                             .flatMap(img ->
@@ -161,13 +174,15 @@ public class ProductServiceImpl implements ProductService {
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
 
-    public Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto) {
+    public Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto, Authentication authentication) {
         return productRepository.findById(productDeleteReqDto.id())
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
                 .flatMap(existingProduct ->
                         Mono.when(
                                 productRepository.deleteById(existingProduct.getId()),
-                                imageService.deleteProductImageById(existingProduct.getId())
+                                imageService.deleteProductImageById(existingProduct.getId()),
+                                reactiveRedisHandler.deleteValue("product:" + productDeleteReqDto.id()),
+                                reactiveRedisHandler.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
                         )
                 )
                 .onErrorMap(e -> !(e instanceof ApiException),
