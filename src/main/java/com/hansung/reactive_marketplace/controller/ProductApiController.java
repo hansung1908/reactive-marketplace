@@ -31,14 +31,15 @@ public class ProductApiController {
 
     @PutMapping("/product/update")
     public Mono<ResponseEntity<String>> update(@RequestPart("product") ProductUpdateReqDto productUpdateReqDto,
-                                               @RequestPart(value = "image", required = false) FilePart image) {
-        return productService.updateProduct(productUpdateReqDto, image)
+                                               @RequestPart(value = "image", required = false) FilePart image,
+                                               Authentication authentication) {
+        return productService.updateProduct(productUpdateReqDto, image, authentication)
                 .then(Mono.just(ResponseEntity.ok("Product updated successfully")));
     }
 
     @DeleteMapping("/product/delete")
-    public Mono<ResponseEntity<String>> delete(@RequestBody ProductDeleteReqDto productDeleteReqDto) {
-        return productService.deleteProduct(productDeleteReqDto)
+    public Mono<ResponseEntity<String>> delete(@RequestBody ProductDeleteReqDto productDeleteReqDto, Authentication authentication) {
+        return productService.deleteProduct(productDeleteReqDto, authentication)
                 .then(Mono.just(ResponseEntity.ok("Product deleted successfully")));
     }
 }

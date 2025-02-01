@@ -206,8 +206,25 @@ $count: # 개수 세기
 - service에 redisTemplate 주입하고 .opsForValue()를 시작으로 .get(), .set(), .delete() 등 오퍼레이션 실행
 
 ### 주의할 점
+- 적용시 아래의 오류들이 발생
+
+##### java.time.LocalDateTime not Supported
 - redis 기능을 구현하여 다른 서비스에 주입할 경우 localdatetime 직렬화/역직렬화 호환성 오류가 발생
 - 각 서비스의 도메인 객체에 @JsonSerialize, @JsonDeserialize 설정을 추가
+
+##### LinkedHasmap cannot be cast to class DTO Object
+- 환경에 따라 어떤 Serializer를 사용해야 될지 고려해야 함
+- Jackson2JsonRedisSerializer
+  - Class Type을 지정해야 하며, redis에 객체를 저장할 때 class 값 대신 Classy Type 값을 JSON 형태로 저장
+  - pacakge 등의 정보 일치를 고려할 필요 x
+  - 하지만, class type을 지정해야 하기 때문에 특정 클래스에 종속적이며, redisTemplate을 여러 쓰레드에서 접근하게 될 때 serializer 타입의 문제가 발생
+- GenericJackson2JsonRedisSerializer
+  - 객체의 클래스 지정 없이 모든 Class Type을 JSON 형태로 저장할 수 있는 Serializer이다
+  - Class Type에 상관 없이 모든 객체를 직렬화해준다는 장점을 가지고 있다.
+  - 하지만, 단점으로는 Object의 class 및 package까지 전부 함께 저장하게 되어 다른 프로젝트에서 redis에 저장되어 있는 값을 사용하려면 package까지 일치시켜줘야한다.
+  - 따라서 MSA 구조의 프로젝트 같은 경우 문제가 생길 수 있을 것 같다.
+- 여러 객체를 캐싱해야 했기 때문에, 여러 객체를 직렬화/역직렬화 사용할 수 있는 GenericJackson2JsonRedisSerializer를 사용
+
 </details>
 
 <details>
@@ -367,3 +384,5 @@ $count: # 개수 세기
 - 그래서 mono.defer()로 supplier에 넘겨 실제 호출 시점으로 실행을 지연 평가(lazy evaluation)해야 함
 - error는 mono.error()를 통해 지연 평가로 에러 처리를 구현
 </details>
+
+https://velog.io/@bagt/Redis-%EC%97%AD%EC%A7%81%EB%A0%AC%ED%99%94-%EC%82%BD%EC%A7%88%EA%B8%B0-feat.-RedisSerializer
