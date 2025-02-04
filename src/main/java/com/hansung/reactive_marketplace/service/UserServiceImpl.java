@@ -7,9 +7,9 @@ import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.dto.response.UserProfileResDto;
 import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
+import com.hansung.reactive_marketplace.redis.ReactiveRedisHandler;
 import com.hansung.reactive_marketplace.repository.UserRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -28,16 +28,16 @@ public class UserServiceImpl implements UserService {
 
     private final ImageService imageService;
 
-    private final ReactiveRedisTemplate<String, User> reactiveRedisTemplate;
+    private final ReactiveRedisHandler reactiveRedisHandler;
 
     public UserServiceImpl(UserRepository userRepository,
                            BCryptPasswordEncoder bCryptPasswordEncoder,
                            ImageService imageService,
-                           ReactiveRedisTemplate<String, User> reactiveRedisTemplate) {
+                           ReactiveRedisHandler reactiveRedisHandler) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.imageService = imageService;
-        this.reactiveRedisTemplate = reactiveRedisTemplate;
+        this.reactiveRedisHandler = reactiveRedisHandler;
     }
 
     public Mono<User> saveUser(UserSaveReqDto userSaveReqDto, FilePart image) {
@@ -67,16 +67,13 @@ public class UserServiceImpl implements UserService {
     }
 
     public Mono<User> findUserById(String userId) {
-        return reactiveRedisTemplate.opsForValue().get("user:" + userId)
-                .switchIfEmpty(
-                        userRepository.findById(userId)
-                                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)))
-                                .flatMap(user ->
-                                        reactiveRedisTemplate.opsForValue()
-                                                .set("user:" + userId, user, Duration.ofHours(1))
-                                                .thenReturn(user)
-                                )
-                );
+        return reactiveRedisHandler.getOrFetch(
+                "user:" + userId,
+                User.class,
+                userRepository.findById(userId)
+                        .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND))),
+                Duration.ofHours(1)
+        );
     }
 
     public Mono<UserProfileResDto> findUserProfile(Authentication authentication) {
@@ -116,8 +113,7 @@ public class UserServiceImpl implements UserService {
                             )
                             .then();
 
-                    Mono<Boolean> deleteCacheMono = reactiveRedisTemplate.opsForValue()
-                            .delete("user:" + userUpdateReqDto.id());
+                    Mono<Boolean> deleteCacheMono = reactiveRedisHandler.deleteValue("user:" + userUpdateReqDto.id());
 
                     return Mono.when(updateUserMono, updateImageMono, deleteCacheMono);
                 })
@@ -134,11 +130,11 @@ public class UserServiceImpl implements UserService {
                                 .flatMap(image -> Mono.when(
                                         userRepository.deleteById(user.getId()),
                                         imageService.deleteProfileImageById(user.getId()),
-                                        reactiveRedisTemplate.opsForValue().delete("user:" + user.getId())
+                                        reactiveRedisHandler.deleteValue("user:" + user.getId())
                                 ))
                                 .switchIfEmpty(Mono.when(
                                         userRepository.deleteById(user.getId()),
-                                        reactiveRedisTemplate.opsForValue().delete("user:" + user.getId())
+                                        reactiveRedisHandler.deleteValue("user:" + user.getId())
                                 ))
                 )
                 .onErrorMap(e -> !(e instanceof ApiException),
