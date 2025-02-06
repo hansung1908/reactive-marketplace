@@ -4,6 +4,7 @@ import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.ImageSource;
 import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
+import com.hansung.reactive_marketplace.redis.ReactiveRedisHandler;
 import com.hansung.reactive_marketplace.repository.ImageRepository;
 import com.hansung.reactive_marketplace.util.ImageUtils;
 import net.coobird.thumbnailator.Thumbnails;
@@ -15,11 +16,14 @@ import reactor.core.publisher.Mono;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 
 @Service
 public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
+
+    private final ReactiveRedisHandler reactiveRedisHandler;
 
     @Value("${image.profile.originalPath}")
     private String profileOriginalPath;
@@ -33,8 +37,9 @@ public class ImageServiceImpl implements ImageService {
     @Value("${image.product.thumbnailPath}")
     private String productThumbnailPath;
 
-    public ImageServiceImpl(ImageRepository imageRepository) {
+    public ImageServiceImpl(ImageRepository imageRepository, ReactiveRedisHandler reactiveRedisHandler) {
         this.imageRepository = imageRepository;
+        this.reactiveRedisHandler = reactiveRedisHandler;
     }
 
     public Mono<Image> uploadImage(FilePart image, String id, ImageSource imageSource) {
@@ -86,17 +91,27 @@ public class ImageServiceImpl implements ImageService {
     }
 
     public Mono<Image> findProductImageById(String productId) {
-        return imageRepository.findByProductId(productId)
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)));
+        return reactiveRedisHandler.getOrFetch(
+                "productImage:" + productId,
+                Image.class,
+                imageRepository.findByProductId(productId)
+                        .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND))),
+                Duration.ofHours(1)
+        );
     }
 
     public Mono<Image> findProfileImageById(String userId) {
-        return imageRepository.findByUserId(userId)
-                .switchIfEmpty(Mono.fromCallable(() -> new Image.Builder() // 이미지가 없으면 기본 이미지로 대체
-                        .imagePath("/img/profile.png")
-                        .thumbnailPath("/img/profile.png")
-                        .build())
-                );
+        return reactiveRedisHandler.getOrFetch(
+                "userImage:" + userId,
+                Image.class,
+                imageRepository.findByUserId(userId)
+                        .switchIfEmpty(Mono.fromCallable(() -> new Image.Builder() // 이미지가 없으면 기본 이미지로 대체
+                                .imagePath("/img/profile.png")
+                                .thumbnailPath("/img/profile.png")
+                                .build())
+                        ),
+                Duration.ofHours(1)
+        );
     }
 
     public Mono<Void> deleteProductImageById(String productId) {
@@ -104,6 +119,7 @@ public class ImageServiceImpl implements ImageService {
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> deleteImageFiles(image))
                 .then(imageRepository.deleteByProductId(productId))
+                .then(reactiveRedisHandler.deleteValue("productImage:" + productId).then())
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
     }
@@ -113,6 +129,7 @@ public class ImageServiceImpl implements ImageService {
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> deleteImageFiles(image))
                 .then(imageRepository.deleteByUserId(userId))
+                .then(reactiveRedisHandler.deleteValue("userImage:" + userId).then())
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
     }
