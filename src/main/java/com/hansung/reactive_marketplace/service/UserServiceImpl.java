@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public Mono<UserProfileResDto> findUserProfile(Authentication authentication) {
-        return imageService.findProfileImageById(AuthUtils.getAuthenticationUser(authentication).getId())
+        return imageService.findProfileImageByIdWithCache(AuthUtils.getAuthenticationUser(authentication).getId())
                 .flatMap(image -> findUserById(AuthUtils.getAuthenticationUser(authentication).getId())
                         .map(user -> new UserProfileResDto(
                                 user.getUsername(),

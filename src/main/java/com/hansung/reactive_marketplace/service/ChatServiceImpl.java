@@ -59,7 +59,7 @@ public class ChatServiceImpl implements ChatService {
 
                     return userService.findUserById(receiverId)
                             .flatMap(receiver -> chatRoomRepository.findChatRoom(productId, buyerId)
-                                    .flatMap(chatRoom -> imageService.findProfileImageById(receiverId)
+                                    .flatMap(chatRoom -> imageService.findProfileImageByIdWithCache(receiverId)
                                             .map(image -> new ChatRoomResDto(
                                                     chatRoom.getId(),
                                                     senderId,
@@ -77,7 +77,7 @@ public class ChatServiceImpl implements ChatService {
 
                                                 return chatRoomRepository.save(newChatRoom)
                                                         .flatMap(savedChatRoom ->
-                                                                imageService.findProfileImageById(receiverId)
+                                                                imageService.findProfileImageByIdWithCache(receiverId)
                                                                         .map(image -> new ChatRoomResDto(
                                                                                 savedChatRoom.getId(),
                                                                                 senderId,

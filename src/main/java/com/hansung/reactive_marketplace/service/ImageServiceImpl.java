@@ -91,25 +91,33 @@ public class ImageServiceImpl implements ImageService {
     }
 
     public Mono<Image> findProductImageById(String productId) {
+        return imageRepository.findByProductId(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)));
+    }
+
+    public Mono<Image> findProductImageByIdWithCache(String productId) {
         return reactiveRedisHandler.getOrFetch(
                 "productImage:" + productId,
                 Image.class,
-                imageRepository.findByProductId(productId)
-                        .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND))),
+                findProductImageById(productId),
                 Duration.ofHours(1)
         );
     }
 
     public Mono<Image> findProfileImageById(String userId) {
+        return imageRepository.findByUserId(userId)
+                .switchIfEmpty(Mono.fromCallable(() -> new Image.Builder() // 이미지가 없으면 기본 이미지로 대체
+                        .imagePath("/img/profile.png")
+                        .thumbnailPath("/img/profile.png")
+                        .build())
+                );
+    }
+
+    public Mono<Image> findProfileImageByIdWithCache(String userId) {
         return reactiveRedisHandler.getOrFetch(
                 "userImage:" + userId,
                 Image.class,
-                imageRepository.findByUserId(userId)
-                        .switchIfEmpty(Mono.fromCallable(() -> new Image.Builder() // 이미지가 없으면 기본 이미지로 대체
-                                .imagePath("/img/profile.png")
-                                .thumbnailPath("/img/profile.png")
-                                .build())
-                        ),
+                findProfileImageById(userId),
                 Duration.ofHours(1)
         );
     }
@@ -136,9 +144,9 @@ public class ImageServiceImpl implements ImageService {
 
     private Mono<Image> deleteImageFiles(Image image) {
         return Mono.fromCallable(() -> {
-                    Files.delete(Paths.get(image.getImagePath()));
-                    Files.delete(Paths.get(image.getThumbnailPath()));
-                    return image;
-                });
+            Files.delete(Paths.get(image.getImagePath()));
+            Files.delete(Paths.get(image.getThumbnailPath()));
+            return image;
+        });
     }
 }
