@@ -13,8 +13,14 @@ public interface ImageService {
     // 상품 이미지 ID로 찾기
     Mono<Image> findProductImageById(String productId);
 
+    // 상품 이미지 ID로 찾기 + cache
+    Mono<Image> findProductImageByIdWithCache(String productId);
+
     // 사용자 프로필 이미지 ID로 찾기
     Mono<Image> findProfileImageById(String userId);
+
+    // 사용자 프로필 이미지 ID로 찾기 + cache
+    Mono<Image> findProfileImageByIdWithCache(String productId);
 
     // 상품 이미지 삭제
     Mono<Void> deleteProductImageById(String productId);

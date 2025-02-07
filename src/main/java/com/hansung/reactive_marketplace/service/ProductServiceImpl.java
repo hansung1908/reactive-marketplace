@@ -71,7 +71,7 @@ public class ProductServiceImpl implements ProductService {
                         .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
                         .flatMap(product ->
                                 Mono.zip(Mono.just(product),
-                                        imageService.findProductImageById(productId),
+                                        imageService.findProductImageByIdWithCache(productId),
                                         userService.findUserById(product.getUserId())
                                 )
                         )
