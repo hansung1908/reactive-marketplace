@@ -49,49 +49,39 @@ public class ChatServiceImpl implements ChatService {
 
     public Mono<ChatRoomResDto> openChat(String productId, String sellerId, String buyerId, Authentication authentication, ChatClickPage clickPage) {
         return Mono.just(AuthUtils.getAuthenticationUser(authentication))
+                .filter(authUser -> !(authUser.getId().equals(sellerId) && clickPage.equals(ChatClickPage.DETAIL)))
                 .flatMap(authUser -> {
-                    if (authUser.getId().equals(sellerId) && clickPage.equals(ChatClickPage.DETAIL)) {
-                        return Mono.error(new ApiException(ExceptionMessage.SELLER_SAME_AS_LOGGED_IN_USER));
-                    }
-
                     String senderId = authUser.getId().equals(sellerId) ? sellerId : buyerId;
                     String receiverId = authUser.getId().equals(sellerId) ? buyerId : sellerId;
 
                     return userService.findUserById(receiverId)
                             .flatMap(receiver -> chatRoomRepository.findChatRoom(productId, buyerId)
-                                    .flatMap(chatRoom -> imageService.findProfileImageByIdWithCache(receiverId)
-                                            .map(image -> new ChatRoomResDto(
-                                                    chatRoom.getId(),
-                                                    senderId,
-                                                    receiverId,
-                                                    receiver.getNickname(),
-                                                    image.getThumbnailPath()
-                                            )))
+                                    .flatMap(chatRoom -> createChatRoomResponse(chatRoom, senderId, receiverId, receiver))
                                     .switchIfEmpty(Mono.defer(() -> productService.findProductById(productId)
-                                            .flatMap(product -> {
-                                                ChatRoom newChatRoom = new ChatRoom.Builder()
-                                                        .productId(productId)
-                                                        .sellerId(sellerId)
-                                                        .buyerId(buyerId)
-                                                        .build();
-
-                                                return chatRoomRepository.save(newChatRoom)
-                                                        .flatMap(savedChatRoom ->
-                                                                imageService.findProfileImageByIdWithCache(receiverId)
-                                                                        .map(image -> new ChatRoomResDto(
-                                                                                savedChatRoom.getId(),
-                                                                                senderId,
-                                                                                receiverId,
-                                                                                receiver.getNickname(),
-                                                                                image.getThumbnailPath()
-                                                                        ))
-                                                        );
-                                            })
+                                            .flatMap(product -> Mono.just(new ChatRoom.Builder()
+                                                            .productId(productId)
+                                                            .sellerId(sellerId)
+                                                            .buyerId(buyerId)
+                                                            .build())
+                                                    .flatMap(newChatRoom -> chatRoomRepository.save(newChatRoom))
+                                                    .flatMap(savedChatRoom -> createChatRoomResponse(savedChatRoom, senderId, receiverId, receiver)))
                                     )))
                             .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)));
                 })
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.SELLER_SAME_AS_LOGGED_IN_USER)))
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.CHAT_ROOM_CREATION_FAILED));
+    }
+
+    private Mono<ChatRoomResDto> createChatRoomResponse(ChatRoom chatRoom, String senderId, String receiverId, User receiver) {
+        return imageService.findProfileImageByIdWithCache(receiverId)
+                .map(image -> new ChatRoomResDto(
+                        chatRoom.getId(),
+                        senderId,
+                        receiverId,
+                        receiver.getNickname(),
+                        image.getThumbnailPath()
+                ));
     }
 
     public Mono<Chat> saveMsg(ChatSaveReqDto chatSaveReqDto) {
