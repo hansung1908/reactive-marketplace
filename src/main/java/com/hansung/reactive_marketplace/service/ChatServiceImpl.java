@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.function.TupleUtils;
 
 @Service
 public class ChatServiceImpl implements ChatService {
@@ -50,27 +51,32 @@ public class ChatServiceImpl implements ChatService {
     public Mono<ChatRoomResDto> openChat(String productId, String sellerId, String buyerId, Authentication authentication, ChatClickPage clickPage) {
         return Mono.just(AuthUtils.getAuthenticationUser(authentication))
                 .filter(authUser -> !(authUser.getId().equals(sellerId) && clickPage.equals(ChatClickPage.DETAIL)))
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.SELLER_SAME_AS_LOGGED_IN_USER)))
                 .flatMap(authUser -> {
                     String senderId = authUser.getId().equals(sellerId) ? sellerId : buyerId;
                     String receiverId = authUser.getId().equals(sellerId) ? buyerId : sellerId;
 
-                    return userService.findUserById(receiverId)
-                            .flatMap(receiver -> chatRoomRepository.findChatRoom(productId, buyerId)
-                                    .flatMap(chatRoom -> createChatRoomResponse(chatRoom, senderId, receiverId, receiver))
-                                    .switchIfEmpty(Mono.defer(() -> productService.findProductById(productId)
-                                            .flatMap(product -> Mono.just(new ChatRoom.Builder()
-                                                            .productId(productId)
-                                                            .sellerId(sellerId)
-                                                            .buyerId(buyerId)
-                                                            .build())
-                                                    .flatMap(newChatRoom -> chatRoomRepository.save(newChatRoom))
-                                                    .flatMap(savedChatRoom -> createChatRoomResponse(savedChatRoom, senderId, receiverId, receiver)))
-                                    )))
-                            .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)));
+                    return Mono.zip(
+                                    chatRoomRepository.findChatRoom(productId, buyerId)
+                                            .switchIfEmpty(Mono.defer(() -> createNewChatRoom(productId, sellerId, buyerId))),
+                                    userService.findUserById(receiverId)
+                                            .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)))
+                            )
+                            .flatMap(TupleUtils.function((chatRoom, receiver) ->
+                                    createChatRoomResponse(chatRoom, senderId, receiverId, receiver)
+                            ));
                 })
-                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.SELLER_SAME_AS_LOGGED_IN_USER)))
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.CHAT_ROOM_CREATION_FAILED));
+    }
+
+    private Mono<ChatRoom> createNewChatRoom(String productId, String sellerId, String buyerId) {
+        return Mono.just(new ChatRoom.Builder()
+                        .productId(productId)
+                        .sellerId(sellerId)
+                        .buyerId(buyerId)
+                        .build())
+                .flatMap(chatRoomRepository::save);
     }
 
     private Mono<ChatRoomResDto> createChatRoomResponse(ChatRoom chatRoom, String senderId, String receiverId, User receiver) {
@@ -85,16 +91,17 @@ public class ChatServiceImpl implements ChatService {
     }
 
     public Mono<Chat> saveMsg(ChatSaveReqDto chatSaveReqDto) {
-        Chat chat = new Chat.Builder()
-                .msg(chatSaveReqDto.msg())
-                .senderId(chatSaveReqDto.senderId())
-                .receiverId(chatSaveReqDto.receiverId())
-                .roomId(chatSaveReqDto.roomId())
-                .build();
-
-        return chatRepository.save(chat)
-                .flatMap(savedMessage -> redisPublisher.publish(chatSaveReqDto.receiverId(), savedMessage.getMsg())
-                        .thenReturn(savedMessage)) // Redis를 통해 메시지 발행
+        return Mono.just(new Chat.Builder()
+                        .msg(chatSaveReqDto.msg())
+                        .senderId(chatSaveReqDto.senderId())
+                        .receiverId(chatSaveReqDto.receiverId())
+                        .roomId(chatSaveReqDto.roomId())
+                        .build()
+                )
+                .flatMap(chat -> chatRepository.save(chat))
+                .flatMap(savedMessage ->
+                        redisPublisher.publish(chatSaveReqDto.receiverId(), savedMessage.getMsg())
+                                .thenReturn(savedMessage)) // Redis를 통해 메시지 발행
                 .onErrorMap(e -> new ApiException(ExceptionMessage.CHAT_SAVE_FAILED));
     }
 
@@ -109,28 +116,26 @@ public class ChatServiceImpl implements ChatService {
     }
 
     public Mono<ChatRoomListResDto> createChatRoomListResponse(ChatRoom chatRoom) {
-        return Mono.zip(productService.findProductById(chatRoom.getProductId()),
-                chatRepository.findRecentChat(chatRoom.getId()),
-                imageService.findProductImageById(chatRoom.getProductId()),
-                userService.findUserById(chatRoom.getSellerId()),
-                userService.findUserById(chatRoom.getBuyerId())
-        ).map(tuple -> {
-            Product product = tuple.getT1();
-            Chat chat = tuple.getT2();
-            Image image = tuple.getT3();
-            User seller = tuple.getT4();
-            User buyer = tuple.getT5();
-
-            return new ChatRoomListResDto(
-                    chatRoom.getProductId(),
-                    product.getTitle(),
-                    chatRoom.getSellerId(),
-                    seller.getNickname(),
-                    chatRoom.getBuyerId(),
-                    buyer.getNickname(),
-                    chat.getMsg(),
-                    DateTimeUtils.format(chat.getCreatedAt()),
-                    image.getThumbnailPath());
-        }).onErrorResume(e -> Mono.error(new ApiException(ExceptionMessage.CHAT_ROOM_INFO_FETCH_FAILED)));
+        return Mono.zip(
+                        productService.findProductById(chatRoom.getProductId()),
+                        chatRepository.findRecentChat(chatRoom.getId()),
+                        imageService.findProductImageById(chatRoom.getProductId()),
+                        userService.findUserById(chatRoom.getSellerId()),
+                        userService.findUserById(chatRoom.getBuyerId())
+                )
+                .map(TupleUtils.function((product, chat, image, seller, buyer) ->
+                        new ChatRoomListResDto(
+                                chatRoom.getProductId(),
+                                product.getTitle(),
+                                chatRoom.getSellerId(),
+                                seller.getNickname(),
+                                chatRoom.getBuyerId(),
+                                buyer.getNickname(),
+                                chat.getMsg(),
+                                DateTimeUtils.format(chat.getCreatedAt()),
+                                image.getThumbnailPath()
+                        )
+                ))
+                .onErrorResume(e -> Mono.error(new ApiException(ExceptionMessage.CHAT_ROOM_INFO_FETCH_FAILED)));
     }
 }
