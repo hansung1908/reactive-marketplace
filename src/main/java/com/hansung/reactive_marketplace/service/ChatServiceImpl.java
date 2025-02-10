@@ -102,7 +102,8 @@ public class ChatServiceImpl implements ChatService {
                 .flatMap(savedMessage ->
                         redisPublisher.publish(chatSaveReqDto.receiverId(), savedMessage.getMsg())
                                 .thenReturn(savedMessage)) // Redis를 통해 메시지 발행
-                .onErrorMap(e -> new ApiException(ExceptionMessage.CHAT_SAVE_FAILED));
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.CHAT_SAVE_FAILED));
     }
 
     public Flux<ChatRoomListResDto> findChatRoomListBySeller(Authentication authentication) {
@@ -136,6 +137,7 @@ public class ChatServiceImpl implements ChatService {
                                 image.getThumbnailPath()
                         )
                 ))
-                .onErrorResume(e -> Mono.error(new ApiException(ExceptionMessage.CHAT_ROOM_INFO_FETCH_FAILED)));
+                .onErrorMap(e -> !(e instanceof ApiException),
+                        e -> new ApiException(ExceptionMessage.CHAT_ROOM_INFO_FETCH_FAILED));
     }
 }
