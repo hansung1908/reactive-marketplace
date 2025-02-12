@@ -373,6 +373,42 @@ $count: # 개수 세기
 </details>
 
 <details>
+  <summary>리액티브 환경에서 재시도 처리</summary>
+
+- 일시적인 오류나 네트워크 문제가 발생하여 재요청이 필요한 경우 retry 관련 오퍼레이션을 통해 구현
+
+##### 선형 대기 전략
+```shell
+Retry.fixedDelay(long maxAttempts, Duration fixedDelay)
+```
+- 고정된 대기시간을 두고 재요청
+- 1s -> 2s -> 3s
+
+##### 지수 백오프 전략
+```shell
+Retry.backoff(long maxAttempts, Duration minBackoff)
+```
+- 초기 대기시간에서 지수적으로 증가하여 재요청
+- 100ms -> 200ms -> 400ms
+- 선형 대기 전략보다 부하를 분산하면서 불필요한 요청을 감소
+
+##### 지터
+- 지수 백오프 전략만 사용하면 여러 클라이언트가 동시에 실패하면 모두 같은 시간대에 재시도
+- 그럼 동시 요청으로 인한 서버 부하로 연쇄적인 실패 발생 가능성이 생김
+```shell
+RetryBackoffSpec.jitter(double jitterFactor)
+```
+- 지수 백오프 전략에 같이 사용
+- 0.0 ~ 1.0 (0% ~ 100%)로 범위를 설정하여 해당 요청에 무작위성을 부여
+- 100ms에 50% 지터를 설정하면 100ms ± 50ms 사이의 시간중 무작위로 요청
+- 서비스 복구 시간을 확보함과 동시에 시스템 과부하를 방지할 수 있음
+
+##### 주의사항
+- 재시도 횟수 제한 설정
+- 최대 대기 시간 설정
+</details>
+
+<details>
   <summary>리액티브 환경에서 적용에 주의해야 할 것</summary>
 
 - aop는 webflux에서 완전히 호환되지 않아 비동기 동작을 보장할 수 없음

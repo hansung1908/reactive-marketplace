@@ -1,14 +1,17 @@
 package com.hansung.reactive_marketplace.service;
 
-import com.hansung.reactive_marketplace.domain.*;
+import com.hansung.reactive_marketplace.domain.Chat;
+import com.hansung.reactive_marketplace.domain.ChatClickPage;
+import com.hansung.reactive_marketplace.domain.ChatRoom;
+import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.ChatSaveReqDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomListResDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomResDto;
 import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
+import com.hansung.reactive_marketplace.redis.RedisPublisher;
 import com.hansung.reactive_marketplace.repository.ChatRepository;
 import com.hansung.reactive_marketplace.repository.ChatRoomRepository;
-import com.hansung.reactive_marketplace.service.messaging.RedisPublisher;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import com.hansung.reactive_marketplace.util.DateTimeUtils;
 import org.springframework.security.core.Authentication;
@@ -17,6 +20,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.function.TupleUtils;
+import reactor.util.retry.Retry;
+
+import java.time.Duration;
 
 @Service
 public class ChatServiceImpl implements ChatService {
@@ -45,6 +51,9 @@ public class ChatServiceImpl implements ChatService {
     public Flux<Chat> findMsgByRoomId(String roomId) {
         return chatRepository.findMsgByRoomId(roomId)
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.CHAT_NOT_FOUND)))
+                .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
+                        .maxBackoff(Duration.ofMillis(500))
+                        .jitter(0.3))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -76,7 +85,7 @@ public class ChatServiceImpl implements ChatService {
                         .sellerId(sellerId)
                         .buyerId(buyerId)
                         .build())
-                .flatMap(chatRoomRepository::save);
+                .flatMap(newChatRoom -> chatRoomRepository.save(newChatRoom));
     }
 
     private Mono<ChatRoomResDto> createChatRoomResponse(ChatRoom chatRoom, String senderId, String receiverId, User receiver) {
