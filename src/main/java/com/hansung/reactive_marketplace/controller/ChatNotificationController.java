@@ -1,6 +1,6 @@
 package com.hansung.reactive_marketplace.controller;
 
-import com.hansung.reactive_marketplace.service.messaging.RedisSubscriber;
+import com.hansung.reactive_marketplace.redis.RedisSubscriber;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -11,7 +11,6 @@ import reactor.core.publisher.Flux;
 
 @RestController
 public class ChatNotificationController {
-    // 다중 구독자에게 메시지를 브로드캐스트하기 위한 Sink
     private final RedisSubscriber redisSubscriber;
 
     public ChatNotificationController(RedisSubscriber redisSubscriber) {
