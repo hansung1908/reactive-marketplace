@@ -409,6 +409,15 @@ RetryBackoffSpec.jitter(double jitterFactor)
 </details>
 
 <details>
+  <summary>리액티브 환경에서 테스트 코드 작성</summary>
+
+##### repository
+- @Createdate 같은 config 파일이 필요한 경우 @Import를 통해 해당 config 파일을 추가
+- db에 테스트 데이터 i/o시 비동기 특성상 순서를 보장할 수 없어 테스트가 먼저 실행될 수 있음
+- 그래서 StepVerifier를 사용하여 db i/o 작업을 보장
+</details>
+
+<details>
   <summary>리액티브 환경에서 적용에 주의해야 할 것</summary>
 
 - aop는 webflux에서 완전히 호환되지 않아 비동기 동작을 보장할 수 없음
