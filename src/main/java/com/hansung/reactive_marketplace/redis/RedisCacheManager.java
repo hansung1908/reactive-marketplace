@@ -9,11 +9,11 @@ import java.time.Duration;
 import java.util.List;
 
 @Component
-public class ReactiveRedisHandler {
+public class RedisCacheManager {
 
     private final ReactiveRedisTemplate<String, Object> reactiveRedisTemplate;
 
-    public ReactiveRedisHandler(ReactiveRedisTemplate<String, Object> reactiveRedisTemplate) {
+    public RedisCacheManager(ReactiveRedisTemplate<String, Object> reactiveRedisTemplate) {
         this.reactiveRedisTemplate = reactiveRedisTemplate;
     }
 

@@ -10,7 +10,7 @@ import com.hansung.reactive_marketplace.dto.response.ProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductUpdateResDto;
 import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
-import com.hansung.reactive_marketplace.redis.ReactiveRedisHandler;
+import com.hansung.reactive_marketplace.redis.RedisCacheManager;
 import com.hansung.reactive_marketplace.repository.ProductRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import com.hansung.reactive_marketplace.util.DateTimeUtils;
@@ -33,13 +33,13 @@ public class ProductServiceImpl implements ProductService {
 
     private final ImageService imageService;
 
-    private final ReactiveRedisHandler reactiveRedisHandler;
+    private final RedisCacheManager redisCacheManager;
 
-    public ProductServiceImpl(ProductRepository productRepository, UserService userService, ImageService imageService, ReactiveRedisHandler reactiveRedisHandler) {
+    public ProductServiceImpl(ProductRepository productRepository, UserService userService, ImageService imageService, RedisCacheManager redisCacheManager) {
         this.productRepository = productRepository;
         this.userService = userService;
         this.imageService = imageService;
-        this.reactiveRedisHandler = reactiveRedisHandler;
+        this.redisCacheManager = redisCacheManager;
     }
 
     public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, Authentication authentication) {
@@ -56,7 +56,7 @@ public class ProductServiceImpl implements ProductService {
                                         .thenReturn(savedProduct))
                                 .defaultIfEmpty(savedProduct))
                 .flatMap(savedProduct ->
-                        reactiveRedisHandler.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
+                        redisCacheManager.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
                                 .thenReturn(savedProduct)
                 )
                 .onErrorMap(e -> !(e instanceof ApiException),
@@ -64,7 +64,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication) {
-        return reactiveRedisHandler.getOrFetch(
+        return redisCacheManager.getOrFetch(
                 "product:" + productId,
                 ProductDetailResDto.class,
                 productRepository.findById(productId)
@@ -123,7 +123,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public Flux<MyProductListResDto> findMyProductList(Authentication authentication) {
-        return reactiveRedisHandler.getOrFetchList(
+        return redisCacheManager.getOrFetchList(
                 "myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId(),
                 MyProductListResDto.class,
                 productRepository.findMyProductList(AuthUtils.getAuthenticationUser(authentication).getId(), Sort.by(Sort.Direction.DESC, "createdAt"))
@@ -157,8 +157,8 @@ public class ProductServiceImpl implements ProductService {
                                     productUpdateReqDto.status()
                             )
                             .then(Mono.zip(
-                                    reactiveRedisHandler.deleteValue("product:" + productUpdateReqDto.id()),
-                                    reactiveRedisHandler.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
+                                    redisCacheManager.deleteValue("product:" + productUpdateReqDto.id()),
+                                    redisCacheManager.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
                             ).then());
 
                     return Mono.justOrEmpty(image)
@@ -181,8 +181,8 @@ public class ProductServiceImpl implements ProductService {
                         Mono.when(
                                 productRepository.deleteById(existingProduct.getId()),
                                 imageService.deleteProductImageById(existingProduct.getId()),
-                                reactiveRedisHandler.deleteValue("product:" + productDeleteReqDto.id()),
-                                reactiveRedisHandler.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
+                                redisCacheManager.deleteValue("product:" + productDeleteReqDto.id()),
+                                redisCacheManager.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
                         )
                 )
                 .onErrorMap(e -> !(e instanceof ApiException),

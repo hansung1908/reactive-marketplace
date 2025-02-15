@@ -7,7 +7,7 @@ import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.dto.response.UserProfileResDto;
 import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
-import com.hansung.reactive_marketplace.redis.ReactiveRedisHandler;
+import com.hansung.reactive_marketplace.redis.RedisCacheManager;
 import com.hansung.reactive_marketplace.repository.UserRepository;
 import com.hansung.reactive_marketplace.util.AuthUtils;
 import org.springframework.http.codec.multipart.FilePart;
@@ -28,16 +28,16 @@ public class UserServiceImpl implements UserService {
 
     private final ImageService imageService;
 
-    private final ReactiveRedisHandler reactiveRedisHandler;
+    private final RedisCacheManager redisCacheManager;
 
     public UserServiceImpl(UserRepository userRepository,
                            BCryptPasswordEncoder bCryptPasswordEncoder,
                            ImageService imageService,
-                           ReactiveRedisHandler reactiveRedisHandler) {
+                           RedisCacheManager redisCacheManager) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.imageService = imageService;
-        this.reactiveRedisHandler = reactiveRedisHandler;
+        this.redisCacheManager = redisCacheManager;
     }
 
     public Mono<User> saveUser(UserSaveReqDto userSaveReqDto, FilePart image) {
@@ -67,7 +67,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public Mono<User> findUserById(String userId) {
-        return reactiveRedisHandler.getOrFetch(
+        return redisCacheManager.getOrFetch(
                 "user:" + userId,
                 User.class,
                 userRepository.findById(userId)
@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
                             )
                             .then();
 
-                    Mono<Boolean> deleteCacheMono = reactiveRedisHandler.deleteValue("user:" + userUpdateReqDto.id());
+                    Mono<Boolean> deleteCacheMono = redisCacheManager.deleteValue("user:" + userUpdateReqDto.id());
 
                     return Mono.when(updateUserMono, updateImageMono, deleteCacheMono);
                 })
@@ -130,11 +130,11 @@ public class UserServiceImpl implements UserService {
                                 .flatMap(image -> Mono.when(
                                         userRepository.deleteById(user.getId()),
                                         imageService.deleteProfileImageById(user.getId()),
-                                        reactiveRedisHandler.deleteValue("user:" + user.getId())
+                                        redisCacheManager.deleteValue("user:" + user.getId())
                                 ))
                                 .switchIfEmpty(Mono.when(
                                         userRepository.deleteById(user.getId()),
-                                        reactiveRedisHandler.deleteValue("user:" + user.getId())
+                                        redisCacheManager.deleteValue("user:" + user.getId())
                                 ))
                 )
                 .onErrorMap(e -> !(e instanceof ApiException),

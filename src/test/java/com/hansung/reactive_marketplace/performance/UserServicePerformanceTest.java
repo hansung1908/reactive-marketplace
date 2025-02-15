@@ -1,10 +1,12 @@
-package com.hansung.reactive_marketplace.service;
+package com.hansung.reactive_marketplace.performance;
 
 import com.hansung.reactive_marketplace.domain.ImageSource;
 import com.hansung.reactive_marketplace.domain.User;
 import com.hansung.reactive_marketplace.dto.request.UserSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.UserUpdateReqDto;
 import com.hansung.reactive_marketplace.repository.UserRepository;
+import com.hansung.reactive_marketplace.service.ImageService;
+import com.hansung.reactive_marketplace.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
