@@ -4,7 +4,7 @@ import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.ImageSource;
 import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
-import com.hansung.reactive_marketplace.redis.ReactiveRedisHandler;
+import com.hansung.reactive_marketplace.redis.RedisCacheManager;
 import com.hansung.reactive_marketplace.repository.ImageRepository;
 import com.hansung.reactive_marketplace.util.ImageUtils;
 import net.coobird.thumbnailator.Thumbnails;
@@ -23,7 +23,7 @@ public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
 
-    private final ReactiveRedisHandler reactiveRedisHandler;
+    private final RedisCacheManager redisCacheManager;
 
     @Value("${image.profile.originalPath}")
     private String profileOriginalPath;
@@ -37,9 +37,9 @@ public class ImageServiceImpl implements ImageService {
     @Value("${image.product.thumbnailPath}")
     private String productThumbnailPath;
 
-    public ImageServiceImpl(ImageRepository imageRepository, ReactiveRedisHandler reactiveRedisHandler) {
+    public ImageServiceImpl(ImageRepository imageRepository, RedisCacheManager redisCacheManager) {
         this.imageRepository = imageRepository;
-        this.reactiveRedisHandler = reactiveRedisHandler;
+        this.redisCacheManager = redisCacheManager;
     }
 
     public Mono<Image> uploadImage(FilePart image, String id, ImageSource imageSource) {
@@ -96,7 +96,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     public Mono<Image> findProductImageByIdWithCache(String productId) {
-        return reactiveRedisHandler.getOrFetch(
+        return redisCacheManager.getOrFetch(
                 "productImage:" + productId,
                 Image.class,
                 findProductImageById(productId),
@@ -114,7 +114,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     public Mono<Image> findProfileImageByIdWithCache(String userId) {
-        return reactiveRedisHandler.getOrFetch(
+        return redisCacheManager.getOrFetch(
                 "userImage:" + userId,
                 Image.class,
                 findProfileImageById(userId),
@@ -127,7 +127,7 @@ public class ImageServiceImpl implements ImageService {
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> deleteImageFiles(image))
                 .then(imageRepository.deleteByProductId(productId))
-                .then(reactiveRedisHandler.deleteValue("productImage:" + productId).then())
+                .then(redisCacheManager.deleteValue("productImage:" + productId).then())
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
     }
@@ -137,7 +137,7 @@ public class ImageServiceImpl implements ImageService {
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> deleteImageFiles(image))
                 .then(imageRepository.deleteByUserId(userId))
-                .then(reactiveRedisHandler.deleteValue("userImage:" + userId).then())
+                .then(redisCacheManager.deleteValue("userImage:" + userId).then())
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
     }

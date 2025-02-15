@@ -1,11 +1,8 @@
-package com.hansung.reactive_marketplace.util;
+package com.hansung.reactive_marketplace.jwt;
 
 import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -18,13 +15,13 @@ import java.util.List;
 
 // jwt token과 관련된 메소드를 모아놓은 유틸리티 클래스
 @Component
-public class JwtUtils {
+public class JwtTokenManager {
 
     private static final long expiredMs = 24 * 60 * 60 * 1000L; // 시간 * 분 * 초 * 밀리초 -> 24시간
 
     private final SecretKey secretKey;
 
-    public JwtUtils(@Value("${spring.jwt.secret}")String secret) {
+    public JwtTokenManager(@Value("${spring.jwt.secret}")String secret) {
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
@@ -50,8 +47,12 @@ public class JwtUtils {
                 .before(new Date()); // 현재 시간이 만료 기한 전인지 검증
     }
 
+    public Mono<String> createToken(CustomUserDetail user) {
+        return Mono.just(buildJwtToken(user.getUsername(), user.getRole()));
+    }
+
     // jwt token 생성
-    public String createJwt(String username, String role) {
+    private String buildJwtToken(String username, String role) {
         return Jwts.builder() // jwt token 빌더 생성
                 .claim("username", username) // username 추가
                 .claim("role", role) // role 추가
@@ -59,21 +60,5 @@ public class JwtUtils {
                 .expiration(new Date(System.currentTimeMillis() + expiredMs)) // 만료 기한(exp) 설정
                 .signWith(secretKey) // secretKey 암호화
                 .compact(); // 문자열로 직렬화 + 토큰 실제 생성
-    }
-
-    public Mono<String> generateToken(CustomUserDetail user) {
-        return Mono.just(createJwt(user.getUsername(), user.getRole()));
-    }
-    public ResponseEntity<String> createLoginResponse(String token) {
-        ResponseCookie cookie = ResponseCookie.from("JWT_TOKEN", token)
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/")
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body("Login successful");
     }
 }

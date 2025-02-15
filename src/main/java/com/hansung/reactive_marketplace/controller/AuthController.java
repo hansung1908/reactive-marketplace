@@ -3,8 +3,8 @@ package com.hansung.reactive_marketplace.controller;
 import com.hansung.reactive_marketplace.dto.request.LoginReqDto;
 import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
+import com.hansung.reactive_marketplace.jwt.JwtTokenManager;
 import com.hansung.reactive_marketplace.security.CustomReactiveUserDetailService;
-import com.hansung.reactive_marketplace.util.JwtUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -21,21 +21,34 @@ public class AuthController {
 
     private final CustomReactiveUserDetailService customReactiveUserDetailService;
 
-    private final JwtUtils jwtUtils;
+    private final JwtTokenManager jwtTokenManager;
 
-    public AuthController(BCryptPasswordEncoder bCryptPasswordEncoder, CustomReactiveUserDetailService customReactiveUserDetailService, JwtUtils jwtUtils) {
+    public AuthController(BCryptPasswordEncoder bCryptPasswordEncoder, CustomReactiveUserDetailService customReactiveUserDetailService, JwtTokenManager jwtTokenManager) {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.customReactiveUserDetailService = customReactiveUserDetailService;
-        this.jwtUtils = jwtUtils;
+        this.jwtTokenManager = jwtTokenManager;
     }
 
     @PostMapping("/auth/login")
     public Mono<ResponseEntity<String>> login(@RequestBody LoginReqDto loginReqDto) {
         return customReactiveUserDetailService.findCustomUserDetailByUsername(loginReqDto.username())
                 .filter(user -> bCryptPasswordEncoder.matches(loginReqDto.password(), user.getPassword()))
-                .flatMap(userDetail -> jwtUtils.generateToken(userDetail))
-                .map(token -> jwtUtils.createLoginResponse(token))
+                .flatMap(userDetail -> jwtTokenManager.createToken(userDetail))
+                .map(token -> createLoginResponse(token))
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.INVALID_CREDENTIALS)));
+    }
+
+    private ResponseEntity<String> createLoginResponse(String token) {
+        ResponseCookie cookie = ResponseCookie.from("JWT_TOKEN", token)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Login successful");
     }
 
     @PostMapping("/auth/logout")
