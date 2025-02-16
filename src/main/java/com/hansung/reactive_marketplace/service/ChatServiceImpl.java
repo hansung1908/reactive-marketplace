@@ -20,9 +20,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.function.TupleUtils;
-import reactor.util.retry.Retry;
-
-import java.time.Duration;
 
 @Service
 public class ChatServiceImpl implements ChatService {
@@ -51,9 +48,6 @@ public class ChatServiceImpl implements ChatService {
     public Flux<Chat> findMsgByRoomId(String roomId) {
         return chatRepository.findMsgByRoomId(roomId)
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.CHAT_NOT_FOUND)))
-                .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
-                        .maxBackoff(Duration.ofMillis(500))
-                        .jitter(0.3))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
