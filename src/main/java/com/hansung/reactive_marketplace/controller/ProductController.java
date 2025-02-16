@@ -1,6 +1,5 @@
 package com.hansung.reactive_marketplace.controller;
 
-import com.hansung.reactive_marketplace.service.ImageService;
 import com.hansung.reactive_marketplace.service.ProductService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -14,11 +13,8 @@ public class ProductController {
 
     private final ProductService productService;
 
-    private final ImageService imageService;
-
-    public ProductController(ProductService productService, ImageService imageService) {
+    public ProductController(ProductService productService) {
         this.productService = productService;
-        this.imageService = imageService;
     }
 
     @GetMapping("/product/saveForm")
