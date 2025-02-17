@@ -14,9 +14,6 @@ public enum ExceptionMessage {
 
     // 상품 관련 예외
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
-    PRODUCT_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "상품 저장에 실패했습니다."),
-    PRODUCT_UPDATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "상품 수정에 실패했습니다."),
-    PRODUCT_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "상품 삭제에 실패했습니다."),
 
     // 이미지 관련 예외
     IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "이미지를 찾을 수 없습니다."),

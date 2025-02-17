@@ -11,6 +11,7 @@ import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -50,7 +51,8 @@ class ChatServiceTest {
     @Mock
     private Authentication authentication;
 
-    private ChatService chatService;
+    @InjectMocks
+    private ChatServiceImpl chatService;
 
     private String productId;
     private String sellerId;
@@ -65,8 +67,6 @@ class ChatServiceTest {
 
     @BeforeEach
     void setUp() {
-        chatService = new ChatServiceImpl(chatRepository, chatRoomRepository, productService, userService, imageService, redisPublisher);
-
         productId = "testProduct";
         sellerId = "testSeller";
         buyerId = "testBuyer";
@@ -133,24 +133,20 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenRoomId_whenFindMsgByRoomId_thenSuccess() {
-        // given
+    void findMsgByRoomId_WhenRoomExists_ThenReturnMessages() {
         when(chatRepository.findMsgByRoomId(roomId))
                 .thenReturn(Flux.just(chat));
 
-        // when & then
         StepVerifier.create(chatService.findMsgByRoomId(roomId))
                 .expectNext(chat)
                 .verifyComplete();
     }
 
     @Test
-    void givenRoomId_whenFindMsgByRoomId_thenChatNotFound() {
-        // given
+    void findMsgByRoomId_WhenRoomDoesNotExist_ThenThrowApiException() {
         when(chatRepository.findMsgByRoomId(roomId))
                 .thenReturn(Flux.empty());
 
-        // when & then
         StepVerifier.create(chatService.findMsgByRoomId(roomId))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.CHAT_NOT_FOUND))
@@ -158,8 +154,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenProductIdAndBuyerId_whenOpenChat_thenSuccess() {
-        // given
+    void openChat_WhenProductAndBuyerExist_ThenReturnChatRoom() {
         setupBuyerAuthentication();
 
         when(chatRoomRepository.findChatRoom(eq(productId), eq(buyerId)))
@@ -169,7 +164,6 @@ class ChatServiceTest {
         when(imageService.findProfileImageByIdWithCache(eq(sellerId)))
                 .thenReturn(Mono.just(image));
 
-        // when & then
         StepVerifier.create(chatService.openChat(productId, sellerId, buyerId, authentication, ChatClickPage.DETAIL))
                 .expectNextMatches(chatRoomResDto ->
                         chatRoomResDto.id().equals(roomId) &&
@@ -182,11 +176,9 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenProductIdAndSellerId_whenOpenChat_thenSellerSameAsLoggedInUser() {
-        // given
+    void openChat_WhenSellerIsLoggedIn_ThenThrowApiException() {
         setupSellerAuthentication();
 
-        // when & then
         StepVerifier.create(chatService.openChat(productId, sellerId, buyerId, authentication, ChatClickPage.DETAIL))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.SELLER_SAME_AS_LOGGED_IN_USER))
@@ -194,8 +186,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenProductIdAndBuyerId_whenOpenChat_thenReceiverNotFound() {
-        // given
+    void openChat_WhenReceiverDoesNotExist_ThenThrowApiException() {
         setupBuyerAuthentication();
 
         when(chatRoomRepository.findChatRoom(eq(productId), eq(buyerId)))
@@ -203,7 +194,6 @@ class ChatServiceTest {
         when(userService.findUserById(eq(sellerId)))
                 .thenReturn(Mono.empty());
 
-        // when & then
         StepVerifier.create(chatService.openChat(productId, sellerId, buyerId, authentication, ChatClickPage.DETAIL))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.USER_NOT_FOUND))
@@ -211,8 +201,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenProductIdAndBuyerId_whenOpenChat_thenChatRoomCreationFailed() {
-        // given
+    void openChat_WhenChatRoomCreationFails_ThenThrowApiException() {
         setupBuyerAuthentication();
 
         when(chatRoomRepository.findChatRoom(eq(productId), eq(buyerId)))
@@ -222,7 +211,6 @@ class ChatServiceTest {
         when(userService.findUserById(eq(sellerId)))
                 .thenReturn(Mono.just(seller));
 
-        // when & then
         StepVerifier.create(chatService.openChat(productId, sellerId, buyerId, authentication, ChatClickPage.DETAIL))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.CHAT_ROOM_CREATION_FAILED))
@@ -230,8 +218,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenChatSaveReqDto_whenSaveMsg_thenSuccess() {
-        // given
+    void saveMsg_WhenGivenValidRequest_ThenMessageIsSaved() {
         ChatSaveReqDto chatSaveReqDto = new ChatSaveReqDto(
                 "Hello",
                 sellerId,
@@ -244,15 +231,13 @@ class ChatServiceTest {
         when(redisPublisher.publish(anyString(), anyString()))
                 .thenReturn(Mono.empty());
 
-        // when & then
         StepVerifier.create(chatService.saveMsg(chatSaveReqDto))
                 .expectNext(chat)
                 .verifyComplete();
     }
 
     @Test
-    void givenChatSaveReqDto_whenSaveMsg_thenSaveFailed() {
-        // given
+    void saveMsg_WhenDatabaseErrorOccurs_ThenThrowApiException() {
         ChatSaveReqDto chatSaveReqDto = new ChatSaveReqDto(
                 "Hello",
                 sellerId,
@@ -263,7 +248,6 @@ class ChatServiceTest {
         when(chatRepository.save(any(Chat.class)))
                 .thenReturn(Mono.error(new RuntimeException("DB Error")));
 
-        // when & then
         StepVerifier.create(chatService.saveMsg(chatSaveReqDto))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.CHAT_SAVE_FAILED))
@@ -271,8 +255,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenChatSaveReqDto_whenSaveMsg_thenRedisPublishFailed() {
-        // given
+    void saveMsg_WhenRedisPublishFails_ThenThrowApiException() {
         ChatSaveReqDto chatSaveReqDto = new ChatSaveReqDto(
                 "Hello",
                 sellerId,
@@ -285,7 +268,6 @@ class ChatServiceTest {
         when(redisPublisher.publish(anyString(), anyString()))
                 .thenReturn(Mono.error(new RuntimeException("Redis Error")));
 
-        // when & then
         StepVerifier.create(chatService.saveMsg(chatSaveReqDto))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.CHAT_SAVE_FAILED))
@@ -293,8 +275,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenSeller_whenFindChatRoomListBySeller_thenSuccess() {
-        // given
+    void findChatRoomListBySeller_WhenSellerExists_ThenReturnChatRooms() {
         setupSellerAuthentication();
 
         when(chatRoomRepository.findChatRoomListBySeller(eq(sellerId)))
@@ -310,7 +291,6 @@ class ChatServiceTest {
         when(userService.findUserById(eq(buyerId)))
                 .thenReturn(Mono.just(buyer));
 
-        // when & then
         StepVerifier.create(chatService.findChatRoomListBySeller(authentication))
                 .expectNextMatches(chatRoomListResDto ->
                         chatRoomListResDto.productId().equals(productId) &&
@@ -326,8 +306,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenSeller_whenFindChatRoomListBySeller_thenFetchFailed() {
-        // given
+    void findChatRoomListBySeller_WhenDatabaseErrorOccurs_ThenThrowApiException() {
         setupSellerAuthentication();
 
         when(chatRoomRepository.findChatRoomListBySeller(eq(sellerId)))
@@ -335,7 +314,6 @@ class ChatServiceTest {
         when(productService.findProductById(eq(productId)))
                 .thenReturn(Mono.error(new RuntimeException("DB Error")));
 
-        // when & then
         StepVerifier.create(chatService.findChatRoomListBySeller(authentication))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.CHAT_ROOM_INFO_FETCH_FAILED))
@@ -343,8 +321,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenBuyer_whenFindChatRoomListByBuyer_thenSuccess() {
-        // given
+    void findChatRoomListByBuyer_WhenBuyerExists_ThenReturnChatRooms() {
         setupBuyerAuthentication();
 
         when(chatRoomRepository.findChatRoomListByBuyer(eq(buyerId)))
@@ -360,7 +337,6 @@ class ChatServiceTest {
         when(userService.findUserById(eq(buyerId)))
                 .thenReturn(Mono.just(buyer));
 
-        // when & then
         StepVerifier.create(chatService.findChatRoomListByBuyer(authentication))
                 .expectNextMatches(chatRoomListResDto ->
                         chatRoomListResDto.productId().equals(productId) &&
@@ -376,8 +352,7 @@ class ChatServiceTest {
     }
 
     @Test
-    void givenBuyer_whenFindChatRoomListByBuyer_thenFetchFailed() {
-        // given
+    void findChatRoomListByBuyer_WhenDatabaseErrorOccurs_ThenThrowApiException() {
         setupBuyerAuthentication();
 
         when(chatRoomRepository.findChatRoomListByBuyer(eq(buyerId)))
@@ -385,7 +360,6 @@ class ChatServiceTest {
         when(productService.findProductById(eq(productId)))
                 .thenReturn(Mono.error(new RuntimeException("DB Error")));
 
-        // when & then
         StepVerifier.create(chatService.findChatRoomListByBuyer(authentication))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.CHAT_ROOM_INFO_FETCH_FAILED))

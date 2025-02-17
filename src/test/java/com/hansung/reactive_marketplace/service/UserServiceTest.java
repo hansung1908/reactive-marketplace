@@ -14,6 +14,7 @@ import com.hansung.reactive_marketplace.security.CustomUserDetail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -46,7 +47,8 @@ class UserServiceTest {
     @Mock
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    private UserService userService;
+    @InjectMocks
+    private UserServiceImpl userService;
 
     private String userId;
     private String username;
@@ -59,11 +61,10 @@ class UserServiceTest {
     private UserUpdateReqDto userUpdateReqDto;
     private UserDeleteReqDto userDeleteReqDto;
     private FilePart filePart;
+    private Authentication authentication;
 
     @BeforeEach
     void setUp() {
-        userService = new UserServiceImpl(userRepository, bCryptPasswordEncoder, imageService, redisCacheManager);
-
         userId = "testUser";
         username = "testUsername";
         nickname = "테스트 유저";
@@ -113,8 +114,15 @@ class UserServiceTest {
         filePart = mock(FilePart.class);
     }
 
+    private void authenticationSetUp() {
+        authentication = mock(Authentication.class);
+        CustomUserDetail userDetail = mock(CustomUserDetail.class);
+        when(authentication.getPrincipal()).thenReturn(userDetail);
+        when(userDetail.getUser()).thenReturn(user);
+    }
+
     @Test
-    void givenUserSaveReqDto_whenSaveUser_thenSuccess() {
+    void testSaveUser_WhenGivenValidRequest_ThenUserIsSavedSuccessfully() {
         // given
         when(bCryptPasswordEncoder.encode(password))
                 .thenReturn("encodedPassword");
@@ -132,7 +140,7 @@ class UserServiceTest {
     }
 
     @Test
-    void givenExistingUsername_whenSaveUser_thenUsernameAlreadyExists() {
+    void testSaveUser_WhenUsernameExists_ThenThrowApiException() {
         // given
         when(userRepository.existsByUsername(username))
                 .thenReturn(Mono.just(true));
@@ -145,8 +153,7 @@ class UserServiceTest {
     }
 
     @Test
-    void givenUserSaveReqDto_whenSaveUser_thenSaveFailed() {
-        // given
+    void testSaveUser_WhenDatabaseErrorOccurs_ThenThrowApiException() {
         when(bCryptPasswordEncoder.encode(password))
                 .thenReturn("encodedPassword");
         when(userRepository.existsByUsername(username))
@@ -154,7 +161,6 @@ class UserServiceTest {
         when(userRepository.save(any(User.class)))
                 .thenReturn(Mono.error(new RuntimeException("DB Error")));
 
-        // when & then
         StepVerifier.create(userService.saveUser(userSaveReqDto, filePart))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.INTERNAL_SERVER_ERROR))
@@ -162,9 +168,9 @@ class UserServiceTest {
     }
 
     @Test
-    void givenUserId_whenFindUserById_thenSuccess() {
-        // given
+    void testFindUserById_WhenUserExists_ThenReturnUser() {
         String cacheKey = "user:" + userId;
+
         when(redisCacheManager.getOrFetch(
                 eq(cacheKey),
                 eq(User.class),
@@ -174,16 +180,15 @@ class UserServiceTest {
         when(userRepository.findById(userId))
                 .thenReturn(Mono.just(user));
 
-        // when & then
         StepVerifier.create(userService.findUserById(userId))
                 .expectNext(user)
                 .verifyComplete();
     }
 
     @Test
-    void givenUserId_whenFindUserById_thenUserNotFound() {
-        // given
+    void testFindUserById_WhenUserDoesNotExist_ThenThrowApiException() {
         String cacheKey = "user:" + userId;
+
         when(redisCacheManager.getOrFetch(
                 eq(cacheKey),
                 eq(User.class),
@@ -193,7 +198,6 @@ class UserServiceTest {
         when(userRepository.findById(userId))
                 .thenReturn(Mono.empty());
 
-        // when & then
         StepVerifier.create(userService.findUserById(userId))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.USER_NOT_FOUND))
@@ -201,24 +205,20 @@ class UserServiceTest {
     }
 
     @Test
-    void givenUsername_whenFindUserByUsername_thenSuccess() {
-        // given
+    void testFindUserByUsername_WhenUserExists_ThenReturnUser() {
         when(userRepository.findByUsername(username))
                 .thenReturn(Mono.just(user));
 
-        // when & then
         StepVerifier.create(userService.findUserByUsername(username))
                 .expectNext(user)
                 .verifyComplete();
     }
 
     @Test
-    void givenUsername_whenFindUserByUsername_thenUserNotFound() {
-        // given
+    void testFindUserByUsername_WhenUserDoesNotExist_ThenThrowApiException() {
         when(userRepository.findByUsername(username))
                 .thenReturn(Mono.empty());
 
-        // when & then
         StepVerifier.create(userService.findUserByUsername(username))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.USER_NOT_FOUND))
@@ -226,8 +226,7 @@ class UserServiceTest {
     }
 
     @Test
-    void givenUserUpdateReqDto_whenUpdateUser_thenSuccess() {
-        // given
+    void testUpdateUser_WhenGivenValidRequest_ThenUserIsUpdatedSuccessfully() {
         when(userRepository.findById(userId))
                 .thenReturn(Mono.just(user));
         when(bCryptPasswordEncoder.encode(password))
@@ -243,14 +242,12 @@ class UserServiceTest {
         when(redisCacheManager.deleteValue("user:" + userId))
                 .thenReturn(Mono.just(true));
 
-        // when & then
         StepVerifier.create(userService.updateUser(userUpdateReqDto, filePart))
                 .verifyComplete();
     }
 
     @Test
-    void givenUserDeleteReqDto_whenDeleteUser_thenSuccess() {
-        // given
+    void testDeleteUser_WhenUserExists_ThenUserIsDeletedSuccessfully() {
         when(userRepository.findById(userId))
                 .thenReturn(Mono.just(user));
         when(imageService.findProfileImageById(userId))
@@ -262,17 +259,13 @@ class UserServiceTest {
         when(redisCacheManager.deleteValue("user:" + userId))
                 .thenReturn(Mono.just(true));
 
-        // when & then
         StepVerifier.create(userService.deleteUser(userDeleteReqDto))
                 .verifyComplete();
     }
 
     @Test
-    void givenAuthentication_whenFindUserProfile_thenSuccess() {
-        // given
-        Authentication authentication = mock(Authentication.class);
-        CustomUserDetail userDetail = new CustomUserDetail(user);
-        when(authentication.getPrincipal()).thenReturn(userDetail);
+    void testFindUserProfile_WhenUserExists_ThenReturnUserProfile() {
+        authenticationSetUp();
 
         when(imageService.findProfileImageByIdWithCache(userId))
                 .thenReturn(Mono.just(image));
@@ -285,7 +278,6 @@ class UserServiceTest {
         when(userRepository.findById(userId))
                 .thenReturn(Mono.just(user));
 
-        // when & then
         StepVerifier.create(userService.findUserProfile(authentication))
                 .expectNextMatches(profile ->
                         profile.username().equals(username) &&
@@ -297,16 +289,12 @@ class UserServiceTest {
     }
 
     @Test
-    void givenAuthentication_whenFindUserProfile_thenImageNotFound() {
-        // given
-        Authentication authentication = mock(Authentication.class);
-        CustomUserDetail userDetail = new CustomUserDetail(user);
-        when(authentication.getPrincipal()).thenReturn(userDetail);
+    void testFindUserProfile_WhenImageNotFound_ThenReturnDefaultImage() {
+        authenticationSetUp();
 
         when(imageService.findProfileImageByIdWithCache(userId))
                 .thenReturn(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)));
 
-        // when & then
         StepVerifier.create(userService.findUserProfile(authentication))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
                         ((ApiException) throwable).getException().equals(ExceptionMessage.IMAGE_NOT_FOUND))
