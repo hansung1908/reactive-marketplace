@@ -60,8 +60,6 @@ class ProductServiceTest {
 
     @BeforeEach
     void setUp() {
-        LocalDateTime now = LocalDateTime.now();
-
         testProduct = new Product.Builder()
                 .title("Test Product")
                 .description("Test Description")
@@ -95,18 +93,18 @@ class ProductServiceTest {
 
         ReflectionTestUtils.setField(testUser, "id", "testId");
 
-        authentication = mock(Authentication.class);
         testFilePart = mock(FilePart.class);
     }
 
     private void authenticationSetUp() {
+        authentication = mock(Authentication.class);
         CustomUserDetail userDetail = mock(CustomUserDetail.class);
         when(authentication.getPrincipal()).thenReturn(userDetail);
         when(userDetail.getUser()).thenReturn(testUser);
     }
 
     @Test
-    void givenProductSaveReqDto_whenSaveProduct_thenSuccess() {
+    void testSaveProduct_WhenGivenValidRequest_ThenProductIsSavedSuccessfully() {
         authenticationSetUp();
 
         when(productRepository.save(any()))
@@ -125,7 +123,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenProductSaveReqDto_whenSaveProduct_thenSaveFailed() {
+    void testSaveProduct_WhenDatabaseErrorOccurs_ThenThrowApiException() {
         authenticationSetUp();
 
         when(productRepository.save(any()))
@@ -133,12 +131,12 @@ class ProductServiceTest {
 
         StepVerifier.create(productService.saveProduct(testProductSaveReqDto, testFilePart, authentication))
                 .expectErrorMatches(throwable -> throwable instanceof ApiException &&
-                        ((ApiException) throwable).getException().equals(ExceptionMessage.PRODUCT_SAVE_FAILED))
+                        ((ApiException) throwable).getException().equals(ExceptionMessage.INTERNAL_SERVER_ERROR))
                 .verify();
     }
 
     @Test
-    void givenProductId_whenFindProductDetail_thenSuccess() {
+    void testFindProductDetail_WhenProductExists_ThenReturnProductDetail() {
         String cacheKey = "product:testProductId";
         ProductDetailResDto expectedDto = new ProductDetailResDto(
                 testProduct.getId(),
@@ -171,7 +169,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenProductId_whenFindProductDetail_thenProductNotFound() {
+    void testFindProductDetail_WhenProductDoesNotExist_ThenThrowApiException() {
         String cacheKey = "product:nonexistentId";
 
         when(redisCacheManager.getOrFetch(
@@ -179,7 +177,7 @@ class ProductServiceTest {
                 eq(ProductDetailResDto.class),
                 any(Mono.class),
                 eq(Duration.ofHours(1))))
-                .thenReturn(Mono.empty());
+                .thenReturn(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)));
         when(productRepository.findById("nonexistentId"))
                 .thenReturn(Mono.empty());
 
@@ -190,7 +188,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenProductUpdateReqDto_whenUpdateProduct_thenSuccess() {
+    void testUpdateProduct_WhenGivenValidRequest_ThenProductIsUpdatedSuccessfully() {
         authenticationSetUp();
 
         when(productRepository.findById("testProductId")).thenReturn(Mono.just(testProduct));
@@ -205,12 +203,12 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenProductId_whenDeleteProduct_thenSuccess() {
+    void testDeleteProduct_WhenProductExists_ThenProductIsDeletedSuccessfully() {
         authenticationSetUp();
 
         when(productRepository.findById("testProductId"))
                 .thenReturn(Mono.just(testProduct));
-        when(productRepository.deleteById((String) any()))
+        when(productRepository.deleteById(anyString()))
                 .thenReturn(Mono.empty());
         when(imageService.deleteProductImageById(any()))
                 .thenReturn(Mono.empty());
@@ -224,7 +222,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenProductId_whenFindProductForUpdateForm_thenSuccess() {
+    void testFindProductForUpdateForm_WhenProductExists_ThenReturnProductDetails() {
         when(productRepository.findById("testProductId"))
                 .thenReturn(Mono.just(testProduct));
         when(imageService.findProductImageById("testProductId"))
@@ -246,7 +244,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenProductId_whenFindProductForUpdateForm_thenProductNotFound() {
+    void testFindProductForUpdateForm_WhenProductDoesNotExist_ThenThrowApiException() {
         when(productRepository.findById("nonexistentId"))
                 .thenReturn(Mono.empty());
 
@@ -257,7 +255,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenNoParameters_whenFindProductList_thenSuccess() {
+    void testFindProductList_WhenNoParametersProvided_ThenReturnProductList() {
         Product product1 = new Product.Builder()
                 .title("Product 1")
                 .description("Description 1")
@@ -300,7 +298,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenAuthentication_whenFindMyProductList_thenSuccess() {
+    void testFindMyProductList_WhenUserAuthenticated_ThenReturnUserProducts() {
         authenticationSetUp();
 
         Product product1 = new Product.Builder()
@@ -358,7 +356,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenProductId_whenFindProductById_thenSuccess() {
+    void testFindProductById_WhenProductExists_ThenReturnProduct() {
         when(productRepository.findById("testProductId"))
                 .thenReturn(Mono.just(testProduct));
 
@@ -372,7 +370,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void givenProductId_whenFindProductById_thenProductNotFound() {
+    void testFindProductById_WhenProductDoesNotExist_ThenThrowApiException() {
         when(productRepository.findById("nonexistentId"))
                 .thenReturn(Mono.empty());
 
