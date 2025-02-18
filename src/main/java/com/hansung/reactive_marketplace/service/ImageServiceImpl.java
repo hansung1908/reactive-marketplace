@@ -9,6 +9,7 @@ import com.hansung.reactive_marketplace.repository.ImageRepository;
 import com.hansung.reactive_marketplace.util.ImageUtils;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -46,7 +47,7 @@ public class ImageServiceImpl implements ImageService {
         return Mono.justOrEmpty(image)
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(img -> createImageData(img, id, imageSource))
-                .flatMap(imageData -> saveImageFiles(image, imageData, imageSource))
+                .flatMap(imageData -> saveImageFile(image, imageData, imageSource))
                 .flatMap(imageData -> imageRepository.save(imageData))
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.IMAGE_UPLOAD_FAILED));
@@ -55,10 +56,11 @@ public class ImageServiceImpl implements ImageService {
     private Mono<Image> createImageData(FilePart image, String id, ImageSource imageSource) {
         String imageName = ImageUtils.generateUniqueImageName(image.filename());
 
-        return Mono.just(new Image.Builder()
+        return getFileSize(image)
+                .flatMap(fileSize -> Mono.just(new Image.Builder()
                 .imageName(image.filename())
                 .imageType(String.valueOf(image.headers().getContentType()))
-                .imageSize(image.headers().getContentLength())
+                .imageSize(fileSize)
                 .imageSource(imageSource)
                 .userId(imageSource == ImageSource.PROFILE ? id : null)
                 .productId(imageSource == ImageSource.PRODUCT ? id : null)
@@ -70,10 +72,19 @@ public class ImageServiceImpl implements ImageService {
                         imageSource == ImageSource.PROFILE ? profileThumbnailPath : productThumbnailPath,
                         "resized_" + imageName
                 ))
-                .build());
+                .build()));
     }
 
-    private Mono<Image> saveImageFiles(FilePart image, Image imageData, ImageSource imageSource) {
+    public Mono<Long> getFileSize(FilePart filePart) {
+        return DataBufferUtils.join(filePart.content()) // 버퍼를 하나로 결합
+                .map(dataBuffer -> {
+                    long size = dataBuffer.readableByteCount();  // 결합된 전체 크기
+                    DataBufferUtils.release(dataBuffer);
+                    return size;
+                });
+    }
+
+    private Mono<Image> saveImageFile(FilePart image, Image imageData, ImageSource imageSource) {
         File originalFile = new File(imageData.getImagePath());
         File resizedFile = new File(imageData.getThumbnailPath());
 

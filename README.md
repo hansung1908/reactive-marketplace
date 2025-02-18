@@ -415,16 +415,35 @@ RetryBackoffSpec.jitter(double jitterFactor)
 - @Createdate 같은 config 파일이 필요한 경우 @Import를 통해 해당 config 파일을 추가
 - db에 테스트 데이터 i/o시 비동기 특성상 순서를 보장할 수 없어 테스트가 먼저 실행될 수 있음
 - 그래서 StepVerifier를 사용하여 db i/o 작업을 보장
+
+##### service
+- filter를 통한 인증 과정을 거쳐 authentication 객체를 매개변수로 받을때 별도의 given 설정 필요
 </details>
 
 <details>
   <summary>리액티브 환경에서 적용에 주의해야 할 것</summary>
 
+##### aop
 - aop는 webflux에서 완전히 호환되지 않아 비동기 동작을 보장할 수 없음
 - if문은 filter + switchifempty나 justorempty로 리액티브하게 변경
 - 여러 작업에서 한 곳에서라도 오류가 나면 전체 롤백이 필요한 경우 zip()을 이용하여 하나의 스트림으로 합침
----
+
+##### evaluation
 - switchifempty는 자바의 즉시 평가(eager evaluation) 특성으로 empty가 아닌 상황에도 불필요한 실행이 됨
 - 그래서 mono.defer()로 supplier에 넘겨 실제 호출 시점으로 실행을 지연 평가(lazy evaluation)해야 함
 - error는 mono.error()를 통해 지연 평가로 에러 처리를 구현
+
+##### dataBuffer
+- 단순히 filePart의 헤더에서 getContentLength()를 통해 파일의 크기값을 얻으려고 하였으나
+- -1을 반환하여 값을 찾을 수 없다고 뜸
+- 원인을 찾아보니 다양한 메타데이터가 같이 있어 정확한 파일 크기를 알 수 없다는 문제를 발견
+---
+- 해결책으로 content()로 부터 dataBuffer 스트림을 얻어 크기를 계산하기로 결정
+- 이때 DataBufferUtils이라는 좋은 유틸리티 클래스가 있어 이를 이용
+- DataBufferUtils.join()을 통해 버퍼를 하나로 묶어줌
+- netty 서버 기반으로 버퍼가 풀링되며 참조 카운팅됨
+- 이때 참조로 인한 메모리 누수를 방지하기 위해 크기 계산이 끝나면 release()로 해제해야 함
+---
+- webflux에서 메모리 문제 방지로 기본 in-memory buffer 크기가 256KB로 제한
+
 </details>
