@@ -15,9 +15,13 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.test.util.ReflectionTestUtils;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -41,6 +45,9 @@ class ImageServiceTest {
 
     @Mock
     private FilePart filePart;
+
+    @Mock
+    private HttpHeaders headers;
 
     @InjectMocks
     private ImageServiceImpl imageService;
@@ -92,12 +99,24 @@ class ImageServiceTest {
         try (MockedStatic<ImageUtils> imageUtils = Mockito.mockStatic(ImageUtils.class);
              MockedStatic<Thumbnails> thumbnails = Mockito.mockStatic(Thumbnails.class)) {
 
-            imageUtils.when(() -> ImageUtils.generateUniqueImageName(anyString())).thenReturn(uniqueFileName);
-            imageUtils.when(() -> ImageUtils.generateImagePath(anyString(), anyString())).thenCallRealMethod();
+            // Given
+            DataBuffer dataBuffer = new DefaultDataBufferFactory().wrap("test data".getBytes());
+            Flux<DataBuffer> dataBufferFlux = Flux.just(dataBuffer);
 
+            // FilePart 기본 설정
+            when(filePart.filename()).thenReturn(fileName);
+            when(filePart.content()).thenReturn(dataBufferFlux);
+
+            // ImageUtils static 메소드 mocking
+            imageUtils.when(() -> ImageUtils.generateUniqueImageName(anyString()))
+                    .thenReturn(uniqueFileName);
+            imageUtils.when(() -> ImageUtils.generateImagePath(anyString(), anyString()))
+                    .thenCallRealMethod();
+
+            // Thumbnails static 메소드 mocking
             Thumbnails.Builder<File> builder = mock(Thumbnails.Builder.class);
-            when(builder.forceSize(any(Integer.class), any(Integer.class))).thenReturn(builder);
-            when(builder.outputQuality(any(Double.class))).thenReturn(builder);
+            when(builder.forceSize(anyInt(), anyInt())).thenReturn(builder);
+            when(builder.outputQuality(anyDouble())).thenReturn(builder);
             try {
                 doNothing().when(builder).toFile(any(File.class));
             } catch (IOException e) {
@@ -105,13 +124,13 @@ class ImageServiceTest {
             }
             thumbnails.when(() -> Thumbnails.of(any(File.class))).thenReturn(builder);
 
-            when(filePart.filename()).thenReturn(fileName);
-            when(filePart.headers()).thenReturn(new org.springframework.http.HttpHeaders() {{
-                setContentType(MediaType.IMAGE_JPEG);
-                setContentLength(fileSize);
-            }});
+            // FilePart 추가 설정
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_JPEG);
+            when(filePart.headers()).thenReturn(headers);
             when(filePart.transferTo(any(File.class))).thenReturn(Mono.empty());
 
+            // Repository mock
             when(imageRepository.save(any(Image.class))).thenReturn(Mono.just(userImage));
 
             imageService.uploadImage(filePart, userId, ImageSource.PROFILE)
@@ -134,22 +153,24 @@ class ImageServiceTest {
         try (MockedStatic<ImageUtils> imageUtils = Mockito.mockStatic(ImageUtils.class);
              MockedStatic<Thumbnails> thumbnails = Mockito.mockStatic(Thumbnails.class)) {
 
-            Image productImage = new Image.Builder()
-                    .imageName(fileName)
-                    .imageType(MediaType.IMAGE_JPEG_VALUE)
-                    .imageSize(fileSize)
-                    .imageSource(ImageSource.PRODUCT)
-                    .productId(productId)
-                    .imagePath("test/product/original/" + uniqueFileName)
-                    .thumbnailPath("test/product/thumbnail/resized_" + uniqueFileName)
-                    .build();
+            // Given
+            DataBuffer dataBuffer = new DefaultDataBufferFactory().wrap("test data".getBytes());
+            Flux<DataBuffer> dataBufferFlux = Flux.just(dataBuffer);
 
-            imageUtils.when(() -> ImageUtils.generateUniqueImageName(anyString())).thenReturn(uniqueFileName);
-            imageUtils.when(() -> ImageUtils.generateImagePath(anyString(), anyString())).thenCallRealMethod();
+            // FilePart 기본 설정
+            when(filePart.filename()).thenReturn(fileName);
+            when(filePart.content()).thenReturn(dataBufferFlux);
 
+            // ImageUtils static 메소드 mocking
+            imageUtils.when(() -> ImageUtils.generateUniqueImageName(anyString()))
+                    .thenReturn(uniqueFileName);
+            imageUtils.when(() -> ImageUtils.generateImagePath(anyString(), anyString()))
+                    .thenCallRealMethod();
+
+            // Thumbnails static 메소드 mocking
             Thumbnails.Builder<File> builder = mock(Thumbnails.Builder.class);
-            when(builder.forceSize(any(Integer.class), any(Integer.class))).thenReturn(builder);
-            when(builder.outputQuality(any(Double.class))).thenReturn(builder);
+            when(builder.forceSize(anyInt(), anyInt())).thenReturn(builder);
+            when(builder.outputQuality(anyDouble())).thenReturn(builder);
             try {
                 doNothing().when(builder).toFile(any(File.class));
             } catch (IOException e) {
@@ -157,13 +178,13 @@ class ImageServiceTest {
             }
             thumbnails.when(() -> Thumbnails.of(any(File.class))).thenReturn(builder);
 
-            when(filePart.filename()).thenReturn(fileName);
-            when(filePart.headers()).thenReturn(new org.springframework.http.HttpHeaders() {{
-                setContentType(MediaType.IMAGE_JPEG);
-                setContentLength(fileSize);
-            }});
+            // FilePart 추가 설정
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_JPEG);
+            when(filePart.headers()).thenReturn(headers);
             when(filePart.transferTo(any(File.class))).thenReturn(Mono.empty());
 
+            // Repository mock
             when(imageRepository.save(any(Image.class))).thenReturn(Mono.just(productImage));
 
             imageService.uploadImage(filePart, productId, ImageSource.PRODUCT)
@@ -279,7 +300,10 @@ class ImageServiceTest {
         when(redisCacheManager.deleteValue(anyString())).thenReturn(Mono.empty());
 
         try (MockedStatic<Files> files = Mockito.mockStatic(Files.class)) {
-            files.when(() -> Files.delete(any(Path.class))).thenReturn(true);
+            files.when(() -> Files.delete(any(Path.class))).then(invocation -> {
+                // void 메소드이므로 null을 반환
+                return null;
+            });
 
             StepVerifier.create(imageService.deleteProductImageById(productId))
                     .verifyComplete();
@@ -293,7 +317,10 @@ class ImageServiceTest {
         when(redisCacheManager.deleteValue(anyString())).thenReturn(Mono.empty());
 
         try (MockedStatic<Files> files = Mockito.mockStatic(Files.class)) {
-            files.when(() -> Files.delete(any(Path.class))).thenReturn(true);
+            files.when(() -> Files.delete(any(Path.class))).then(invocation -> {
+                // void 메소드이므로 null을 반환
+                return null;
+            });
 
             StepVerifier.create(imageService.deleteProfileImageById(userId))
                     .verifyComplete();
