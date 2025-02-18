@@ -418,6 +418,7 @@ RetryBackoffSpec.jitter(double jitterFactor)
 
 ##### service
 - filter를 통한 인증 과정을 거쳐 authentication 객체를 매개변수로 받을때 별도의 given 설정 필요
+- then() 연산의 경우 즉시 평가로 인해 switchIfEmpty로 null 처리 전에 실행되므로 defer()를 통해 지연 평가로 수정
 </details>
 
 <details>

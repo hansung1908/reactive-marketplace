@@ -75,7 +75,7 @@ public class ImageServiceImpl implements ImageService {
                 .build()));
     }
 
-    public Mono<Long> getFileSize(FilePart filePart) {
+    private Mono<Long> getFileSize(FilePart filePart) {
         return DataBufferUtils.join(filePart.content()) // 버퍼를 하나로 결합
                 .map(dataBuffer -> {
                     long size = dataBuffer.readableByteCount();  // 결합된 전체 크기
@@ -137,8 +137,9 @@ public class ImageServiceImpl implements ImageService {
         return imageRepository.findByProductId(productId)
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> deleteImageFiles(image))
-                .then(imageRepository.deleteByProductId(productId))
-                .then(redisCacheManager.deleteValue("productImage:" + productId).then())
+                .then(Mono.defer(() -> imageRepository.deleteByProductId(productId)))
+                .then(Mono.defer(() -> redisCacheManager.deleteValue("productImage:" + productId)))
+                .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
     }
@@ -147,8 +148,9 @@ public class ImageServiceImpl implements ImageService {
         return imageRepository.findByUserId(userId)
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(image -> deleteImageFiles(image))
-                .then(imageRepository.deleteByUserId(userId))
-                .then(redisCacheManager.deleteValue("userImage:" + userId).then())
+                .then(Mono.defer(() -> imageRepository.deleteByUserId(userId)))
+                .then(Mono.defer(() -> redisCacheManager.deleteValue("userImage:" + userId)))
+                .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.IMAGE_DELETE_FAILED));
     }
