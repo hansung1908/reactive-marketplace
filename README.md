@@ -404,8 +404,8 @@ RetryBackoffSpec.jitter(double jitterFactor)
 - 서비스 복구 시간을 확보함과 동시에 시스템 과부하를 방지할 수 있음
 
 ##### 주의사항
-- 재시도 횟수 제한 설정
-- 최대 대기 시간 설정
+- 재시도 횟수 제한 설정 필요
+- 최대 대기 시간 설정 필요
 </details>
 
 <details>
@@ -433,6 +433,7 @@ RetryBackoffSpec.jitter(double jitterFactor)
 - switchifempty는 자바의 즉시 평가(eager evaluation) 특성으로 empty가 아닌 상황에도 불필요한 실행이 됨
 - 그래서 mono.defer()로 supplier에 넘겨 실제 호출 시점으로 실행을 지연 평가(lazy evaluation)해야 함
 - error는 mono.error()를 통해 지연 평가로 에러 처리를 구현
+- then() 역시 즉시 평가하므로 조치 필요
 
 ##### dataBuffer
 - 단순히 filePart의 헤더에서 getContentLength()를 통해 파일의 크기값을 얻으려고 하였으나
@@ -445,6 +446,7 @@ RetryBackoffSpec.jitter(double jitterFactor)
 - netty 서버 기반으로 버퍼가 풀링되며 참조 카운팅됨
 - 이때 참조로 인한 메모리 누수를 방지하기 위해 크기 계산이 끝나면 release()로 해제해야 함
 ---
-- webflux에서 메모리 문제 방지로 기본 in-memory buffer 크기가 256KB로 제한
+- webflux에서 메모리 문제 방지로 기본 in-memory buffer 크기가 256KB로 제한되므로 조정 필요
+- 압축을 통한 파일 전송 과정에서 헤더값이 붙어 실제 크기보다 클 수 있음
 
 </details>
