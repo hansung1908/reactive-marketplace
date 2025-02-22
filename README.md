@@ -411,6 +411,9 @@ RetryBackoffSpec.jitter(double jitterFactor)
 <details>
   <summary>리액티브 환경에서 테스트 코드 작성</summary>
 
+- 기본적으로 단위 테스트를 위해 mockito 사용
+- 통합 테스트가 필요하다면 @SpringBootTest를 사용하여 통합 컨텍스트 적용
+
 ##### repository
 - @Createdate 같은 config 파일이 필요한 경우 @Import를 통해 해당 config 파일을 추가
 - db에 테스트 데이터 i/o시 비동기 특성상 순서를 보장할 수 없어 테스트가 먼저 실행될 수 있음
@@ -419,6 +422,8 @@ RetryBackoffSpec.jitter(double jitterFactor)
 ##### service
 - filter를 통한 인증 과정을 거쳐 authentication 객체를 매개변수로 받을때 별도의 given 설정 필요
 - then() 연산의 경우 즉시 평가로 인해 switchIfEmpty로 null 처리 전에 실행되므로 defer()를 통해 지연 평가로 수정
+
+##### controller
 </details>
 
 <details>
