@@ -1,7 +1,6 @@
 package com.hansung.reactive_marketplace.controller;
 
 import com.hansung.reactive_marketplace.domain.ChatClickPage;
-import com.hansung.reactive_marketplace.domain.ChatRoom;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomListResDto;
 import com.hansung.reactive_marketplace.dto.response.ChatRoomResDto;
 import com.hansung.reactive_marketplace.service.ChatService;
