@@ -455,3 +455,11 @@ RetryBackoffSpec.jitter(double jitterFactor)
 - 압축을 통한 파일 전송 과정에서 헤더값이 붙어 실제 크기보다 클 수 있음
 
 </details>
+
+<details>
+  <summary>리액티브 환경에서 도움되는 툴</summary>
+
+##### blockhound
+- 자동으로 블로킹 코드를 찾아주는 라이브러리
+- 해당 기능이 동작할시 블로킹 코드를 감지해 에러를 발생
+</details>

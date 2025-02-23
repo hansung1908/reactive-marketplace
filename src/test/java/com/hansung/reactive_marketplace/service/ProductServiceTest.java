@@ -4,7 +4,6 @@ import com.hansung.reactive_marketplace.domain.*;
 import com.hansung.reactive_marketplace.dto.request.ProductDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductUpdateReqDto;
-import com.hansung.reactive_marketplace.dto.response.MyProductListResDto;
 import com.hansung.reactive_marketplace.dto.response.ProductDetailResDto;
 import com.hansung.reactive_marketplace.exception.ApiException;
 import com.hansung.reactive_marketplace.exception.ExceptionMessage;
@@ -111,8 +110,6 @@ class ProductServiceTest {
                 .thenReturn(Mono.just(testProduct));
         when(imageService.uploadImage(any(), any(), any()))
                 .thenReturn(Mono.empty());
-        when(redisCacheManager.deleteList(any()))
-                .thenReturn(Mono.just(true));
 
         StepVerifier.create(productService.saveProduct(testProductSaveReqDto, testFilePart, authentication))
                 .expectNextMatches(product ->
@@ -189,12 +186,9 @@ class ProductServiceTest {
 
     @Test
     void testUpdateProduct_WhenGivenValidRequest_ThenProductIsUpdatedSuccessfully() {
-        authenticationSetUp();
-
         when(productRepository.findById("testProductId")).thenReturn(Mono.just(testProduct));
         when(productRepository.updateProduct(any(), any(), anyInt(), any())).thenReturn(Mono.empty());
         when(redisCacheManager.deleteValue(anyString())).thenReturn(Mono.empty());
-        when(redisCacheManager.deleteList(anyString())).thenReturn(Mono.empty());
         when(imageService.deleteProductImageById(anyString())).thenReturn(Mono.empty());
         when(imageService.uploadImage(any(), anyString(), any())).thenReturn(Mono.empty());
 
@@ -204,8 +198,6 @@ class ProductServiceTest {
 
     @Test
     void testDeleteProduct_WhenProductExists_ThenProductIsDeletedSuccessfully() {
-        authenticationSetUp();
-
         when(productRepository.findById("testProductId"))
                 .thenReturn(Mono.just(testProduct));
         when(productRepository.deleteById(anyString()))
@@ -213,8 +205,6 @@ class ProductServiceTest {
         when(imageService.deleteProductImageById(any()))
                 .thenReturn(Mono.empty());
         when(redisCacheManager.deleteValue(any()))
-                .thenReturn(Mono.just(true));
-        when(redisCacheManager.deleteList(any()))
                 .thenReturn(Mono.just(true));
 
         StepVerifier.create(productService.deleteProduct(testProductDeleteReqDto, authentication))
@@ -329,15 +319,6 @@ class ProductServiceTest {
                 .thenReturn(Mono.just(new Image.Builder()
                         .thumbnailPath("/thumbnail2.jpg")
                         .build()));
-        when(redisCacheManager.getOrFetchList(
-                eq("myProductList:" + testUser.getId()),
-                eq(MyProductListResDto.class),
-                any(Flux.class),
-                any(Duration.class)))
-                .thenAnswer(invocation -> {
-                    Flux<MyProductListResDto> fallback = invocation.getArgument(2);
-                    return fallback;
-                });
 
         StepVerifier.create(productService.findMyProductList(authentication))
                 .expectNextMatches(dto ->

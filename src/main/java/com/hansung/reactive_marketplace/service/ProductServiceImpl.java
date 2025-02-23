@@ -55,10 +55,6 @@ public class ProductServiceImpl implements ProductService {
                                 .flatMap(img -> imageService.uploadImage(img, savedProduct.getId(), productSaveReqDto.imageSource())
                                         .thenReturn(savedProduct))
                                 .defaultIfEmpty(savedProduct))
-                .flatMap(savedProduct ->
-                        redisCacheManager.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
-                                .thenReturn(savedProduct)
-                )
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
@@ -91,24 +87,24 @@ public class ProductServiceImpl implements ProductService {
 
     public Mono<ProductUpdateResDto> findProductForUpdateForm(String productId) {
         return productRepository.findById(productId)
-                        .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
-                        .flatMap(product ->
-                                Mono.zip(
-                                        Mono.just(product),
-                                        imageService.findProductImageById(productId),
-                                        userService.findUserById(product.getUserId())
-                                )
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
+                .flatMap(product ->
+                        Mono.zip(
+                                Mono.just(product),
+                                imageService.findProductImageById(productId),
+                                userService.findUserById(product.getUserId())
                         )
-                        .map(TupleUtils.function((product, image, user) ->
-                                new ProductUpdateResDto(
-                                        product.getId(),
-                                        product.getTitle(),
-                                        product.getPrice(),
-                                        product.getDescription(),
-                                        user.getNickname(),
-                                        image.getImagePath()
-                                )
-                        ));
+                )
+                .map(TupleUtils.function((product, image, user) ->
+                        new ProductUpdateResDto(
+                                product.getId(),
+                                product.getTitle(),
+                                product.getPrice(),
+                                product.getDescription(),
+                                user.getNickname(),
+                                image.getImagePath()
+                        )
+                ));
     }
 
     public Flux<ProductListResDto> findProductList() {
@@ -123,22 +119,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public Flux<MyProductListResDto> findMyProductList(Authentication authentication) {
-        return redisCacheManager.getOrFetchList(
-                "myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId(),
-                MyProductListResDto.class,
-                productRepository.findMyProductList(AuthUtils.getAuthenticationUser(authentication).getId(), Sort.by(Sort.Direction.DESC, "createdAt"))
-                        .concatMap(product -> imageService.findProductImageById(product.getId()) // 순차적 처리를 보장하기 위한 concatMap
-                                .map(image -> new MyProductListResDto(
-                                        product.getId(),
-                                        product.getTitle(),
-                                        product.getDescription(),
-                                        product.getPrice(),
-                                        product.getStatus(),
-                                        DateTimeUtils.format(product.getCreatedAt()),
-                                        image.getThumbnailPath()
-                                ))),
-                Duration.ofHours(1)
-        );
+        return productRepository.findMyProductList(AuthUtils.getAuthenticationUser(authentication).getId(), Sort.by(Sort.Direction.DESC, "createdAt"))
+                .concatMap(product -> imageService.findProductImageById(product.getId()) // 순차적 처리를 보장하기 위한 concatMap
+                        .map(image -> new MyProductListResDto(
+                                product.getId(),
+                                product.getTitle(),
+                                product.getDescription(),
+                                product.getPrice(),
+                                product.getStatus(),
+                                DateTimeUtils.format(product.getCreatedAt()),
+                                image.getThumbnailPath()
+                        )));
     }
 
     public Mono<Product> findProductById(String productId) {
@@ -156,10 +147,8 @@ public class ProductServiceImpl implements ProductService {
                                     productUpdateReqDto.price(),
                                     productUpdateReqDto.status()
                             )
-                            .then(Mono.zip(
-                                    redisCacheManager.deleteValue("product:" + productUpdateReqDto.id()),
-                                    redisCacheManager.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
-                            ).then());
+                            .then(redisCacheManager.deleteValue("product:" + productUpdateReqDto.id()))
+                            .then();
 
                     return Mono.justOrEmpty(image)
                             .flatMap(img ->
@@ -181,8 +170,7 @@ public class ProductServiceImpl implements ProductService {
                         Mono.when(
                                 productRepository.deleteById(existingProduct.getId()),
                                 imageService.deleteProductImageById(existingProduct.getId()),
-                                redisCacheManager.deleteValue("product:" + productDeleteReqDto.id()),
-                                redisCacheManager.deleteList("myProductList:" + AuthUtils.getAuthenticationUser(authentication).getId())
+                                redisCacheManager.deleteValue("product:" + productDeleteReqDto.id())
                         )
                 )
                 .onErrorMap(e -> !(e instanceof ApiException),
