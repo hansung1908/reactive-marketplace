@@ -8,7 +8,10 @@ import reactor.blockhound.BlockHound;
 public class ReactiveMarketplaceApplication {
 
 	public static void main(String[] args) {
-		BlockHound.install();
+//		BlockHound.builder()
+//				.allowBlockingCallsInside("org.thymeleaf.spring6.SpringWebFluxTemplateEngine", "process")
+//				.install();
+
 		SpringApplication.run(ReactiveMarketplaceApplication.class, args);
 	}
 

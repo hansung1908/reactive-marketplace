@@ -26,6 +26,9 @@ public class GlobalExceptionHandler implements WebExceptionHandler {
         ServerHttpResponse response = exchange.getResponse();
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
+        // 에러 로깅 추가
+        ex.printStackTrace();
+
         if (ex instanceof ApiException) {
             ApiException apiException = (ApiException) ex;
             ExceptionMessage exceptionMessage = apiException.getException();
