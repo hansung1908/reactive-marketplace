@@ -188,6 +188,40 @@ $count: # 개수 세기
 </details>
 
 <details>
+  <summary>mongodb-transaction</summary>
+
+- mongodb에서 트랜잭션을 하려면 기존 db를 레플리카 셋으로 변경해야 가능
+- 레플리카 셋은 기본 노드(db) 하나와 부하 노드 둘 이상을 결합한 db cluter
+- 로컬에서 설정
+```shell
+# 데이터 디렉토리 생성
+mkdir -p "C:\Program Files\MongoDB\Server\6.0\27017"
+mkdir -p "C:\Program Files\MongoDB\Server\6.0\27018"
+mkdir -p "C:\Program Files\MongoDB\Server\6.0\27019"
+
+# MongoDB 인스턴스 시작 (각각 다른 cmd에서 관리자 권한 실행)
+# 각 cmd는 계속 켜져있어야 함
+mongod --replSet rs0 --port 27017 --dbpath "C:\Program Files\MongoDB\Server\6.0\27017"
+mongod --replSet rs0 --port 27018 --dbpath "C:\Program Files\MongoDB\Server\6.0\27018"
+mongod --replSet rs0 --port 27019 --dbpath "C:\Program Files\MongoDB\Server\6.0\27019"
+
+# 레플리카 셋 초기화
+# --eval 옵션은 자바스크립트 표현식을 직접 실행 가능하게 해주는 명령줄 옵션
+mongosh --eval 'rs.initiate({
+  _id: "rs0",
+  members: [
+    {_id: 0, host: "localhost:27017"},
+    {_id: 1, host: "localhost:27018"},
+    {_id: 2, host: "localhost:27019"}
+  ]
+})'
+
+# 레플리카 셋 확인
+mongosh --eval 'rs.status()'
+```
+</details>
+
+<details>
   <summary>spring-data-redis-reactive</summary>
 
 - webflux 같은 논블로킹 방식으로 동작하는 reactive 버전 redis
