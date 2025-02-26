@@ -14,6 +14,7 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -30,14 +31,18 @@ public class UserServiceImpl implements UserService {
 
     private final RedisCacheManager redisCacheManager;
 
+    private final TransactionalOperator transactionalOperator;
+
     public UserServiceImpl(UserRepository userRepository,
                            BCryptPasswordEncoder bCryptPasswordEncoder,
                            ImageService imageService,
-                           RedisCacheManager redisCacheManager) {
+                           RedisCacheManager redisCacheManager,
+                           TransactionalOperator transactionalOperator) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.imageService = imageService;
         this.redisCacheManager = redisCacheManager;
+        this.transactionalOperator = transactionalOperator;
     }
 
     public Mono<User> saveUser(UserSaveReqDto userSaveReqDto, FilePart image) {
@@ -57,6 +62,7 @@ public class UserServiceImpl implements UserService {
                                 .flatMap(img -> imageService.uploadImage(img, savedUser.getId(), userSaveReqDto.imageSource())
                                         .thenReturn(savedUser))
                                 .defaultIfEmpty(savedUser))
+                .as(transactionalOperator::transactional)
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
@@ -91,36 +97,30 @@ public class UserServiceImpl implements UserService {
 
     public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto, FilePart image) {
         return userRepository.findById(userUpdateReqDto.id())
-                .flatMap(user -> {
-                    String password = Optional.ofNullable(userUpdateReqDto.password())
-                            .filter(pwd -> !pwd.isEmpty())
-                            .map(pwd -> bCryptPasswordEncoder.encode(pwd))
-                            .orElse(user.getPassword());
-
-                    Mono<Void> updateUserMono = userRepository.updateUser(
+                .flatMap(user -> userRepository.updateUser(
                             userUpdateReqDto.id(),
                             userUpdateReqDto.nickname(),
-                            password,
+                            Optional.ofNullable(userUpdateReqDto.password())
+                                    .filter(pwd -> !pwd.isEmpty())
+                                    .map(pwd -> bCryptPasswordEncoder.encode(pwd))
+                                    .orElse(user.getPassword()),
                             userUpdateReqDto.email()
-                    );
-
-                    Mono<Void> updateImageMono = Mono.justOrEmpty(image)
-                            .flatMap(img -> imageService.findProfileImageById(userUpdateReqDto.id())
-                                    .filter(findImg -> !findImg.getImagePath().equals("/img/profile.png"))
-                                    .switchIfEmpty(Mono.defer(() -> imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource())))
-                                    .flatMap(existingImage -> imageService.deleteProfileImageById(userUpdateReqDto.id()))
-                                    .then(imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource()))
-                            )
-                            .then();
-
-                    Mono<Boolean> deleteCacheMono = redisCacheManager.deleteValue("user:" + userUpdateReqDto.id());
-
-                    return Mono.when(updateUserMono, updateImageMono, deleteCacheMono);
-                })
+                        )
+                )
+                .flatMap(user -> Mono.justOrEmpty(image)
+                        .flatMap(img -> imageService.findProfileImageById(userUpdateReqDto.id())
+                                .filter(findImg -> !findImg.getImagePath().equals("/img/profile.png"))
+                                .switchIfEmpty(Mono.defer(() -> imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource())))
+                                .flatMap(existingImage -> imageService.deleteProfileImageById(userUpdateReqDto.id()))
+                                .then(imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource()))
+                        )
+                )
+                .as(transactionalOperator::transactional)
+                .then(redisCacheManager.deleteValue("user:" + userUpdateReqDto.id()))
+                .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
-
 
     public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
         return userRepository.findById(userDeleteReqDto.id())
@@ -137,6 +137,8 @@ public class UserServiceImpl implements UserService {
                                         redisCacheManager.deleteValue("user:" + user.getId())
                                 ))
                 )
+                .as(transactionalOperator::transactional)
+                .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }

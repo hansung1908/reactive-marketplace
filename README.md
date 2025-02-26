@@ -194,6 +194,18 @@ $count: # 개수 세기
 - 레플리카 셋은 기본 노드(db) 하나와 부하 노드 둘 이상을 결합한 db cluter
 - 로컬에서 설정
 ```shell
+# 설정 전 mongod.cfg 파일에 해당 설정 추가
+replication:
+replSetName: rs0
+
+# 설정 적용을 위한 mongodb 재시작
+net stop MongoDB
+net start MongoDB
+
+# 안될 경우
+mongod --config "C:\경로\mongod.cfg"
+```
+```shell
 # 데이터 디렉토리 생성
 mkdir -p "C:\Program Files\MongoDB\Server\6.0\27017"
 mkdir -p "C:\Program Files\MongoDB\Server\6.0\27018"
