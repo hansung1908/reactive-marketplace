@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.function.TupleUtils;
@@ -35,11 +36,18 @@ public class ProductServiceImpl implements ProductService {
 
     private final RedisCacheManager redisCacheManager;
 
-    public ProductServiceImpl(ProductRepository productRepository, UserService userService, ImageService imageService, RedisCacheManager redisCacheManager) {
+    private final TransactionalOperator transactionalOperator;
+
+    public ProductServiceImpl(ProductRepository productRepository,
+                              UserService userService,
+                              ImageService imageService,
+                              RedisCacheManager redisCacheManager,
+                              TransactionalOperator transactionalOperator) {
         this.productRepository = productRepository;
         this.userService = userService;
         this.imageService = imageService;
         this.redisCacheManager = redisCacheManager;
+        this.transactionalOperator = transactionalOperator;
     }
 
     public Mono<Product> saveProduct(ProductSaveReqDto productSaveReqDto, FilePart image, Authentication authentication) {
@@ -55,6 +63,7 @@ public class ProductServiceImpl implements ProductService {
                                 .flatMap(img -> imageService.uploadImage(img, savedProduct.getId(), productSaveReqDto.imageSource())
                                         .thenReturn(savedProduct))
                                 .defaultIfEmpty(savedProduct))
+                .as(transactionalOperator::transactional)
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
@@ -140,25 +149,21 @@ public class ProductServiceImpl implements ProductService {
     public Mono<Void> updateProduct(ProductUpdateReqDto productUpdateReqDto, FilePart image, Authentication authentication) {
         return productRepository.findById(productUpdateReqDto.id())
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
-                .flatMap(existingProduct -> {
-                    Mono<Void> updateProductMono = productRepository.updateProduct(
-                                    productUpdateReqDto.id(),
-                                    productUpdateReqDto.description(),
-                                    productUpdateReqDto.price(),
-                                    productUpdateReqDto.status()
-                            )
-                            .then(redisCacheManager.deleteValue("product:" + productUpdateReqDto.id()))
-                            .then();
-
-                    return Mono.justOrEmpty(image)
-                            .flatMap(img ->
-                                    updateProductMono
-                                            .then(imageService.deleteProductImageById(productUpdateReqDto.id()))
-                                            .then(imageService.uploadImage(img, productUpdateReqDto.id(), productUpdateReqDto.imageSource()))
-                                            .then()
-                            )
-                            .switchIfEmpty(Mono.defer(() -> updateProductMono));
-                })
+                .flatMap(product -> productRepository.updateProduct(
+                                productUpdateReqDto.id(),
+                                productUpdateReqDto.description(),
+                                productUpdateReqDto.price(),
+                                productUpdateReqDto.status()
+                        )
+                )
+                .then(Mono.justOrEmpty(image)
+                        .flatMap(img -> imageService.deleteProductImageById(productUpdateReqDto.id())
+                                .then(imageService.uploadImage(img, productUpdateReqDto.id(), productUpdateReqDto.imageSource()))
+                        )
+                )
+                .as(transactionalOperator::transactional)
+                .then(Mono.defer(() -> redisCacheManager.deleteValue("product:" + productUpdateReqDto.id())))
+                .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
@@ -166,13 +171,11 @@ public class ProductServiceImpl implements ProductService {
     public Mono<Void> deleteProduct(ProductDeleteReqDto productDeleteReqDto, Authentication authentication) {
         return productRepository.findById(productDeleteReqDto.id())
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
-                .flatMap(existingProduct ->
-                        Mono.when(
-                                productRepository.deleteById(existingProduct.getId()),
-                                imageService.deleteProductImageById(existingProduct.getId()),
-                                redisCacheManager.deleteValue("product:" + productDeleteReqDto.id())
-                        )
-                )
+                .flatMap(product -> productRepository.deleteById(product.getId()).thenReturn(product))
+                .flatMap(product -> imageService.deleteProductImageById(product.getId()))
+                .as(transactionalOperator::transactional)
+                .then(Mono.defer(() ->redisCacheManager.deleteValue("product:" + productDeleteReqDto.id())))
+                .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }

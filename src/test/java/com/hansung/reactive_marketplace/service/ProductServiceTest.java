@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -45,6 +46,9 @@ class ProductServiceTest {
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private TransactionalOperator transactionalOperator;
 
     @InjectMocks
     private ProductServiceImpl productService;
@@ -102,9 +106,16 @@ class ProductServiceTest {
         when(userDetail.getUser()).thenReturn(testUser);
     }
 
+    private void transactionalSetUp() {
+        // 트랜잭션 호출시 첫번째 인자를 그대로 반환하도록 지정
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
     @Test
     void testSaveProduct_WhenGivenValidRequest_ThenProductIsSavedSuccessfully() {
         authenticationSetUp();
+        transactionalSetUp();
 
         when(productRepository.save(any()))
                 .thenReturn(Mono.just(testProduct));
@@ -122,6 +133,7 @@ class ProductServiceTest {
     @Test
     void testSaveProduct_WhenDatabaseErrorOccurs_ThenThrowApiException() {
         authenticationSetUp();
+        transactionalSetUp();
 
         when(productRepository.save(any()))
                 .thenReturn(Mono.error(new RuntimeException("DB Error")));
@@ -186,6 +198,7 @@ class ProductServiceTest {
 
     @Test
     void testUpdateProduct_WhenGivenValidRequest_ThenProductIsUpdatedSuccessfully() {
+        transactionalSetUp();
         when(productRepository.findById("testProductId")).thenReturn(Mono.just(testProduct));
         when(productRepository.updateProduct(any(), any(), anyInt(), any())).thenReturn(Mono.empty());
         when(redisCacheManager.deleteValue(anyString())).thenReturn(Mono.empty());
@@ -198,6 +211,7 @@ class ProductServiceTest {
 
     @Test
     void testDeleteProduct_WhenProductExists_ThenProductIsDeletedSuccessfully() {
+        transactionalSetUp();
         when(productRepository.findById("testProductId"))
                 .thenReturn(Mono.just(testProduct));
         when(productRepository.deleteById(anyString()))
