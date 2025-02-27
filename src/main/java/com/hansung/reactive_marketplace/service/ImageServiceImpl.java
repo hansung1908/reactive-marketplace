@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
@@ -26,6 +27,8 @@ public class ImageServiceImpl implements ImageService {
 
     private final RedisCacheManager redisCacheManager;
 
+    private final TransactionalOperator transactionalOperator;
+
     @Value("${image.profile.originalPath}")
     private String profileOriginalPath;
 
@@ -38,17 +41,19 @@ public class ImageServiceImpl implements ImageService {
     @Value("${image.product.thumbnailPath}")
     private String productThumbnailPath;
 
-    public ImageServiceImpl(ImageRepository imageRepository, RedisCacheManager redisCacheManager) {
+    public ImageServiceImpl(ImageRepository imageRepository, RedisCacheManager redisCacheManager, TransactionalOperator transactionalOperator) {
         this.imageRepository = imageRepository;
         this.redisCacheManager = redisCacheManager;
+        this.transactionalOperator = transactionalOperator;
     }
 
     public Mono<Image> uploadImage(FilePart image, String id, ImageSource imageSource) {
         return Mono.justOrEmpty(image)
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
                 .flatMap(img -> createImageData(img, id, imageSource))
-                .flatMap(imageData -> saveImageFile(image, imageData, imageSource))
                 .flatMap(imageData -> imageRepository.save(imageData))
+                .as(transactionalOperator::transactional)
+                .flatMap(imageData -> saveImageFile(image, imageData, imageSource))
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.IMAGE_UPLOAD_FAILED));
     }
@@ -58,21 +63,21 @@ public class ImageServiceImpl implements ImageService {
 
         return getFileSize(image)
                 .flatMap(fileSize -> Mono.just(new Image.Builder()
-                .imageName(image.filename())
-                .imageType(String.valueOf(image.headers().getContentType()))
-                .imageSize(fileSize)
-                .imageSource(imageSource)
-                .userId(imageSource == ImageSource.PROFILE ? id : null)
-                .productId(imageSource == ImageSource.PRODUCT ? id : null)
-                .imagePath(ImageUtils.generateImagePath(
-                        imageSource == ImageSource.PROFILE ? profileOriginalPath : productOriginalPath,
-                        imageName
-                ))
-                .thumbnailPath(ImageUtils.generateImagePath(
-                        imageSource == ImageSource.PROFILE ? profileThumbnailPath : productThumbnailPath,
-                        "resized_" + imageName
-                ))
-                .build()));
+                        .imageName(image.filename())
+                        .imageType(String.valueOf(image.headers().getContentType()))
+                        .imageSize(fileSize)
+                        .imageSource(imageSource)
+                        .userId(imageSource == ImageSource.PROFILE ? id : null)
+                        .productId(imageSource == ImageSource.PRODUCT ? id : null)
+                        .imagePath(ImageUtils.generateImagePath(
+                                imageSource == ImageSource.PROFILE ? profileOriginalPath : productOriginalPath,
+                                imageName
+                        ))
+                        .thumbnailPath(ImageUtils.generateImagePath(
+                                imageSource == ImageSource.PROFILE ? profileThumbnailPath : productThumbnailPath,
+                                "resized_" + imageName
+                        ))
+                        .build()));
     }
 
     private Mono<Long> getFileSize(FilePart filePart) {
@@ -136,8 +141,9 @@ public class ImageServiceImpl implements ImageService {
     public Mono<Void> deleteProductImageById(String productId) {
         return imageRepository.findByProductId(productId)
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
+                .flatMap(image -> imageRepository.deleteByProductId(productId).thenReturn(image))
+                .as(transactionalOperator::transactional)
                 .flatMap(image -> deleteImageFiles(image))
-                .then(Mono.defer(() -> imageRepository.deleteByProductId(productId)))
                 .then(Mono.defer(() -> redisCacheManager.deleteValue("productImage:" + productId)))
                 .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
@@ -147,8 +153,9 @@ public class ImageServiceImpl implements ImageService {
     public Mono<Void> deleteProfileImageById(String userId) {
         return imageRepository.findByUserId(userId)
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND)))
+                .flatMap(image -> imageRepository.deleteByUserId(userId).thenReturn(image))
+                .as(transactionalOperator::transactional)
                 .flatMap(image -> deleteImageFiles(image))
-                .then(Mono.defer(() -> imageRepository.deleteByUserId(userId)))
                 .then(Mono.defer(() -> redisCacheManager.deleteValue("userImage:" + userId)))
                 .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
