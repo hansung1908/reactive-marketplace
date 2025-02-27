@@ -21,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -47,7 +48,7 @@ class ImageServiceTest {
     private FilePart filePart;
 
     @Mock
-    private HttpHeaders headers;
+    private TransactionalOperator transactionalOperator;
 
     @InjectMocks
     private ImageServiceImpl imageService;
@@ -94,10 +95,18 @@ class ImageServiceTest {
                 .build();
     }
 
+    private void transactionalSetUp() {
+        // 트랜잭션 호출시 첫번째 인자를 그대로 반환하도록 지정
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
     @Test
     void testUploadImage_WhenValidFileProvided_ThenImageUploadedSuccessfully() {
         try (MockedStatic<ImageUtils> imageUtils = Mockito.mockStatic(ImageUtils.class);
              MockedStatic<Thumbnails> thumbnails = Mockito.mockStatic(Thumbnails.class)) {
+
+            transactionalSetUp();
 
             // Given
             DataBuffer dataBuffer = new DefaultDataBufferFactory().wrap("test data".getBytes());
@@ -152,6 +161,8 @@ class ImageServiceTest {
     void testUploadImage_WhenValidProductFileProvided_ThenProductImageUploadedSuccessfully() {
         try (MockedStatic<ImageUtils> imageUtils = Mockito.mockStatic(ImageUtils.class);
              MockedStatic<Thumbnails> thumbnails = Mockito.mockStatic(Thumbnails.class)) {
+
+            transactionalSetUp();
 
             // Given
             DataBuffer dataBuffer = new DefaultDataBufferFactory().wrap("test data".getBytes());
@@ -295,6 +306,7 @@ class ImageServiceTest {
 
     @Test
     void testDeleteProductImageById_WhenProductExists_ThenDeleteImageSuccessfully() {
+        transactionalSetUp();
         when(imageRepository.findByProductId(productId)).thenReturn(Mono.just(productImage));
         when(imageRepository.deleteByProductId(productId)).thenReturn(Mono.empty());
         when(redisCacheManager.deleteValue(anyString())).thenReturn(Mono.empty());
@@ -312,6 +324,7 @@ class ImageServiceTest {
 
     @Test
     void testDeleteProfileImageById_WhenUserExists_ThenDeleteImageSuccessfully() {
+        transactionalSetUp();
         when(imageRepository.findByUserId(userId)).thenReturn(Mono.just(userImage));
         when(imageRepository.deleteByUserId(userId)).thenReturn(Mono.empty());
         when(redisCacheManager.deleteValue(anyString())).thenReturn(Mono.empty());
@@ -329,6 +342,7 @@ class ImageServiceTest {
 
     @Test
     void testDeleteProductImageById_WhenProductDoesNotExist_ThenThrowApiException() {
+        transactionalSetUp();
         when(imageRepository.findByProductId(productId)).thenReturn(Mono.empty());
 
         StepVerifier.create(imageService.deleteProductImageById(productId))
@@ -338,6 +352,7 @@ class ImageServiceTest {
 
     @Test
     void testDeleteProfileImageById_WhenUserDoesNotExist_ThenThrowApiException() {
+        transactionalSetUp();
         when(imageRepository.findByUserId(userId)).thenReturn(Mono.empty());
 
         StepVerifier.create(imageService.deleteProfileImageById(userId))
