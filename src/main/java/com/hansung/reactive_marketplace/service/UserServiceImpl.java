@@ -107,7 +107,7 @@ public class UserServiceImpl implements UserService {
                             userUpdateReqDto.email()
                         )
                 )
-                .flatMap(user -> Mono.justOrEmpty(image)
+                .then(Mono.justOrEmpty(image)
                         .flatMap(img -> imageService.findProfileImageById(userUpdateReqDto.id())
                                 .filter(findImg -> !findImg.getImagePath().equals("/img/profile.png"))
                                 .switchIfEmpty(Mono.defer(() -> imageService.uploadImage(img, userUpdateReqDto.id(), userUpdateReqDto.imageSource())))
@@ -125,19 +125,14 @@ public class UserServiceImpl implements UserService {
     public Mono<Void> deleteUser(UserDeleteReqDto userDeleteReqDto) {
         return userRepository.findById(userDeleteReqDto.id())
                 .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.USER_NOT_FOUND)))
-                .flatMap(user ->
-                        imageService.findProfileImageById(user.getId())
-                                .flatMap(image -> Mono.when(
-                                        userRepository.deleteById(user.getId()),
-                                        imageService.deleteProfileImageById(user.getId()),
-                                        redisCacheManager.deleteValue("user:" + user.getId())
-                                ))
-                                .switchIfEmpty(Mono.when(
-                                        userRepository.deleteById(user.getId()),
-                                        redisCacheManager.deleteValue("user:" + user.getId())
-                                ))
+                .flatMap(user -> userRepository.deleteById(user.getId()).thenReturn(user))
+                .flatMap(user -> imageService.findProfileImageById(user.getId())
+                        .flatMap(image -> imageService.deleteProfileImageById(user.getId()))
+                        .switchIfEmpty(Mono.empty())
+                        .thenReturn(user)
                 )
                 .as(transactionalOperator::transactional)
+                .flatMap(user -> redisCacheManager.deleteValue("user:" + user.getId()))
                 .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
