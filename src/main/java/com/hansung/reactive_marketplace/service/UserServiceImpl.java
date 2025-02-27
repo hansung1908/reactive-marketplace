@@ -98,13 +98,13 @@ public class UserServiceImpl implements UserService {
     public Mono<Void> updateUser(UserUpdateReqDto userUpdateReqDto, FilePart image) {
         return userRepository.findById(userUpdateReqDto.id())
                 .flatMap(user -> userRepository.updateUser(
-                            userUpdateReqDto.id(),
-                            userUpdateReqDto.nickname(),
-                            Optional.ofNullable(userUpdateReqDto.password())
-                                    .filter(pwd -> !pwd.isEmpty())
-                                    .map(pwd -> bCryptPasswordEncoder.encode(pwd))
-                                    .orElse(user.getPassword()),
-                            userUpdateReqDto.email()
+                                userUpdateReqDto.id(),
+                                userUpdateReqDto.nickname(),
+                                Optional.ofNullable(userUpdateReqDto.password())
+                                        .filter(pwd -> !pwd.isEmpty())
+                                        .map(pwd -> bCryptPasswordEncoder.encode(pwd))
+                                        .orElse(user.getPassword()),
+                                userUpdateReqDto.email()
                         )
                 )
                 .then(Mono.justOrEmpty(image)
@@ -116,7 +116,7 @@ public class UserServiceImpl implements UserService {
                         )
                 )
                 .as(transactionalOperator::transactional)
-                .then(redisCacheManager.deleteValue("user:" + userUpdateReqDto.id()))
+                .then(Mono.defer(() ->redisCacheManager.deleteValue("user:" + userUpdateReqDto.id())))
                 .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
@@ -132,7 +132,7 @@ public class UserServiceImpl implements UserService {
                         .thenReturn(user)
                 )
                 .as(transactionalOperator::transactional)
-                .flatMap(user -> redisCacheManager.deleteValue("user:" + user.getId()))
+                .then(Mono.defer(() ->redisCacheManager.deleteValue("user:" + userDeleteReqDto.id())))
                 .then()
                 .onErrorMap(e -> !(e instanceof ApiException),
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
