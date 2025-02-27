@@ -22,6 +22,7 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -46,6 +47,9 @@ class UserServiceTest {
 
     @Mock
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Mock
+    private TransactionalOperator transactionalOperator;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -112,6 +116,8 @@ class UserServiceTest {
 
         // FilePart 설정
         filePart = mock(FilePart.class);
+
+
     }
 
     private void authenticationSetUp() {
@@ -121,9 +127,16 @@ class UserServiceTest {
         when(userDetail.getUser()).thenReturn(user);
     }
 
+    private void transactionalSetUp() {
+        // 트랜잭션 호출시 첫번째 인자를 그대로 반환하도록 지정
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
     @Test
     void testSaveUser_WhenGivenValidRequest_ThenUserIsSavedSuccessfully() {
         // given
+        transactionalSetUp();
         when(bCryptPasswordEncoder.encode(password))
                 .thenReturn("encodedPassword");
         when(userRepository.existsByUsername(username))
@@ -132,6 +145,7 @@ class UserServiceTest {
                 .thenReturn(Mono.just(user));
         when(imageService.uploadImage(eq(filePart), eq(userId), eq(ImageSource.PROFILE)))
                 .thenReturn(Mono.empty());
+
 
         // when & then
         StepVerifier.create(userService.saveUser(userSaveReqDto, filePart))
@@ -142,6 +156,7 @@ class UserServiceTest {
     @Test
     void testSaveUser_WhenUsernameExists_ThenThrowApiException() {
         // given
+        transactionalSetUp();
         when(userRepository.existsByUsername(username))
                 .thenReturn(Mono.just(true));
 
@@ -154,6 +169,7 @@ class UserServiceTest {
 
     @Test
     void testSaveUser_WhenDatabaseErrorOccurs_ThenThrowApiException() {
+        transactionalSetUp();
         when(bCryptPasswordEncoder.encode(password))
                 .thenReturn("encodedPassword");
         when(userRepository.existsByUsername(username))
@@ -227,6 +243,7 @@ class UserServiceTest {
 
     @Test
     void testUpdateUser_WhenGivenValidRequest_ThenUserIsUpdatedSuccessfully() {
+        transactionalSetUp();
         when(userRepository.findById(userId))
                 .thenReturn(Mono.just(user));
         when(bCryptPasswordEncoder.encode(password))
@@ -248,6 +265,7 @@ class UserServiceTest {
 
     @Test
     void testDeleteUser_WhenUserExists_ThenUserIsDeletedSuccessfully() {
+        transactionalSetUp();
         when(userRepository.findById(userId))
                 .thenReturn(Mono.just(user));
         when(imageService.findProfileImageById(userId))
