@@ -202,8 +202,12 @@ replSetName: rs0
 net stop MongoDB
 net start MongoDB
 
-# 안될 경우
-mongod --config "C:\경로\mongod.cfg"
+# 안될 경우 (cmd에서 직접 설정)
+echo replication: >> "C:\Program Files\MongoDB\Server\6.0\bin\mongod.cfg"
+echo   replSetName: rs0 >> "C:\Program Files\MongoDB\Server\6.0\bin\mongod.cfg"
+
+# cmd에서 설정 파일 확인
+type "C:\Program Files\MongoDB\Server\6.0\bin\mongod.cfg"
 ```
 ```shell
 # 데이터 디렉토리 생성

@@ -70,7 +70,7 @@ public class ProductServiceImpl implements ProductService {
 
     public Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication) {
         return redisCacheManager.getOrFetch(
-                "product:" + productId,
+                "product:" + productId + ":user:" + AuthUtils.getAuthenticationUser(authentication).getId(),
                 ProductDetailResDto.class,
                 productRepository.findById(productId)
                         .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
