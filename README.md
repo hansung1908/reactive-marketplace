@@ -217,9 +217,9 @@ mkdir -p "C:\Program Files\MongoDB\Server\6.0\27019"
 
 # MongoDB 인스턴스 시작 (각각 다른 cmd에서 관리자 권한 실행)
 # 각 cmd는 계속 켜져있어야 함
-mongod --replSet rs0 --port 27017 --dbpath "C:\Program Files\MongoDB\Server\6.0\27017"
-mongod --replSet rs0 --port 27018 --dbpath "C:\Program Files\MongoDB\Server\6.0\27018"
-mongod --replSet rs0 --port 27019 --dbpath "C:\Program Files\MongoDB\Server\6.0\27019"
+start mongod --replSet rs0 --port 27017 --dbpath "C:\Program Files\MongoDB\Server\6.0\27017"
+start mongod --replSet rs0 --port 27018 --dbpath "C:\Program Files\MongoDB\Server\6.0\27018"
+start mongod --replSet rs0 --port 27019 --dbpath "C:\Program Files\MongoDB\Server\6.0\27019"
 
 # 레플리카 셋 초기화
 # --eval 옵션은 자바스크립트 표현식을 직접 실행 가능하게 해주는 명령줄 옵션
@@ -231,6 +231,20 @@ mongosh --eval 'rs.initiate({
     {_id: 2, host: "localhost:27019"}
   ]
 })'
+
+# db 및 collection 생성
+mongosh --eval 'use market;
+db.createCollection("chat", {
+  capped: true,
+  size: 104857,
+  max: 10000
+});
+db.createCollection("user");
+db.createCollection("product");
+db.createCollection("chatroom");
+db.createCollection("image");
+print("Collections created in market database:");
+db.getCollectionNames();'
 
 # 레플리카 셋 확인
 mongosh --eval 'rs.status()'
