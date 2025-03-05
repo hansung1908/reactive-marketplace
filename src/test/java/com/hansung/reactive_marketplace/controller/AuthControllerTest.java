@@ -84,7 +84,7 @@ public class AuthControllerTest {
                 .bodyValue(validLoginReqDto)
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().valueMatches(HttpHeaders.SET_COOKIE, "JWT_TOKEN=mockToken; Path=/; Secure; HttpOnly; SameSite=Strict")
+                .expectHeader().valueMatches(HttpHeaders.SET_COOKIE, "JWT_TOKEN=mockToken; Path=/; HttpOnly; SameSite=Strict")
                 .expectBody(String.class).isEqualTo("Login successful");
     }
 
@@ -121,7 +121,7 @@ public class AuthControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueMatches("Set-Cookie",
-                        "JWT_TOKEN=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; HttpOnly")
+                        "JWT_TOKEN=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly")
                 .expectBody(String.class).isEqualTo("Logout successful");
     }
 }
