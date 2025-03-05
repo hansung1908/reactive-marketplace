@@ -527,3 +527,61 @@ RetryBackoffSpec.jitter(double jitterFactor)
 - 자동으로 블로킹 코드를 찾아주는 라이브러리
 - 해당 기능이 동작할시 블로킹 코드를 감지해 에러를 발생
 </details>
+
+<details>
+  <summary>배포 진행</summary>
+
+- jar 파일 배포로 thymeleaf 설정에서 경로를 classpath 경로로 변경
+- http 배포 환경이라 cookie.secure(true) 설정은 임시 제외
+- localhost로 설정된 부분은 배포 ip로 재설정
+  - chat.js에 eventSource 경로 수정 (hansung1908.site:8081)
+- 이미지 경로는 배포 환경(ubuntu)에 따라 해당 환경에 맞는 절대 경로로 설정 (/home/ubuntu/image)
+  - WebfluxConfig static resouce 경로 등록
+  - ImageServiceImpl.java의 File 객체 생성 부분 수정
+---
+- ec2 free tier는 ram가 1gib만 있어 프로젝트 빌드 과정에서 cpu 과부하로 서버가 다운될 수 있음
+- swap 메모리 설정을 통해 남는 공간을 ram으로 대체 가능하도록 설정
+```shell
+# 1. Swap 메모리 추가하기
+$ sudo dd if=/dev/zero of=/swapfile bs=128M count=16
+$ sudo chmod 600 /swapfile
+
+# EC2는 기본 램 1GB를 갖고 있는데 + 쉘에 해당 명령어를 입력해 2GB 스왑파일을 생성한다.
+# 권한부여는 잊지말자!
+
+# 2. Swap 메모리를 Swap 파일로 포맷
+$ sudo mkswap /swapfile
+
+# 해당 명령어를 입력해서 Swap 메모리를 Swap 파일로 포맷할 수 있다.
+
+# 3. Swap 메모리 활성화
+$ sudo swapon /swapfile
+$ sudo swapon -s
+# 해당 명령어를 입력해 Swap 메모리를 활성화 시킨다.
+# 마지막 명령어를 통해 출력은 활성화된 스왑 파일의 정보와 크기 등을 보여주고, 출력은 활성화된 스왑 파일의 정보와 크기 등을 나타낸다.
+
+# 4. Swap 메모리 시스템이 재시작되더라도 자동 활성화
+$ sudo vi /etc/fstab 
+
+# 마지막 행에 추가하기
+/swapfile swap swap defaults 0 0
+
+# vi 명령어를 이용해 설정 파일로 들어가 마지막 행에 해당 구문을 추가해주자.
+
+#5. 현재의 메모리 사용 및 가용 메모리에 대한 정보 확인
+$ sudo free -h 
+
+# 해당 명령어를 입력하면 현재 메모리에 관한 정보를 확인 할 수 있는데 우리가 생성한 Swap 메모리가 잘 작동하고 있는지 확인해주자.
+
+# 기타 정보
+# Swap 메모리 삭제
+sudo rm -r swapfile
+
+# 단일 Swap 메모리 비활성화
+$ sudo swapoff swapfile
+
+# 모든 Swap 메모리 비활성화
+$ sudo swapoff -a
+```
+
+</details>

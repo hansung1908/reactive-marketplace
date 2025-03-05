@@ -17,6 +17,7 @@ public class WebFluxConfig implements WebFluxConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/image/**") // 해당 요청에 대해서
-                .addResourceLocations("file:///C:/image/"); // 해당 외부 경로로 지정
+                .addResourceLocations("file:///C:/image/") // Windows 환경 경로
+                .addResourceLocations("file:///home/ubuntu/image/"); // Ubuntu 환경 경로
     }
 }

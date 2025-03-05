@@ -38,3 +38,5 @@ out/
 
 ### 중요 설정 파일 ###
 src/main/resources/application.yml
+/src/main/resources/application-ubuntu.yml
+/src/main/resources/application-window.yml

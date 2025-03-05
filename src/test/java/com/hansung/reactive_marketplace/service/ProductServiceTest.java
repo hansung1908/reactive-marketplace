@@ -146,6 +146,8 @@ class ProductServiceTest {
 
     @Test
     void testFindProductDetail_WhenProductExists_ThenReturnProductDetail() {
+        authenticationSetUp();
+
         String cacheKey = "product:testProductId";
         ProductDetailResDto expectedDto = new ProductDetailResDto(
                 testProduct.getId(),
@@ -159,7 +161,7 @@ class ProductServiceTest {
         );
 
         when(redisCacheManager.getOrFetch(
-                eq(cacheKey),
+                eq("product:testProductId:user:testId"),
                 eq(ProductDetailResDto.class),
                 any(Mono.class),
                 eq(Duration.ofHours(1))))
@@ -179,10 +181,12 @@ class ProductServiceTest {
 
     @Test
     void testFindProductDetail_WhenProductDoesNotExist_ThenThrowApiException() {
+        authenticationSetUp();
+
         String cacheKey = "product:nonexistentId";
 
         when(redisCacheManager.getOrFetch(
-                eq(cacheKey),
+                eq("product:nonexistentId:user:testId"),
                 eq(ProductDetailResDto.class),
                 any(Mono.class),
                 eq(Duration.ofHours(1))))

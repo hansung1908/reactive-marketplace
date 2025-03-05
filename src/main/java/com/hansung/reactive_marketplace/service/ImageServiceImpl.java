@@ -41,6 +41,9 @@ public class ImageServiceImpl implements ImageService {
     @Value("${image.product.thumbnailPath}")
     private String productThumbnailPath;
 
+    @Value("${image.os.basePath}")
+    private String osBasePath;
+
     public ImageServiceImpl(ImageRepository imageRepository, RedisCacheManager redisCacheManager, TransactionalOperator transactionalOperator) {
         this.imageRepository = imageRepository;
         this.redisCacheManager = redisCacheManager;
@@ -90,8 +93,8 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private Mono<Image> saveImageFile(FilePart image, Image imageData, ImageSource imageSource) {
-        File originalFile = new File(imageData.getImagePath());
-        File resizedFile = new File(imageData.getThumbnailPath());
+        File originalFile = new File(osBasePath + imageData.getImagePath());
+        File resizedFile = new File(osBasePath + imageData.getThumbnailPath());
 
         return image.transferTo(originalFile)
                 .then(Mono.fromCallable(() -> {

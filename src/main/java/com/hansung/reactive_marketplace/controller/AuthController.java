@@ -41,7 +41,7 @@ public class AuthController {
     private ResponseEntity<String> createLoginResponse(String token) {
         ResponseCookie cookie = ResponseCookie.from("JWT_TOKEN", token)
                 .httpOnly(true)
-                .secure(true)
+//                .secure(true)
                 .sameSite("Strict")
                 .path("/")
                 .build();
@@ -56,7 +56,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("JWT_TOKEN", "")
                 .maxAge(0) // 유효시간을 0으로 설정하여 시간 종료로 쿠키 삭제
                 .httpOnly(true)
-                .secure(true)
+//                .secure(true)
                 .path("/")
                 .build();
 
