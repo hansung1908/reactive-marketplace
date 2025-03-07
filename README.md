@@ -1,5 +1,118 @@
-# reactive-marketplace
-비동기 방식을 활용한 중고거래 사이트 프로젝트
+# Reactive Marketplace - 비동기 중고거래 플랫폼
+
+http://hansung1908.site:8081/
+
+# 📌 목차
+
+[1. 프로젝트 소개](#프로젝트-소개)
+
+[2. 기술 스택](#기술-스택)
+
+[3. ERD](#ERD)
+
+[4. 주요 기능](#주요-기능)
+
+[5. 성능 최적화 및 트러블 슈팅](#성능-최적화-및-트러블-슈팅)
+
+[6. 프로젝트 구조](#프로젝트-구조)
+
+[7. 개발 상세 정보](#개발 상세 정보)
+
+# 🚀 프로젝트 소개
+Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 비동기 중고거래 플랫폼입니다.
+
+리액티브 프로그래밍 패러다임을 통해 동시성을 효율적으로 처리하고, MongoDB와 Redis의 리액티브 버전을 활용하여 높은 처리 속도와 효율적인 리소스 관리를 실현했습니다.
+
+# 🛠️ 기술 스택
+
+### Backend
+- Java 17
+- Spring Boot 3.x
+- Spring WebFlux (리액티브 프로그래밍)
+- Spring Data MongoDB Reactive
+- Spring Data Redis Reactive
+- Spring Security (JWT 기반 인증)
+
+### Database
+- MongoDB (Reactive)
+- Redis (Reactive)
+
+### Frontend
+- Thymeleaf
+- JavaScript
+- SSE(Server-Sent Events)
+
+### Tools & Libraries
+- Lombok
+- Thumbnailator (이미지 리사이징)
+- Jackson (JSON 직렬화/역직렬화)
+- Blockhound (블로킹 코드 탐지)
+- Mockito, StepVerifier (테스트 코드 작성)
+
+### Infrastructure & Deployment
+- AWS EC2 (Ubuntu 환경 배포)
+
+# ✨ 주요 기능
+
+### 사용자 관리 및 인증
+- JWT 기반 인증 및 보안 설정
+
+### 상품 관리 및 거래 기능
+- 상품 CRUD 기능 구현 및 이미지 업로드 지원
+- 실시간 채팅 기능 (MongoDB capped collection + SSE 활용)
+
+### 실시간 알림 서비스
+- Redis Pub/Sub과 SSE를 이용한 실시간 알림 서비스 구현
+
+### 캐싱 기능
+- Redis Reactive Template을 활용한 캐싱 기능 구현
+
+### 이미지 처리 및 리사이징
+- Thumbnailator를 통한 이미지 크기 및 품질 조정
+
+# 🚧 성능 최적화 및 트러블 슈팅
+MongoDB LocalDateTime 이슈 해결 시도 및 결론
+MongoDB는 LocalDateTime 저장 시 UTC로 고정되는 이슈가 있습니다. 이를 해결하기 위해 DateTimeProvider를 통해 한국 시간대로 설정했으나, 출력 시 추가 조정 문제가 발생하여 기본 UTC 저장 방식을 유지하는 것으로 결정했습니다.
+
+MongoDB Aggregation 최적화
+파이프라인 초기에 $match 사용, 인덱스 활용, 메모리 사용량 제한 고려 등 최적화를 진행했습니다.
+
+Redis 직렬화 문제 해결
+GenericJackson2JsonRedisSerializer를 사용하여 다양한 객체 직렬화를 지원하도록 설정했습니다.
+
+파일 업로드(Content-Type) 문제 해결
+WebFluxConfigurer에서 Decoder 설정을 통해 multipart/form-data와 application/octet-stream 문제를 해결했습니다.
+
+#📂 프로젝트 구조
+
+```text
+src
+├── main
+│   ├── java
+│   │   └── com
+│   │       └── reactivemarketplace
+│   │           ├── config          # 환경설정 클래스들
+│   │           ├── controller      # 웹 요청 컨트롤러 클래스들
+│   │           ├── domain          # 도메인 모델 클래스들
+│   │           ├── dto             # 데이터 전송 객체(DTO) 클래스들
+│   │           ├── exception       # 전역 예외처리 핸들러 클래스들
+│   │           ├── jwt
+│   │           ├── redis     
+│   │           ├── model           
+│   │           ├── repository      # 데이터 접근 레이어 클래스들
+│   │           ├── security
+│   │           ├── service         # 비즈니스 로직 클래스들
+│   │           └── util            # 유틸리티 클래스들
+│   └── resources
+│       ├── static
+│       └── templates
+└── test
+```
+
+src/main/java/com/reactivemarketplace/
+
+
+# 🔗 개발 상세 정보
 
 <details>
   <summary>auto reload 활성화 하는법</summary>
@@ -76,6 +189,10 @@
 - collection 생성시 tailable cursor를 사용하려면 capped 설정을 true하고, size를 지정해야함
 ```shell
 db.createCollection("chat", { capped: true, size: 1048576 });
+```
+- 이후 바로 연결하면 데이터가 없어 dead 상태가 되므로 더미 데이터를 추가하여 연결 유지
+```shell
+db.chat.insertOne({ roomId: "dummyId" })
 ```
 </details>
 
