@@ -4,19 +4,19 @@ http://hansung1908.site:8081/
 
 # 📌 목차
 
-[1. 프로젝트 소개](#프로젝트-소개)
+[1. 프로젝트 소개](#🚀-프로젝트-소개)
 
-[2. 기술 스택](#기술-스택)
+[2. 기술 스택](#🛠️-기술-스택)
 
 [3. ERD](#ERD)
 
-[4. 주요 기능](#주요-기능)
+[4. 주요 기능](#✨-주요-기능)
 
-[5. 성능 최적화 및 트러블 슈팅](#성능-최적화-및-트러블-슈팅)
+[5. 성능 최적화 및 트러블 슈팅](#🚧-성능-최적화-및-트러블-슈팅)
 
-[6. 프로젝트 구조](#프로젝트-구조)
+[6. 프로젝트 구조](#📂-프로젝트-구조)
 
-[7. 개발 상세 정보](#개발 상세 정보)
+[7. 개발 상세 정보](#🔗-개발-상세-정보)
 
 # 🚀 프로젝트 소개
 Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 비동기 중고거래 플랫폼입니다.
@@ -52,6 +52,10 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 ### Infrastructure & Deployment
 - AWS EC2 (Ubuntu 환경 배포)
 
+# ERD
+
+추가 예정
+
 # ✨ 주요 기능
 
 ### 사용자 관리 및 인증
@@ -62,7 +66,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 - 실시간 채팅 기능 (MongoDB capped collection + SSE 활용)
 
 ### 실시간 알림 서비스
-- Redis Pub/Sub과 SSE를 이용한 실시간 알림 서비스 구현
+- Redis Pub/Sub과 SSE를 이용한 실시간 채팅 알림 서비스 구현
 
 ### 캐싱 기능
 - Redis Reactive Template을 활용한 캐싱 기능 구현
@@ -71,19 +75,64 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 - Thumbnailator를 통한 이미지 크기 및 품질 조정
 
 # 🚧 성능 최적화 및 트러블 슈팅
-MongoDB LocalDateTime 이슈 해결 시도 및 결론
-MongoDB는 LocalDateTime 저장 시 UTC로 고정되는 이슈가 있습니다. 이를 해결하기 위해 DateTimeProvider를 통해 한국 시간대로 설정했으나, 출력 시 추가 조정 문제가 발생하여 기본 UTC 저장 방식을 유지하는 것으로 결정했습니다.
 
-MongoDB Aggregation 최적화
-파이프라인 초기에 $match 사용, 인덱스 활용, 메모리 사용량 제한 고려 등 최적화를 진행했습니다.
+<details>
+  <summary><strong>MongoDB LocalDateTime 이슈</strong></summary>
 
-Redis 직렬화 문제 해결
-GenericJackson2JsonRedisSerializer를 사용하여 다양한 객체 직렬화를 지원하도록 설정했습니다.
+### 문제 원인 파악
+- MongoDB는 LocalDateTime 저장 시 지역 시간대를 지원하지 않아 UTC로 고정 저장됩니다. 이를 해결하기 위해 @CreatedDate를 설정했지만, 저장 시 UTC+9(한국 시간)로 변환되면서 출력 시 또다시 9시간이 추가되는 문제가 발생했습니다.
 
-파일 업로드(Content-Type) 문제 해결
-WebFluxConfigurer에서 Decoder 설정을 통해 multipart/form-data와 application/octet-stream 문제를 해결했습니다.
+### 해결 과정
+- DateTimeProvider를 구현하여 한국 시간대(UTC+9)로 설정했으나, 출력 시 추가 조정 문제가 발생했습니다.
+- 최종적으로 기본 UTC 시간대로 저장하고, 개발 과정에서 이를 인지하여 처리하는 방식으로 결정했습니다.
 
-#📂 프로젝트 구조
+### 결과
+- UTC 시간대로 저장하는 기본 방식을 유지하며, 개발 및 출력 단계에서 시간대 문제를 고려해 처리하도록 설계했습니다.
+</details>
+
+<details>
+  <summary><strong>MongoDB Aggregation 최적화</strong></summary>
+
+### 문제 원인 파악
+- MongoDB Aggregation 파이프라인이 복잡할 경우 성능 저하와 메모리 사용량 초과 문제가 발생할 수 있습니다.
+
+### 해결 과정
+- 파이프라인 초기에 $match 단계를 활용해 데이터를 필터링하고, 인덱스를 적극적으로 활용하여 처리 속도를 높였습니다.
+- 또한 메모리 사용량 제한(기본 100MB)을 고려해 설계를 최적화했습니다.
+
+### 결과
+- 데이터 처리 속도가 개선되었으며, 복잡한 집계 연산에서도 안정적인 성능을 유지할 수 있었습니다.
+</details>
+
+<details>
+  <summary><strong>Redis 직렬화 문제</strong></summary>
+
+### 문제 원인 파악
+- Redis에서 객체 직렬화 시 LocalDateTime 호환성 문제와 다양한 객체 직렬화를 지원하지 못하는 이슈가 발생했습니다.
+
+### 해결 과정
+- GenericJackson2JsonRedisSerializer를 사용하여 다양한 클래스 타입의 객체를 JSON 형태로 직렬화/역직렬화하도록 설정했습니다.
+- 또한 각 도메인 객체에 @JsonSerialize 및 @JsonDeserialize를 추가해 호환성을 확보했습니다.
+
+### 결과
+- Redis 캐싱 기능이 안정적으로 작동하며, 다양한 객체의 직렬화/역직렬화가 가능해졌습니다.
+</details>
+
+<details>
+  <summary><strong>파일 업로드(Content-Type) 문제</strong></summary>
+
+### 문제 원인 파악
+- WebFlux 환경에서 multipart/form-data와 application/octet-stream 타입 파일 업로드 시 디코딩 문제가 발생했습니다.
+
+### 해결 과정
+- WebFluxConfigurer에서 커스텀 Decoder를 설정하여 파일 업로드 요청을 처리하도록 수정했습니다.
+- 이를 통해 다양한 Content-Type 요청을 정상적으로 디코딩할 수 있도록 구현했습니다.
+
+### 결과
+- 파일 업로드 기능이 안정적으로 작동하며, 다양한 파일 형식 업로드 요청을 처리할 수 있게 되었습니다.
+</details>
+
+# 📂 프로젝트 구조
 
 ```text
 src
@@ -96,11 +145,10 @@ src
 │   │           ├── domain          # 도메인 모델 클래스들
 │   │           ├── dto             # 데이터 전송 객체(DTO) 클래스들
 │   │           ├── exception       # 전역 예외처리 핸들러 클래스들
-│   │           ├── jwt
-│   │           ├── redis     
-│   │           ├── model           
+│   │           ├── jwt             # jwt 관련 클래스들
+│   │           ├── redis           # redis 관련 클래스들
 │   │           ├── repository      # 데이터 접근 레이어 클래스들
-│   │           ├── security
+│   │           ├── security        # 시큐리티 관련 클래스들
 │   │           ├── service         # 비즈니스 로직 클래스들
 │   │           └── util            # 유틸리티 클래스들
 │   └── resources
@@ -108,9 +156,6 @@ src
 │       └── templates
 └── test
 ```
-
-src/main/java/com/reactivemarketplace/
-
 
 # 🔗 개발 상세 정보
 
