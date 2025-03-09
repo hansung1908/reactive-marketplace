@@ -4,26 +4,26 @@ http://hansung1908.site:8081/
 
 # 📌 목차
 
-[1. 프로젝트 소개](#🚀-프로젝트-소개)
+[1. 프로젝트 소개](#프로젝트-소개)
 
-[2. 기술 스택](#🛠️-기술-스택)
+[2. 기술 스택](#기술-스택)
 
 [3. ERD](#ERD)
 
-[4. 주요 기능](#✨-주요-기능)
+[4. 주요 기능](#주요-기능)
 
-[5. 성능 최적화 및 트러블 슈팅](#🚧-성능-최적화-및-트러블-슈팅)
+[5. 성능 최적화 및 트러블 슈팅](#성능-최적화-및-트러블-슈팅)
 
-[6. 프로젝트 구조](#📂-프로젝트-구조)
+[6. 프로젝트 구조](#프로젝트-구조)
 
-[7. 개발 상세 정보](#🔗-개발-상세-정보)
+[7. 개발 상세 정보](#개발-상세-정보)
 
-# 🚀 프로젝트 소개
+# 프로젝트 소개
 Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 비동기 중고거래 플랫폼입니다.
 
 리액티브 프로그래밍 패러다임을 통해 동시성을 효율적으로 처리하고, MongoDB와 Redis의 리액티브 버전을 활용하여 높은 처리 속도와 효율적인 리소스 관리를 실현했습니다.
 
-# 🛠️ 기술 스택
+# 기술 스택
 
 ### Backend
 - Java 17
@@ -54,9 +54,9 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 
 # ERD
 
-추가 예정
+![Image](https://github.com/user-attachments/assets/fa040f54-710d-41cf-8cb3-5d76e93676c3)
 
-# ✨ 주요 기능
+# 주요 기능
 
 ### 사용자 관리 및 인증
 - JWT 기반 인증 및 보안 설정
@@ -74,7 +74,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 ### 이미지 처리 및 리사이징
 - Thumbnailator를 통한 이미지 크기 및 품질 조정
 
-# 🚧 성능 최적화 및 트러블 슈팅
+# 성능 최적화 및 트러블 슈팅
 
 <details>
   <summary><strong>MongoDB LocalDateTime 이슈</strong></summary>
@@ -132,7 +132,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 - 파일 업로드 기능이 안정적으로 작동하며, 다양한 파일 형식 업로드 요청을 처리할 수 있게 되었습니다.
 </details>
 
-# 📂 프로젝트 구조
+# 프로젝트 구조
 
 ```text
 src
@@ -157,7 +157,7 @@ src
 └── test
 ```
 
-# 🔗 개발 상세 정보
+# 개발 상세 정보
 
 <details>
   <summary>auto reload 활성화 하는법</summary>
