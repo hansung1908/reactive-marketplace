@@ -77,20 +77,6 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 # 성능 최적화 및 트러블 슈팅
 
 <details>
-  <summary><strong>MongoDB LocalDateTime 이슈</strong></summary>
-
-### 문제 원인 파악
-- MongoDB는 LocalDateTime 저장 시 지역 시간대를 지원하지 않아 UTC로 고정 저장됩니다. 이를 해결하기 위해 @CreatedDate를 설정했지만, 저장 시 UTC+9(한국 시간)로 변환되면서 출력 시 또다시 9시간이 추가되는 문제가 발생했습니다.
-
-### 해결 과정
-- DateTimeProvider를 구현하여 한국 시간대(UTC+9)로 설정했으나, 출력 시 추가 조정 문제가 발생했습니다.
-- 최종적으로 기본 UTC 시간대로 저장하고, 개발 과정에서 이를 인지하여 처리하는 방식으로 결정했습니다.
-
-### 결과
-- UTC 시간대로 저장하는 기본 방식을 유지하며, 개발 및 출력 단계에서 시간대 문제를 고려해 처리하도록 설계했습니다.
-</details>
-
-<details>
   <summary><strong>MongoDB Aggregation 최적화</strong></summary>
 
 ### 문제 원인 파악
@@ -105,7 +91,22 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 </details>
 
 <details>
-  <summary><strong>Redis 직렬화 문제</strong></summary>
+  <summary><strong>MongoDB LocalDateTime 이슈</strong></summary>
+
+### 문제 원인 파악
+- MongoDB는 LocalDateTime 저장 시 지역 시간대를 지원하지 않아 UTC로 고정 저장됩니다.
+- 이를 해결하기 위해 @CreatedDate를 설정했지만, 저장 시 UTC+9(한국 시간)로 변환되면서 출력 시 또다시 9시간이 추가되는 문제가 발생했습니다.
+
+### 해결 과정
+- DateTimeProvider를 구현하여 한국 시간대(UTC+9)로 설정했으나, 출력 시 추가 조정 문제가 발생했습니다.
+- 최종적으로 기본 UTC 시간대로 저장하고, 개발 과정에서 이를 인지하여 처리하는 방식으로 결정했습니다.
+
+### 결과
+- UTC 시간대로 저장하는 기본 방식을 유지하며, 개발 및 출력 단계에서 시간대 문제를 고려해 처리하도록 설계했습니다.
+</details>
+
+<details>
+  <summary><strong>Redis 직렬화 문제 해결</strong></summary>
 
 ### 문제 원인 파악
 - Redis에서 객체 직렬화 시 LocalDateTime 호환성 문제와 다양한 객체 직렬화를 지원하지 못하는 이슈가 발생했습니다.
@@ -119,7 +120,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 </details>
 
 <details>
-  <summary><strong>파일 업로드(Content-Type) 문제</strong></summary>
+  <summary><strong>파일 업로드(Content-Type) 문제 해결</strong></summary>
 
 ### 문제 원인 파악
 - WebFlux 환경에서 multipart/form-data와 application/octet-stream 타입 파일 업로드 시 디코딩 문제가 발생했습니다.
@@ -130,6 +131,35 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 
 ### 결과
 - 파일 업로드 기능이 안정적으로 작동하며, 다양한 파일 형식 업로드 요청을 처리할 수 있게 되었습니다.
+</details>
+
+<details>
+  <summary><strong>DataBuffer 처리 문제 해결</strong></summary>
+
+### 문제 원인 파악
+- FilePart의 getContentLength()가 -1을 반환하여 파일 크기를 측정할 수 없었습니다.
+- 다양한 메타데이터가 함께 있어 정확한 파일 크기를 알 수 없는 문제가 있었습니다.
+
+### 해결 과정
+- DataBufferUtils.join()으로 버퍼를 하나로 묶어 크기를 계산했습니다.
+- 메모리 누수 방지를 위해 계산 후 release()로 메모리를 해제했습니다.
+
+### 결과
+- 파일 크기를 정확히 측정할 수 있게 되었고, 메모리 누수 없이 효율적인 파일 처리가 가능해졌습니다.
+</details>
+
+<details>
+  <summary><strong>배포 환경에서 서버 다운 현상 해결</strong></summary>
+
+### 문제 원인 파악
+- EC2 Free Tier는 RAM이 1GB로 제한되어 있어, 프로젝트 빌드 시 CPU 과부하로 서버가 다운되는 문제가 발생했습니다.
+
+### 해결 과정
+- Swap 메모리를 설정하여 디스크 공간을 RAM으로 활용했습니다.
+- 2GB의 Swap 파일을 생성하고 시스템 재시작 시에도 자동 활성화되도록 설정했습니다.
+
+### 결과
+- 제한된 RAM 환경에서도 안정적인 빌드와 서버 운영이 가능해졌습니다.
 </details>
 
 # 프로젝트 구조
