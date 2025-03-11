@@ -76,83 +76,116 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 
 # 성능 최적화 및 트러블 슈팅
 
-<details>
+<details> 
   <summary><strong>MongoDB Aggregation 최적화</strong></summary>
 
-### 문제 원인 파악
-- MongoDB Aggregation 파이프라인이 복잡할 경우 성능 저하와 메모리 사용량 초과 문제가 발생할 수 있습니다.
+### 문제 발생
+- MongoDB Aggregation 파이프라인 사용 시 성능 저하와 메모리 사용량 초과 문제가 발생했습니다.
+
+### 원인 분석
+- 복잡한 Aggregation 파이프라인 구조가 처리 속도를 저하시켰습니다.
+- MongoDB의 기본 메모리 제한(100MB)을 초과하는 대용량 데이터 처리 시도가 문제였습니다.
 
 ### 해결 과정
-- 파이프라인 초기에 $match 단계를 활용해 데이터를 필터링하고, 인덱스를 적극적으로 활용하여 처리 속도를 높였습니다.
-- 또한 메모리 사용량 제한(기본 100MB)을 고려해 설계를 최적화했습니다.
+- 파이프라인 초기에 $match 단계를 배치하여 처리할 데이터 양을 사전에 줄였습니다.
+- 인덱스를 적극적으로 활용하여 쿼리 성능을 개선했습니다.
+- 메모리 사용량 제한을 고려한 최적화된 파이프라인 설계를 적용했습니다.
 
 ### 결과
-- 데이터 처리 속도가 개선되었으며, 복잡한 집계 연산에서도 안정적인 성능을 유지할 수 있었습니다.
-</details>
+- 데이터 처리 속도가 현저히 개선되었습니다.
+- 복잡한 집계 연산에서도 안정적인 성능을 유지할 수 있게 되었습니다.
+</details> 
 
-<details>
+<details> 
   <summary><strong>MongoDB LocalDateTime 이슈</strong></summary>
 
-### 문제 원인 파악
-- MongoDB는 LocalDateTime 저장 시 지역 시간대를 지원하지 않아 UTC로 고정 저장됩니다.
-- 이를 해결하기 위해 @CreatedDate를 설정했지만, 저장 시 UTC+9(한국 시간)로 변환되면서 출력 시 또다시 9시간이 추가되는 문제가 발생했습니다.
+### 문제 발생
+- MongoDB에 @CreatedDate를 통해 시간대를 저장할 때 9시간 늦은 시간으로 저장되는 문제가 발생했습니다.
+
+### 원인 분석
+- MongoDB는 LocalDateTime 저장 시 지역 시간대를 지원하지 않고 UTC로 고정 저장하는 특성이 있었습니다.
 
 ### 해결 과정
-- DateTimeProvider를 구현하여 한국 시간대(UTC+9)로 설정했으나, 출력 시 추가 조정 문제가 발생했습니다.
-- 최종적으로 기본 UTC 시간대로 저장하고, 개발 과정에서 이를 인지하여 처리하는 방식으로 결정했습니다.
+- 시간대 설정 문제로 판단하여 DateTimeProvider를 구현해 한국 시간대(UTC+9)로 설정했으나 실패했습니다.
+- 추가 조사를 통해 MongoDB의 UTC 고정 저장 특성을 확인했습니다.
+- 저장 시 +9시간을 추가하는 방식을 시도했으나, 출력 시 컴퓨터 시간대에 맞춰 또다시 +9시간이 적용되는 문제가 발생했습니다.
 
 ### 결과
-- UTC 시간대로 저장하는 기본 방식을 유지하며, 개발 및 출력 단계에서 시간대 문제를 고려해 처리하도록 설계했습니다.
-</details>
+UTC 시간대로 저장하는 기본 방식을 유지하고, 개발 및 출력 단계에서 시간대 문제를 고려해 처리하는 방식으로 설계를 확정했습니다.
 
-<details>
-  <summary><strong>Redis 직렬화 문제 해결</strong></summary>
+</details> 
 
-### 문제 원인 파악
-- Redis에서 객체 직렬화 시 LocalDateTime 호환성 문제와 다양한 객체 직렬화를 지원하지 못하는 이슈가 발생했습니다.
+<details> 
+  <summary><strong>Redis Cache 직렬화 문제</strong></summary>
+
+### 문제 발생
+- Redis Cache 적용 시 다양한 직렬화/역직렬화 오류가 발생했습니다.
+- 'java.time.LocalDateTime not Supported' 오류가 발생했습니다.
+
+### 원인 분석
+- 클래스 타입별 직렬화 설정 중복 문제가 있었습니다.
+- 객체 타입 변환 과정에서 호환성 문제가 있었습니다.
 
 ### 해결 과정
-- GenericJackson2JsonRedisSerializer를 사용하여 다양한 클래스 타입의 객체를 JSON 형태로 직렬화/역직렬화하도록 설정했습니다.
-- 또한 각 도메인 객체에 @JsonSerialize 및 @JsonDeserialize를 추가해 호환성을 확보했습니다.
+- 기존 Jackson2JsonRedisSerializer에서 GenericJackson2JsonRedisSerializer로 변경하여 다양한 클래스 타입 객체의 직렬화/역직렬화를 지원하도록 했습니다.
+- 각 도메인 객체에 @JsonSerialize 및 @JsonDeserialize 어노테이션을 추가하여 LocalDateTime 호환성 문제를 해결했습니다.
 
 ### 결과
-- Redis 캐싱 기능이 안정적으로 작동하며, 다양한 객체의 직렬화/역직렬화가 가능해졌습니다.
-</details>
+- Redis 캐싱 기능이 안정적으로 작동하게 되었습니다.
+- 다양한 객체 타입의 직렬화/역직렬화가 원활하게 처리되었습니다.
 
-<details>
-  <summary><strong>파일 업로드(Content-Type) 문제 해결</strong></summary>
+</details> 
 
-### 문제 원인 파악
-- WebFlux 환경에서 multipart/form-data와 application/octet-stream 타입 파일 업로드 시 디코딩 문제가 발생했습니다.
+<details> 
+  <summary><strong>파일 업로드(Content-Type) 문제</strong></summary>
+
+### 문제 발생
+- WebFlux 환경에서 파일 저장이 되지 않는 문제가 발생했습니다.
+
+### 원인 분석
+- application/octet-stream 타입의 파일 업로드 시 디코딩 문제가 발생했습니다.
+- WebFlux에서 해당 타입에 대한 Content-Type 요청 디코더 설정이 부족했습니다.
 
 ### 해결 과정
-- WebFluxConfigurer에서 커스텀 Decoder를 설정하여 파일 업로드 요청을 처리하도록 수정했습니다.
-- 이를 통해 다양한 Content-Type 요청을 정상적으로 디코딩할 수 있도록 구현했습니다.
+- WebFluxConfigurer에서 커스텀 Decoder를 설정하여 다양한 Content-Type의 파일 업로드 요청을 처리하도록 구현했습니다.
 
 ### 결과
-- 파일 업로드 기능이 안정적으로 작동하며, 다양한 파일 형식 업로드 요청을 처리할 수 있게 되었습니다.
-</details>
+- 파일 업로드 기능이 안정적으로 작동하게 되었습니다.
+- 다양한 파일 형식과 Content-Type 요청을 정상적으로 처리할 수 있게 되었습니다.
 
-<details>
-  <summary><strong>DataBuffer 처리 문제 해결</strong></summary>
+</details> 
 
-### 문제 원인 파악
+<details> 
+  <summary><strong>DataBuffer 처리 문제</strong></summary>
+
+### 문제 발생
 - FilePart의 getContentLength()가 -1을 반환하여 파일 크기를 측정할 수 없었습니다.
+
+### 원인 분석
 - 다양한 메타데이터가 함께 있어 정확한 파일 크기를 알 수 없는 문제가 있었습니다.
+- FilePart는 multipart/form-data 요청에서 파일 부분을 나타내는 인터페이스로, 파일 데이터가 여러 DataBuffer로 분할되어 스트리밍 방식으로 전송됩니다.
+- 이러한 특성 때문에 전체 파일 크기를 미리 알 수 없어 getContentLength()가 -1을 반환하게 됩니다.
 
 ### 해결 과정
-- DataBufferUtils.join()으로 버퍼를 하나로 묶어 크기를 계산했습니다.
-- 메모리 누수 방지를 위해 계산 후 release()로 메모리를 해제했습니다.
+- FilePart.content()를 통해 얻은 DataBuffer 스트림을 하나로 결합하는 방식으로 접근했습니다.
+- DataBufferUtils.join()을 사용하여 여러 DataBuffer를 하나의 DataBuffer로 묶었습니다.
+- 이렇게 하나로 묶인 DataBuffer에서 readableByteCount()를 호출하여 전체 파일 크기를 정확히 측정할 수 있었습니다.
+- Netty 서버 기반으로 버퍼가 풀링되며 참조 카운팅되기 때문에, 메모리 누수 방지를 위해 계산 후 release() 메소드로 메모리를 해제하는 로직을 추가했습니다.
 
 ### 결과
-- 파일 크기를 정확히 측정할 수 있게 되었고, 메모리 누수 없이 효율적인 파일 처리가 가능해졌습니다.
-</details>
+- 파일 크기를 정확히 측정할 수 있게 되었습니다.
+- 메모리 누수 없이 효율적인 파일 크기 계산이 가능해졌습니다.
 
-<details>
-  <summary><strong>배포 환경에서 서버 다운 현상 해결</strong></summary>
+</details> 
 
-### 문제 원인 파악
-- EC2 Free Tier는 RAM이 1GB로 제한되어 있어, 프로젝트 빌드 시 CPU 과부하로 서버가 다운되는 문제가 발생했습니다.
+<details> 
+  <summary><strong>배포 환경에서 서버 다운 현상</strong></summary>
+
+### 문제 발생
+- EC2 Free Tier 환경에서 프로젝트 빌드 시 CPU 과부하로 서버가 다운되는 현상이 발생했습니다.
+
+### 원인 분석
+- EC2 Free Tier는 RAM이 1GB로 제한되어 있어 빌드 과정에서 메모리 부족 문제가 발생했습니다.
 
 ### 해결 과정
 - Swap 메모리를 설정하여 디스크 공간을 RAM으로 활용했습니다.
@@ -160,6 +193,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 
 ### 결과
 - 제한된 RAM 환경에서도 안정적인 빌드와 서버 운영이 가능해졌습니다.
+
 </details>
 
 # 프로젝트 구조
@@ -468,7 +502,7 @@ mongosh --eval 'rs.status()'
 - redis 기능을 구현하여 다른 서비스에 주입할 경우 localdatetime 직렬화/역직렬화 호환성 오류가 발생
 - 각 서비스의 도메인 객체에 @JsonSerialize, @JsonDeserialize 설정을 추가
 
-##### LinkedHasmap cannot be cast to class DTO Object
+##### LinkedHashmap cannot be cast to class DTO Object
 - 환경에 따라 어떤 Serializer를 사용해야 될지 고려해야 함
 - Jackson2JsonRedisSerializer
   - Class Type을 지정해야 하며, redis에 객체를 저장할 때 class 값 대신 Classy Type 값을 JSON 형태로 저장
