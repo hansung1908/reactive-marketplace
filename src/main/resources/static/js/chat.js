@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const senderId = document.getElementById("senderId").value;
 
     const eventSource = new EventSource(`http://hansung1908.site:8081/chat/${roomId}`);
+//    const eventSource = new EventSource(`http://localhost:8081/chat/${roomId}`);
 
     eventSource.onmessage = (event) => {
 

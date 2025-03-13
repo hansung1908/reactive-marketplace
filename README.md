@@ -54,7 +54,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 
 # ERD
 
-![Image](https://github.com/user-attachments/assets/fa040f54-710d-41cf-8cb3-5d76e93676c3)
+![Image](https://github.com/user-attachments/assets/b12d31d2-4c75-4a48-bf04-b14ef952b491)
 
 # 주요 기능
 
@@ -156,7 +156,7 @@ UTC 시간대로 저장하는 기본 방식을 유지하고, 개발 및 출력 �
 </details> 
 
 <details> 
-  <summary><strong>DataBuffer 처리 문제</strong></summary>
+  <summary><strong>DataBuffer 크기 측정 문제</strong></summary>
 
 ### 문제 발생
 - FilePart의 getContentLength()가 -1을 반환하여 파일 크기를 측정할 수 없었습니다.

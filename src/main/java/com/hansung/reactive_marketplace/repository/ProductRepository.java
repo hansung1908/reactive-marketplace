@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 
 public interface ProductRepository extends ReactiveMongoRepository<Product, String> {
 
-    @Query(value = "{}", fields = "{ '_id' : 1, 'title' : 1, 'price' : 1 }")
+    @Query(value = "{ 'status' : 'ON_SALE' }", fields = "{ '_id' : 1, 'title' : 1, 'price' : 1 }")
     Flux<Product> findProductList(Sort sort);
 
     @Query(value = "{ 'userId' : ?0 }")
