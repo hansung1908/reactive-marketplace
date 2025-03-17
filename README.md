@@ -8,15 +8,17 @@ http://hansung1908.site:8081/
 
 [2. 기술 스택](#기술-스택)
 
-[3. ERD](#ERD)
+[3. 시스템 아키텍처](#시스템-아키텍처)
 
-[4. 주요 기능](#주요-기능)
+[4. ERD](#ERD)
 
-[5. 성능 최적화 및 트러블 슈팅](#성능-최적화-및-트러블-슈팅)
+[5. 주요 기능](#주요-기능)
 
-[6. 프로젝트 구조](#프로젝트-구조)
+[6. 성능 최적화 및 트러블 슈팅](#성능-최적화-및-트러블-슈팅)
 
-[7. 개발 상세 정보](#개발-상세-정보)
+[7. 프로젝트 구조](#프로젝트-구조)
+
+[8. 개발 상세 정보](#개발-상세-정보)
 
 # 프로젝트 소개
 Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 비동기 중고거래 플랫폼입니다.
@@ -27,7 +29,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 
 ### Backend
 - Java 17
-- Spring Boot 3.x
+- Spring Boot 3.3
 - Spring WebFlux (리액티브 프로그래밍)
 - Spring Data MongoDB Reactive
 - Spring Data Redis Reactive
@@ -51,6 +53,10 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 
 ### Infrastructure & Deployment
 - AWS EC2 (Ubuntu 환경 배포)
+
+# 시스템 아키텍처
+
+![Image](https://github.com/user-attachments/assets/f3123264-1fe5-4723-ad16-7529110f42fb)
 
 # ERD
 
