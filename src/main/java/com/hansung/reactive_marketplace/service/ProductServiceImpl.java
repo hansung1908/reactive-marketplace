@@ -1,5 +1,6 @@
 package com.hansung.reactive_marketplace.service;
 
+import com.hansung.reactive_marketplace.domain.Image;
 import com.hansung.reactive_marketplace.domain.Product;
 import com.hansung.reactive_marketplace.dto.request.ProductDeleteReqDto;
 import com.hansung.reactive_marketplace.dto.request.ProductSaveReqDto;
@@ -22,8 +23,6 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.function.TupleUtils;
-
-import java.time.Duration;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -68,30 +67,55 @@ public class ProductServiceImpl implements ProductService {
                         e -> new ApiException(ExceptionMessage.INTERNAL_SERVER_ERROR));
     }
 
+//    public Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication) {
+//        return redisCacheManager.getOrFetch(
+//                "product:" + productId,
+//                ProductDetailResDto.class,
+//                productRepository.findById(productId)
+//                        .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
+//                        .flatMap(product ->
+//                                Mono.zip(Mono.just(product),
+//                                        imageService.findProductImageByIdWithCache(productId),
+//                                        userService.findUserById(product.getUserId())
+//                                )
+//                        )
+//                        .map(TupleUtils.function((product, image, user) -> new ProductDetailResDto(
+//                                product.getId(),
+//                                product.getTitle(),
+//                                product.getPrice(),
+//                                product.getDescription(),
+//                                user.getNickname(),
+//                                image.getImagePath(),
+//                                product.getUserId(),
+//                                AuthUtils.getAuthenticationUser(authentication).getId()))
+//                        ),
+//                Duration.ofHours(1)
+//        );
+//    }
+
     public Mono<ProductDetailResDto> findProductDetail(String productId, Authentication authentication) {
-        return redisCacheManager.getOrFetch(
-                "product:" + productId + ":user:" + AuthUtils.getAuthenticationUser(authentication).getId(),
-                ProductDetailResDto.class,
-                productRepository.findById(productId)
-                        .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND)))
-                        .flatMap(product ->
-                                Mono.zip(Mono.just(product),
-                                        imageService.findProductImageByIdWithCache(productId),
-                                        userService.findUserById(product.getUserId())
-                                )
-                        )
-                        .map(TupleUtils.function((product, image, user) -> new ProductDetailResDto(
-                                product.getId(),
-                                product.getTitle(),
-                                product.getPrice(),
-                                product.getDescription(),
-                                user.getNickname(),
-                                image.getImagePath(),
-                                product.getUserId(),
-                                AuthUtils.getAuthenticationUser(authentication).getId()))
-                        ),
-                Duration.ofHours(1)
-        );
+        Mono<Product> productMono = productRepository.findById(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.PRODUCT_NOT_FOUND))); // 상품을 찾을 수 없음
+
+        Mono<Image> imageMono = imageService.findProductImageById(productId)
+                .switchIfEmpty(Mono.error(new ApiException(ExceptionMessage.IMAGE_NOT_FOUND))); // 이미지가 없음
+
+        return Mono.zip(productMono, imageMono)
+                .flatMap(tuple -> {
+                    Product product = tuple.getT1();
+                    Image image = tuple.getT2();
+
+                    return userService.findUserById(product.getUserId())
+                            .map(user -> new ProductDetailResDto(
+                                    product.getId(),
+                                    product.getTitle(),
+                                    product.getPrice(),
+                                    product.getDescription(),
+                                    user.getNickname(),
+                                    image.getImagePath(),
+                                    product.getUserId(),
+                                    AuthUtils.getAuthenticationUser(authentication).getId()));
+                });
     }
 
     public Mono<ProductUpdateResDto> findProductForUpdateForm(String productId) {

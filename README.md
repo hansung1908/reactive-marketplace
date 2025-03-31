@@ -83,43 +83,36 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 # 성능 최적화 및 트러블 슈팅
 
 <details> 
-  <summary><strong>MongoDB Aggregation 최적화</strong></summary>
+  <summary><strong>Redis Cache 도입</strong></summary>
 
 ### 문제 발생
-- MongoDB Aggregation 파이프라인 사용 시 성능 저하와 메모리 사용량 초과 문제가 발생했습니다.
+- 서비스 사용자 경험을 향상시키기 위해 데이터베이스 성능 문제를 해결해야 하는 상황에 직면했습니다.
+- 쿼리 호출량이 증가할수록 데이터 조회 성능이 감소하고 데이터베이스에 과부하가 발생했습니다.
 
 ### 원인 분석
-- 복잡한 Aggregation 파이프라인 구조가 처리 속도를 저하시켰습니다.
-- MongoDB의 기본 메모리 제한(100MB)을 초과하는 대용량 데이터 처리 시도가 문제였습니다.
+- 모든 조회를 단일 데이터베이스에서 처리함으로 인해 과부하가 발생했습니다.
+- 잦은 데이터 조회로 인해 성능 저하가 심화되었습니다.
 
 ### 해결 과정
-- 파이프라인 초기에 $match 단계를 배치하여 처리할 데이터 양을 사전에 줄였습니다.
-- 인덱스를 적극적으로 활용하여 쿼리 성능을 개선했습니다.
-- 메모리 사용량 제한을 고려한 최적화된 파이프라인 설계를 적용했습니다.
+- Redis 도입 전:
+  - 기존 시스템은 단일 MongoDB를 사용하여 모든 조회 요청을 처리했습니다.
+  - 이로 인해 데이터베이스의 부하가 증가하고 응답 시간이 길어졌습니다.
+
+![Image](https://github.com/user-attachments/assets/bc27b90d-5cc3-4843-99e)
+
+- Redis 도입 후:
+  - Redis를 활용하여 자주 조회되는 특정 상품 데이터를 캐싱하였습니다.
+  - 캐시를 통해 데이터베이스의 부하를 줄이고, 조회 성능을 개선하였습니다.
+  - 비동기 처리 방식으로 대량의 요청을 효율적으로 처리하도록 시스템을 설계하였습니다.
+
+![Image](https://github.com/user-attachments/assets/29dde79b-077f-4b07-b476-ce425727a)
 
 ### 결과
-- 데이터 처리 속도가 현저히 개선되었습니다.
-- 복잡한 집계 연산에서도 안정적인 성능을 유지할 수 있게 되었습니다.
-</details> 
+- 단순 기능 테스트에선 조회 성능을 87.3% 향상시켰습니다.(60.79ms -> 7.70ms)
+- 부하 테스트에선 tps를 약 34% 증가시켰습니다.(1113tps -> 1440tps)
 
-<details> 
-  <summary><strong>MongoDB LocalDateTime 이슈</strong></summary>
-
-### 문제 발생
-- MongoDB에 @CreatedDate를 통해 시간대를 저장할 때 9시간 늦은 시간으로 저장되는 문제가 발생했습니다.
-
-### 원인 분석
-- MongoDB는 LocalDateTime 저장 시 지역 시간대를 지원하지 않고 UTC로 고정 저장하는 특성이 있었습니다.
-
-### 해결 과정
-- 시간대 설정 문제로 판단하여 DateTimeProvider를 구현해 한국 시간대(UTC+9)로 설정했으나 실패했습니다.
-- 추가 조사를 통해 MongoDB의 UTC 고정 저장 특성을 확인했습니다.
-- 저장 시 +9시간을 추가하는 방식을 시도했으나, 출력 시 컴퓨터 시간대에 맞춰 또다시 +9시간이 적용되는 문제가 발생했습니다.
-
-### 결과
-UTC 시간대로 저장하는 기본 방식을 유지하고, 개발 및 출력 단계에서 시간대 문제를 고려해 처리하는 방식으로 설계를 확정했습니다.
-
-</details> 
+![Image](https://github.com/user-attachments/assets/c0a4e973-581b-4946-bf29-dcf78d20c8cd)
+</details>
 
 <details> 
   <summary><strong>Redis Cache 직렬화 문제</strong></summary>
@@ -140,7 +133,27 @@ UTC 시간대로 저장하는 기본 방식을 유지하고, 개발 및 출력 �
 - Redis 캐싱 기능이 안정적으로 작동하게 되었습니다.
 - 다양한 객체 타입의 직렬화/역직렬화가 원활하게 처리되었습니다.
 
-</details> 
+</details>
+
+<details> 
+  <summary><strong>MongoDB Aggregation 최적화</strong></summary>
+
+### 문제 발생
+- MongoDB Aggregation 파이프라인 사용 시 성능 저하와 메모리 사용량 초과 문제가 발생했습니다.
+
+### 원인 분석
+- 복잡한 Aggregation 파이프라인 구조가 처리 속도를 저하시켰습니다.
+- MongoDB의 기본 메모리 제한(100MB)을 초과하는 대용량 데이터 처리 시도가 문제였습니다.
+
+### 해결 과정
+- 파이프라인 초기에 $match 단계를 배치하여 처리할 데이터 양을 사전에 줄였습니다.
+- 인덱스를 적극적으로 활용하여 쿼리 성능을 개선했습니다.
+- 메모리 사용량 제한을 고려한 최적화된 파이프라인 설계를 적용했습니다.
+
+### 결과
+- 데이터 처리 속도가 현저히 개선되었습니다.
+- 복잡한 집계 연산에서도 안정적인 성능을 유지할 수 있게 되었습니다.
+</details>
 
 <details> 
   <summary><strong>파일 업로드(Content-Type) 문제</strong></summary>
