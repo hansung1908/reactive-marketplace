@@ -98,14 +98,14 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
   - 기존 시스템은 단일 MongoDB를 사용하여 모든 조회 요청을 처리했습니다.
   - 이로 인해 데이터베이스의 부하가 증가하고 응답 시간이 길어졌습니다.
 
-![Image](https://github.com/user-attachments/assets/bc27b90d-5cc3-4843-99e)
+![Image](https://github.com/user-attachments/assets/7b0bc6d5-1f6e-4d3d-9e1a-2efabec97888)
 
 - Redis 도입 후:
   - Redis를 활용하여 자주 조회되는 특정 상품 데이터를 캐싱하였습니다.
   - 캐시를 통해 데이터베이스의 부하를 줄이고, 조회 성능을 개선하였습니다.
   - 비동기 처리 방식으로 대량의 요청을 효율적으로 처리하도록 시스템을 설계하였습니다.
 
-![Image](https://github.com/user-attachments/assets/29dde79b-077f-4b07-b476-ce425727a)
+![Image](https://github.com/user-attachments/assets/54fa9e33-5eb8-46c8-ac7d-a0021a0e3214)
 
 ### 결과
 - 단순 기능 테스트에선 조회 성능을 87.3% 향상시켰습니다.(60.79ms -> 7.70ms)
