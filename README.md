@@ -50,6 +50,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 - Jackson (JSON 직렬화/역직렬화)
 - Blockhound (블로킹 코드 탐지)
 - Mockito, StepVerifier (테스트 코드 작성)
+- ngrinder (부하 테스트)
 
 ### Infrastructure & Deployment
 - AWS EC2 (Ubuntu 환경 배포)
@@ -136,6 +137,79 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 </details>
 
 <details> 
+  <summary><strong>mongodb replica set 도입</strong></summary>
+
+### 문제 발생
+- 단일 MongoDB 인스턴스에서 트랜잭션을 실행하려고 시도했으나,
+- 오류 발생 시 이전에 실행된 로직이 DB에 그대로 저장되어 데이터 불일치 문제가 발생했습니다.
+
+### 원인 분석
+- MongoDB 트랜잭션은 ACID 특성을 보장하기 위해 Replica Set 환경에서만 동작하도록 설계되었습니다.
+- 단일 노드 환경에서는 트랜잭션을 지원하지 않으며, 이를 위해 Replica Set 구성이 필요합니다.
+
+### 해결 과정
+
+##### 1. Replica Set 구성
+- mongod.cfg 파일에 다음 설정 추가:
+```shell
+replication:
+  replSetName: rs0
+```
+- 이후 MongoDB를 재시작하고, 각 포트(27017, 27018, 27019)에서 데이터 디렉토리를 생성한 후 mongod 인스턴스를 시작했습니다.
+- rs.initiate() 명령어를 통해 Replica Set 초기화:
+```shell
+rs.initiate({
+  _id: "rs0",
+  members: [
+    {_id: 0, host: "localhost:27017"},
+    {_id: 1, host: "localhost:27018"},
+    {_id: 2, host: "localhost:27019"}
+  ]
+});
+```
+
+##### 2. 트랜잭션 적용
+- 트랜잭션은 .as(transactionalOperator::transactional) 구문을 통해 전체 파이프라인에 적용되었습니다.
+1. 트랜잭션 범위 지정 
+- .as() 연산자를 사용해 Product 저장 → 이미지 업로드 과정 전체를 하나의 트랜잭션으로 묶었습니다.
+```shell
+.as(transactionalOperator::transactional)  // 전체 체인 트랜잭션 적용
+```
+
+2. 트랜잭션 동작 흐름
+```shell
+return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
+    .flatMap(product -> productRepository.save(product))  // 2. DB 저장
+    .flatMap(savedProduct ->
+        Mono.justOrEmpty(image)
+            .flatMap(img -> imageService.uploadImage(...))  // 3. 이미지 업로드
+            .defaultIfEmpty(savedProduct)
+    )
+    .as(transactionalOperator::transactional)  // 트랜잭션 커밋/롤백 결정
+```
+3. 오류 처리 메커니즘
+- 모든 단계가 성공해야 트랜잭션 커밋
+- 예외 발생 시 전체 작업 롤백 (onErrorMap에서 커스텀 예외 처리)
+
+4. 예외 상황
+- Redis 작업은 트랜잭션의 ACID 보장 대상이 아니며, DB 작업과 독립적으로 처리해야 합니다.
+- 또한, Redis 작업을 트랜잭션 범위에 포함하면 트랜잭션 커밋 전에 Redis 작업이 완료되어야 하므로 전체 작업의 성능이 저하될 수 있습니다.
+- 그래서, .as() 구문 이후에 작업하여 트랜잭션 영역 외부에 위치시켰습니다.
+```shell
+.as(transactionalOperator::transactional)  // 트랜잭션 적용: DB 저장 및 이미지 업로드
+.then(Mono.defer(() -> redisCacheManager.deleteValue("product:" + productUpdateReqDto.id())))  // 트랜잭션 외부
+```
+
+##### 3. 테스트
+- rs.status() 명령으로 Replica Set 상태를 확인하고, 
+- 유닛 테스트를 통해 트랜잭션이 정상적으로 작동하는지 검증했습니다.
+
+### 결과
+- Replica Set 환경에서 MongoDB 트랜잭션이 성공적으로 동작하여 데이터 불일치 문제가 해결되었습니다.
+- 데이터의 고가용성과 무결성을 보장하면서도 장애 복구 기능을 갖춘 안정적인 시스템을 구축할 수 있었습니다.
+</details>
+
+<details> 
   <summary><strong>thumbnailtor를 통한 이미지 용량 감소</strong></summary>
 
 ### 문제 발생
@@ -195,7 +269,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 - 파일 크기를 정확히 측정할 수 있게 되었습니다.
 - 메모리 누수 없이 효율적인 파일 크기 계산이 가능해졌습니다.
 
-</details> 
+</details>
 
 <details> 
   <summary><strong>MongoDB Aggregation 최적화</strong></summary>
