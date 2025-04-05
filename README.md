@@ -84,7 +84,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 # 성능 최적화 및 트러블 슈팅
 
 <details> 
-  <summary><strong>Redis Cache 도입</strong></summary>
+  <summary><strong>데이터베이스 과부하 현상을 해결할 Redis Cache 도입</strong></summary>
 
 ### 문제 발생
 - 서비스 사용자 경험을 향상시키기 위해 데이터베이스 성능 문제를 해결해야 하는 상황에 직면했습니다.
@@ -116,7 +116,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 </details>
 
 <details> 
-  <summary><strong>Redis Cache 직렬화 문제</strong></summary>
+  <summary><strong>Redis Cache 적용에 따른 직렬화 문제 해결</strong></summary>
 
 ### 문제 발생
 - Redis Cache 적용 시 다양한 직렬화/역직렬화 오류가 발생했습니다.
@@ -137,7 +137,7 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 </details>
 
 <details> 
-  <summary><strong>mongodb replica set 도입</strong></summary>
+  <summary><strong>데이터 불일치 문제를 해결할 MongoDB Replica Set 도입</strong></summary>
 
 ### 문제 발생
 - 단일 MongoDB 인스턴스에서 트랜잭션을 실행하려고 시도했으나,
@@ -210,6 +210,26 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 </details>
 
 <details> 
+  <summary><strong>MongoDB Aggregation 최적화를 통한 호출 성능 개선</strong></summary>
+
+### 문제 발생
+- MongoDB Aggregation 파이프라인 사용 시 성능 저하와 메모리 사용량 초과 문제가 발생했습니다.
+
+### 원인 분석
+- 복잡한 Aggregation 파이프라인 구조가 처리 속도를 저하시켰습니다.
+- MongoDB의 기본 메모리 제한(100MB)을 초과하는 대용량 데이터 처리 시도가 문제였습니다.
+
+### 해결 과정
+- 파이프라인 초기에 $match 단계를 배치하여 처리할 데이터 양을 사전에 줄였습니다.
+- 인덱스를 적극적으로 활용하여 쿼리 성능을 개선했습니다.
+- 메모리 사용량 제한을 고려한 최적화된 파이프라인 설계를 적용했습니다.
+
+### 결과
+- 데이터 처리 속도가 현저히 개선되었습니다.
+- 복잡한 집계 연산에서도 안정적인 성능을 유지할 수 있게 되었습니다.
+</details>
+
+<details> 
   <summary><strong>thumbnailtor를 통한 이미지 용량 감소</strong></summary>
 
 ### 문제 발생
@@ -230,7 +250,7 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 </details>
 
 <details> 
-  <summary><strong>파일 업로드(Content-Type) 문제</strong></summary>
+  <summary><strong>커스텀 디코더 설정을 통한 파일 업로드(Content-Type) 문제 해결</strong></summary>
 
 ### 문제 발생
 - WebFlux 환경에서 파일 저장이 되지 않는 문제가 발생했습니다.
@@ -249,7 +269,7 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 </details> 
 
 <details> 
-  <summary><strong>DataBuffer 크기 측정 문제</strong></summary>
+  <summary><strong>스트림 결합을 통한 DataBuffer 크기 측정 문제 해결</strong></summary>
 
 ### 문제 발생
 - FilePart의 getContentLength()가 -1을 반환하여 파일 크기를 측정할 수 없었습니다.
@@ -271,28 +291,8 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 
 </details>
 
-<details> 
-  <summary><strong>MongoDB Aggregation 최적화</strong></summary>
-
-### 문제 발생
-- MongoDB Aggregation 파이프라인 사용 시 성능 저하와 메모리 사용량 초과 문제가 발생했습니다.
-
-### 원인 분석
-- 복잡한 Aggregation 파이프라인 구조가 처리 속도를 저하시켰습니다.
-- MongoDB의 기본 메모리 제한(100MB)을 초과하는 대용량 데이터 처리 시도가 문제였습니다.
-
-### 해결 과정
-- 파이프라인 초기에 $match 단계를 배치하여 처리할 데이터 양을 사전에 줄였습니다.
-- 인덱스를 적극적으로 활용하여 쿼리 성능을 개선했습니다.
-- 메모리 사용량 제한을 고려한 최적화된 파이프라인 설계를 적용했습니다.
-
-### 결과
-- 데이터 처리 속도가 현저히 개선되었습니다.
-- 복잡한 집계 연산에서도 안정적인 성능을 유지할 수 있게 되었습니다.
-</details>
-
-<details> 
-  <summary><strong>배포 환경에서 서버 다운 현상</strong></summary>
+<details>
+  <summary><strong>swap 메모리를 통한 서버 다운 현상 해결</strong></summary>
 
 ### 문제 발생
 - EC2 Free Tier 환경에서 프로젝트 빌드 시 CPU 과부하로 서버가 다운되는 현상이 발생했습니다.
