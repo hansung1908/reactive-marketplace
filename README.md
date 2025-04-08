@@ -156,27 +156,6 @@ Reactive Marketplace는 Spring WebFlux 및 Reactive MongoDB를 기반으로 한 
 </details>
 
 <details> 
-  <summary><strong>Redis Cache 적용에 따른 직렬화 문제 해결</strong></summary>
-
-### 문제 발생
-- Redis Cache 적용 시 다양한 직렬화/역직렬화 오류가 발생했습니다.
-- 'java.time.LocalDateTime not Supported' 오류가 발생했습니다.
-
-### 원인 분석
-- 클래스 타입별 직렬화 설정 중복 문제가 있었습니다.
-- 객체 타입 변환 과정에서 호환성 문제가 있었습니다.
-
-### 해결 과정
-- 기존 Jackson2JsonRedisSerializer에서 GenericJackson2JsonRedisSerializer로 변경하여 다양한 클래스 타입 객체의 직렬화/역직렬화를 지원하도록 했습니다.
-- 각 도메인 객체에 @JsonSerialize 및 @JsonDeserialize 어노테이션을 추가하여 LocalDateTime 호환성 문제를 해결했습니다.
-
-### 결과
-- Redis 캐싱 기능이 안정적으로 작동하게 되었습니다.
-- 다양한 객체 타입의 직렬화/역직렬화가 원활하게 처리되었습니다.
-
-</details>
-
-<details> 
   <summary><strong>데이터 불일치 문제를 해결할 MongoDB Replica Set 도입</strong></summary>
 
 ### 문제 발생
@@ -250,26 +229,6 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 </details>
 
 <details> 
-  <summary><strong>MongoDB Aggregation 최적화를 통한 호출 성능 개선</strong></summary>
-
-### 문제 발생
-- MongoDB Aggregation 파이프라인 사용 시 성능 저하와 메모리 사용량 초과 문제가 발생했습니다.
-
-### 원인 분석
-- 복잡한 Aggregation 파이프라인 구조가 처리 속도를 저하시켰습니다.
-- MongoDB의 기본 메모리 제한(100MB)을 초과하는 대용량 데이터 처리 시도가 문제였습니다.
-
-### 해결 과정
-- 파이프라인 초기에 $match 단계를 배치하여 처리할 데이터 양을 사전에 줄였습니다.
-- 인덱스를 적극적으로 활용하여 쿼리 성능을 개선했습니다.
-- 메모리 사용량 제한을 고려한 최적화된 파이프라인 설계를 적용했습니다.
-
-### 결과
-- 데이터 처리 속도가 현저히 개선되었습니다.
-- 복잡한 집계 연산에서도 안정적인 성능을 유지할 수 있게 되었습니다.
-</details>
-
-<details> 
   <summary><strong>thumbnailtor를 통한 이미지 용량 감소</strong></summary>
 
 ### 문제 발생
@@ -288,25 +247,6 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 - 이미지 용량을 약 90% 정도 감소시켜 저장 공간 절약과 데이터 전송 속도 개선을 이루었습니다.(248kb -> 22kb)
 
 </details>
-
-<details> 
-  <summary><strong>커스텀 디코더 설정을 통한 파일 업로드(Content-Type) 문제 해결</strong></summary>
-
-### 문제 발생
-- WebFlux 환경에서 파일 저장이 되지 않는 문제가 발생했습니다.
-
-### 원인 분석
-- application/octet-stream 타입의 파일 업로드 시 디코딩 문제가 발생했습니다.
-- WebFlux에서 해당 타입에 대한 Content-Type 요청 디코더 설정이 부족했습니다.
-
-### 해결 과정
-- WebFluxConfigurer에서 커스텀 Decoder를 설정하여 다양한 Content-Type의 파일 업로드 요청을 처리하도록 구현했습니다.
-
-### 결과
-- 파일 업로드 기능이 안정적으로 작동하게 되었습니다.
-- 다양한 파일 형식과 Content-Type 요청을 정상적으로 처리할 수 있게 되었습니다.
-
-</details> 
 
 <details> 
   <summary><strong>스트림 결합을 통한 DataBuffer 크기 측정 문제 해결</strong></summary>
@@ -964,3 +904,63 @@ $ sudo swapoff -a
 ```
 
 </details>
+
+<details> 
+  <summary><strong>Redis Cache 적용에 따른 직렬화 문제 해결</strong></summary>
+
+### 문제 발생
+- Redis Cache 적용 시 다양한 직렬화/역직렬화 오류가 발생했습니다.
+- 'java.time.LocalDateTime not Supported' 오류가 발생했습니다.
+
+### 원인 분석
+- 클래스 타입별 직렬화 설정 중복 문제가 있었습니다.
+- 객체 타입 변환 과정에서 호환성 문제가 있었습니다.
+
+### 해결 과정
+- 기존 Jackson2JsonRedisSerializer에서 GenericJackson2JsonRedisSerializer로 변경하여 다양한 클래스 타입 객체의 직렬화/역직렬화를 지원하도록 했습니다.
+- 각 도메인 객체에 @JsonSerialize 및 @JsonDeserialize 어노테이션을 추가하여 LocalDateTime 호환성 문제를 해결했습니다.
+
+### 결과
+- Redis 캐싱 기능이 안정적으로 작동하게 되었습니다.
+- 다양한 객체 타입의 직렬화/역직렬화가 원활하게 처리되었습니다.
+
+</details>
+
+<details> 
+  <summary><strong>MongoDB Aggregation 최적화를 통한 호출 성능 개선</strong></summary>
+
+### 문제 발생
+- MongoDB Aggregation 파이프라인 사용 시 성능 저하와 메모리 사용량 초과 문제가 발생했습니다.
+
+### 원인 분석
+- 복잡한 Aggregation 파이프라인 구조가 처리 속도를 저하시켰습니다.
+- MongoDB의 기본 메모리 제한(100MB)을 초과하는 대용량 데이터 처리 시도가 문제였습니다.
+
+### 해결 과정
+- 파이프라인 초기에 $match 단계를 배치하여 처리할 데이터 양을 사전에 줄였습니다.
+- 인덱스를 적극적으로 활용하여 쿼리 성능을 개선했습니다.
+- 메모리 사용량 제한을 고려한 최적화된 파이프라인 설계를 적용했습니다.
+
+### 결과
+- 데이터 처리 속도가 현저히 개선되었습니다.
+- 복잡한 집계 연산에서도 안정적인 성능을 유지할 수 있게 되었습니다.
+</details>
+
+<details> 
+  <summary><strong>커스텀 디코더 설정을 통한 파일 업로드(Content-Type) 문제 해결</strong></summary>
+
+### 문제 발생
+- WebFlux 환경에서 파일 저장이 되지 않는 문제가 발생했습니다.
+
+### 원인 분석
+- application/octet-stream 타입의 파일 업로드 시 디코딩 문제가 발생했습니다.
+- WebFlux에서 해당 타입에 대한 Content-Type 요청 디코더 설정이 부족했습니다.
+
+### 해결 과정
+- WebFluxConfigurer에서 커스텀 Decoder를 설정하여 다양한 Content-Type의 파일 업로드 요청을 처리하도록 구현했습니다.
+
+### 결과
+- 파일 업로드 기능이 안정적으로 작동하게 되었습니다.
+- 다양한 파일 형식과 Content-Type 요청을 정상적으로 처리할 수 있게 되었습니다.
+
+</details> 
