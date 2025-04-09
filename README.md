@@ -248,29 +248,6 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 
 </details>
 
-<details> 
-  <summary><strong>스트림 결합을 통한 DataBuffer 크기 측정 문제 해결</strong></summary>
-
-### 문제 발생
-- FilePart의 getContentLength()가 -1을 반환하여 파일 크기를 측정할 수 없었습니다.
-
-### 원인 분석
-- 다양한 메타데이터가 함께 있어 정확한 파일 크기를 알 수 없는 문제가 있었습니다.
-- FilePart는 multipart/form-data 요청에서 파일 부분을 나타내는 인터페이스로, 파일 데이터가 여러 DataBuffer로 분할되어 스트리밍 방식으로 전송됩니다.
-- 이러한 특성 때문에 전체 파일 크기를 미리 알 수 없어 getContentLength()가 -1을 반환하게 됩니다.
-
-### 해결 과정
-- FilePart.content()를 통해 얻은 DataBuffer 스트림을 하나로 결합하는 방식으로 접근했습니다.
-- DataBufferUtils.join()을 사용하여 여러 DataBuffer를 하나의 DataBuffer로 묶었습니다.
-- 이렇게 하나로 묶인 DataBuffer에서 readableByteCount()를 호출하여 전체 파일 크기를 정확히 측정할 수 있었습니다.
-- Netty 서버 기반으로 버퍼가 풀링되며 참조 카운팅되기 때문에, 메모리 누수 방지를 위해 계산 후 release() 메소드로 메모리를 해제하는 로직을 추가했습니다.
-
-### 결과
-- 파일 크기를 정확히 측정할 수 있게 되었습니다.
-- 메모리 누수 없이 효율적인 파일 크기 계산이 가능해졌습니다.
-
-</details>
-
 <details>
   <summary><strong>swap 메모리를 통한 서버 다운 현상 해결</strong></summary>
 
@@ -963,4 +940,27 @@ $ sudo swapoff -a
 - 파일 업로드 기능이 안정적으로 작동하게 되었습니다.
 - 다양한 파일 형식과 Content-Type 요청을 정상적으로 처리할 수 있게 되었습니다.
 
-</details> 
+</details>
+
+<details> 
+  <summary><strong>스트림 결합을 통한 DataBuffer 크기 측정 문제 해결</strong></summary>
+
+### 문제 발생
+- FilePart의 getContentLength()가 -1을 반환하여 파일 크기를 측정할 수 없었습니다.
+
+### 원인 분석
+- 다양한 메타데이터가 함께 있어 정확한 파일 크기를 알 수 없는 문제가 있었습니다.
+- FilePart는 multipart/form-data 요청에서 파일 부분을 나타내는 인터페이스로, 파일 데이터가 여러 DataBuffer로 분할되어 스트리밍 방식으로 전송됩니다.
+- 이러한 특성 때문에 전체 파일 크기를 미리 알 수 없어 getContentLength()가 -1을 반환하게 됩니다.
+
+### 해결 과정
+- FilePart.content()를 통해 얻은 DataBuffer 스트림을 하나로 결합하는 방식으로 접근했습니다.
+- DataBufferUtils.join()을 사용하여 여러 DataBuffer를 하나의 DataBuffer로 묶었습니다.
+- 이렇게 하나로 묶인 DataBuffer에서 readableByteCount()를 호출하여 전체 파일 크기를 정확히 측정할 수 있었습니다.
+- Netty 서버 기반으로 버퍼가 풀링되며 참조 카운팅되기 때문에, 메모리 누수 방지를 위해 계산 후 release() 메소드로 메모리를 해제하는 로직을 추가했습니다.
+
+### 결과
+- 파일 크기를 정확히 측정할 수 있게 되었습니다.
+- 메모리 누수 없이 효율적인 파일 크기 계산이 가능해졌습니다.
+
+</details>

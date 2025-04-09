@@ -167,8 +167,8 @@ public class ImageServiceImpl implements ImageService {
 
     private Mono<Image> deleteImageFiles(Image image) {
         return Mono.fromCallable(() -> {
-            Files.delete(Paths.get(image.getImagePath()));
-            Files.delete(Paths.get(image.getThumbnailPath()));
+            Files.delete(Paths.get(osBasePath + image.getImagePath()));
+            Files.delete(Paths.get(osBasePath + image.getThumbnailPath()));
             return image;
         });
     }
