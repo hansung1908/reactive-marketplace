@@ -247,20 +247,20 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 - 리사이징 전
   - 렌더링 완료 속도
 
-  ![Image](https://github.com/user-attachments/assets/d1913c0f-991d-48a3-9211-50daf01de147)
+  ![Image](https://github.com/user-attachments/assets/13db674b-aa2d-4348-9234-2f324629e4ac)
   
   - 이미지 크기
 
-  ![Image](https://github.com/user-attachments/assets/13db674b-aa2d-4348-9234-2f324629e4ac)
-  
+  ![Image](https://github.com/user-attachments/assets/d1913c0f-991d-48a3-9211-50daf01de147)
+
 - 리사이징 후
   - 렌더링 완료 속도
 
-    ![Image](https://github.com/user-attachments/assets/a368c141-c0ad-4769-94cb-debfdfce5e0b)
+  ![Image](https://github.com/user-attachments/assets/2df8c2e6-9b89-465d-be59-74dafe60b189)
 
   - 이미지 크기
 
-    ![Image](https://github.com/user-attachments/assets/2df8c2e6-9b89-465d-be59-74dafe60b189)
+  ![Image](https://github.com/user-attachments/assets/a368c141-c0ad-4769-94cb-debfdfce5e0b)
 
 ### 결과
 - 이미지 용량을 약 90% 정도 감소시켜 저장 공간 절약하였습니다. (248kb -> 22kb)
