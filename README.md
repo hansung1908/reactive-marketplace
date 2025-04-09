@@ -246,13 +246,20 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 - 업로드된 이미지를 서버에서 처리하여 용량을 줄이고, 필요한 경우 썸네일 이미지를 생성했습니다.
 - 리사이징 전
   - 렌더링 완료 속도
-    ![Image](https://github.com/user-attachments/assets/13db674b-aa2d-4348-9234-2f324629e4ac)
+
+  ![Image](https://github.com/user-attachments/assets/d1913c0f-991d-48a3-9211-50daf01de147)
+  
   - 이미지 크기
-    ![Image](https://github.com/user-attachments/assets/d1913c0f-991d-48a3-9211-50daf01de147)
+
+  ![Image](https://github.com/user-attachments/assets/13db674b-aa2d-4348-9234-2f324629e4ac)
+  
 - 리사이징 후
   - 렌더링 완료 속도
+
     ![Image](https://github.com/user-attachments/assets/a368c141-c0ad-4769-94cb-debfdfce5e0b)
+
   - 이미지 크기
+
     ![Image](https://github.com/user-attachments/assets/2df8c2e6-9b89-465d-be59-74dafe60b189)
 
 ### 결과
@@ -274,10 +281,12 @@ return Mono.just(new Product.Builder()...)  // 1. Product 객체 생성
 - Swap 메모리를 설정하여 디스크 공간을 RAM으로 활용했습니다.
 - 2GB의 Swap 파일을 생성하고 시스템 재시작 시에도 자동 활성화되도록 설정했습니다.
 - Swap 메모리 설정 전
-  ![Image](https://github.com/user-attachments/assets/c6238ee8-9c29-4bf1-b593-d8059f2247de)
-- Swap 메모리 설정 후
-  ![Image](https://github.com/user-attachments/assets/82e38df6-0a9e-47b1-9f7b-e26a04e76163)
 
+  ![Image](https://github.com/user-attachments/assets/c6238ee8-9c29-4bf1-b593-d8059f2247de)
+
+- Swap 메모리 설정 후
+
+  ![Image](https://github.com/user-attachments/assets/82e38df6-0a9e-47b1-9f7b-e26a04e76163)
 
 ### 결과
 - 제한된 RAM 환경에서도 안정적인 빌드와 서버 운영이 가능해졌습니다. (100% -> 42%)
